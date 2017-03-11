@@ -1,0 +1,32 @@
+//auth:
+start mongo with mongod --auth
+
+use flashcards
+db.createUser( { user: "pablo",
+                 pwd: "1234",
+                 customData: { employeeId: 12345 },
+                 roles: [ { role: "clusterAdmin", db: "admin" },
+                          { role: "readAnyDatabase", db: "admin" },
+                          "readWrite"] },
+               { w: "majority" , wtimeout: 5000 } )
+
+db.auth('pablo','1234');
+
+-----------------------------------------------
+
+db.users.update({'user':'pablo'},{$set:{cards:[ObjectId('583247768fa769bfcc93907e')]}})
+
+//The $addToSet operator adds a value to an array unless the value is already present,
+//in which case $addToSet does nothing to that array.
+db.users.update({'user':'pablo'},{$addToSet:{cards:ObjectId('583247768fa769bfcc939072')}})
+
+//get all ids of cards than a user has
+db.users.find({"user":"pablo"}, {"cards":1, "_id":0})
+
+//get all cards than a user has
+var array = db.users.find({"user":"pablo"}, {"cards":1, "_id":0}).map(function(cursor){return cursor.cards;})
+db.cards.find({"_id":{$in: array[0]}})
+//get card by id
+db.cards.find({"_id":{$in: [ObjectId('583247768fa769bfcc93907e')]}})
+
+//delete card

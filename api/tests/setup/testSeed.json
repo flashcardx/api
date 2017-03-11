@@ -1,0 +1,44 @@
+{"users":[  
+    {
+        "username": "pablo1",
+        "email": "pablo-n-m@hotmail.com",
+        "name": "pablo",
+        "password":"1234",
+        "lang":"en",
+        "cards": []
+    },
+    {
+        "username": "agustina",
+        "email": "pablonicolasm.pm@gmail.com",
+        "name": "agustina",
+        "password":"1111",
+        "lang":"en",
+        "cards": []
+    },
+     {
+        "username": "antonella1",
+        "email": "anto-marino@hotmail.com",
+        "name": "antonella",
+        "password":"1234",
+        "lang":"es",
+        "cards": []
+    }
+],
+"cards":[
+    {
+         "name": "dog",
+         "description":"its a beautiful animal",
+         "urls": ["https://images-na.ssl-images-amazon.com/images/G/01/img15/pet-products/small-tiles/23695_pets_vertical_store_dogs_small_tile_8._CB312176604_.jpg",
+                 "http://cdn1-www.dogtime.com/assets/uploads/2011/01/file_23262_entlebucher-mountain-dog-460x290.jpg"]
+    },
+    {
+        "name":"cat",
+        "urls": []
+    },
+    {
+        "name":"hinge",
+        "description":"widely used in doors",
+        "urls": []
+    }
+]
+}

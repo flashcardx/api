@@ -1,0 +1,4 @@
+{
+    "access": "/logs/access.log",
+    "app": "/logs/app.log"
+}
