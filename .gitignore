@@ -1,0 +1,4 @@
+.vscode/*
+api/node_modules/*
+api/config/email.json
+api/config/db.json
