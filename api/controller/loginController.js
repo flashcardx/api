@@ -1,52 +1,22 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
-const bcrypt = require("bcryptjs");
 const config = require(appRoot + "/config");
 const controllerUtils = require("./utils");
-const Users = require(appRoot + "/models/userModel");
 const userService = require(appRoot + "/service/userService");
+const emailVerification = require(appRoot + "/service/emailVerificationService");
 const logger = config.getLogger(__filename);
 
-function save(user, res){
-    user.save(function(error){
-        if(error){
-            console.log("VIENE PIOLA");
-            logger.error(String(error));
-            res.json({success:false, msg:String(error)});
-        }
-        else{
-            logger.info("user" + user.username + "was created ok");
-            res.json({success:true, msg:"new user created succesfully!"});
-        }
-    });
-}
+module.exports = function(app){
 
-function registerNewUser(req, res, password){
-    var pablo = {
+    app.post("/signup",function(req, res){
+        var user = {
             email: req.body.email,
             name: req.body.name,
-            password: password,
-            lang:req.body.lang
+            password: req.body.password,
+            lang: req.body.lang
         };
-        var user = new Users(pablo);
-
-        user.validate(function (err) {
-        if(err){
-            logger.error(String(err));
-            res.json({success:false, msg:String(err)});
-        }
-        else{
-            save(user, res);
-        }
-        });
-}
-
-module.exports = function(app){
-    app.post("/signup",function(req, res){
-        bcrypt.genSalt(10,  function(err, salt) {
-            bcrypt.hash(req.body.password, salt, function(err, hash){
-                registerNewUser(req, res, hash);
-            });
+        userService.registerNewUser(user, function(result){
+            res.json(result);
         });
     });
 
@@ -78,6 +48,20 @@ module.exports = function(app){
     app.get("/logout", controllerUtils.requireLogin, function(req,res){
         req.session.reset();
         res.json({success:true, msg:"you logged out succesfully!"});
+    });
+
+    app.get("/email-verification/:id", function(req, res){
+        const id = req.params.id;
+        emailVerification.confirmUser(id, (msj)=>{
+            res.json(msj);
+        });
+    });
+
+    app.get("/resend-email-verification/:email", function(req, res){
+        const email = req.params.email;
+        emailVerification.resendEmailVerification(email, (msj)=>{
+            res.json(msj);
+        });
     });
 
     app.get("/test", controllerUtils.requireLogin,function(req, res){

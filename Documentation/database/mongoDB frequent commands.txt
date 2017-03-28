@@ -11,6 +11,7 @@ db.createUser( { user: "pablo",
                { w: "majority" , wtimeout: 5000 } )
 
 db.auth('pablo','1234');
+db.collname.stats()
 
 -----------------------------------------------
 

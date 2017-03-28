@@ -1,6 +1,9 @@
+const env = process.env.NODE_ENV || "development";
 const fs = require('fs');
 const bunyan = require("bunyan");
-const logPath = require("./logs.json");
+const bformat = require('bunyan-format')  
+const formatOut = bformat({ outputMode: 'short' });
+const logs = require("./logs.json")[env];
 const appRoot = require('app-root-path');
 
 function getLogger(name){
@@ -8,12 +11,12 @@ function getLogger(name){
                 name: name,
                 streams: [
                      {
-                     level: 'info',
-                     path: appRoot + logPath.app
+                     level: logs.levelFile,
+                     path: appRoot + logs.app
                     },
                     {
-                     level: 'warn',
-                     stream: process.stdout  // log ERROR and above to stdout
+                     level: logs.levelConsole,
+                     stream: formatOut // log ERROR and above to stdout
                     }
                 ],
                  serializers: bunyan.stdSerializers
@@ -25,12 +28,12 @@ function getLogger(name){
                 name: name,
                 streams: [
                      {
-                     level: 'info',
-                     path: appRoot + logPath.access
+                     level: logs.levelFile,
+                     path: appRoot + logs.access
                     },
                     {
-                     level: 'warn',
-                     stream: process.stdout  // log WARN and above to stdout
+                     level: logs.levelConsole,
+                     stream: formatOut  // log WARN and above to stdout
                     }
                 ],
                  serializers: bunyan.stdSerializers
