@@ -3,4 +3,4 @@ Node.js REST API for creating virtual flashcards for learning new vocabulary whe
 If you want to use run it just:<br/>
 -npm install<br/>
 -go to config/email.json and config/db.json and replace the dummy data with real data<br/>
--npm app.js<br/>
+-node app.js<br/>
