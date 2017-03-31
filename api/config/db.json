@@ -1,0 +1,16 @@
+{
+    "development":{
+        "host": "HOST, EX:localhost",
+        "port": "FILL_DB_PORT",
+        "name": "FILL_DB_NAME",
+        "user": "FILL_DB_USER",
+        "pass": "FILL_DB_PASS"
+    },
+    "production":{
+        "host": "HOST, EX:localhost",
+        "port": "FILL_DB_PORT",
+        "name": "FILL_DB_NAME",
+        "user": "FILL_DB_USER",
+        "pass": "FILL_DB_PASS"
+    }
+}
