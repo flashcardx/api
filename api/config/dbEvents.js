@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const logger = require("./logger").getLogger(__filename);
 const config = require("./index");
 
-module.exports = function(){a
+module.exports = function(){
 
 mongoose.connection.on('error', function onError(err) {
   logger.error('Mongoose default connection error: ' + err);
