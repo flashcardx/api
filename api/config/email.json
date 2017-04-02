@@ -1,11 +1,11 @@
 {
     "development":{
-        "service": "YOUR_EMAIL_SERVICE_PROVIDER, EX:GMAIL",
+        "service": "YOUR_EMAIL_SERVICE_PROVIDER, EX:Gmail",
         "user": "EMAIL_ADRESS",
         "password": "PASSWORD"
     },
     "production":{
-        "service": "YOUR_EMAIL_SERVICE_PROVIDER, EX:GMAIL",
+        "service": "YOUR_EMAIL_SERVICE_PROVIDER, EX:Gmail",
         "user": "EMAIL_ADRESS",
         "password": "PASSWORD"
     }
