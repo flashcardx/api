@@ -13,7 +13,7 @@ module.exports = function(app){
             var card = {
                 name: req.body.name,
                 description: req.body.description,
-                };
+            };
             cardService.createCard(card, req.body.urls, req.user._id,function(result){
                 res.json(result);
             });
