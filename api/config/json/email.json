@@ -1,12 +1,12 @@
 {
     "development":{
-        "service": "Gmail",
-        "user": "pablonicolasm.pm@gmail.com",
-        "password": "38992628"
+        "service": "YOUR_EMAIL_SERVICE_PROVIDER, EX:Gmail",
+        "user": "EMAIL_ADRESS",
+        "password": "PASSWORD"
     },
     "production":{
-        "service": "Gmail",
-        "user": "pablonicolasm.pm@gmail.com",
-        "password": "38992628"
+        "service": "YOUR_EMAIL_SERVICE_PROVIDER, EX:Gmail",
+        "user": "EMAIL_ADRESS",
+        "password": "PASSWORD"
     }
 }
