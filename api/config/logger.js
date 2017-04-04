@@ -3,7 +3,7 @@ const fs = require('fs');
 const bunyan = require("bunyan");
 const bformat = require('bunyan-format')  
 const formatOut = bformat({ outputMode: 'short' });
-const logs = require("./logs.json")[env];
+const logs = require("./json/logs.json")[env];
 const appRoot = require('app-root-path');
 
 function getLogger(name){

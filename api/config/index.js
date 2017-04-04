@@ -1,10 +1,11 @@
 const env = process.env.NODE_ENV || "development";
-const db = require("./db")[env];
+const db = require("./json/db")[env];
 const dbEvents= require("./dbEvents");
-const api = require("./api.json")[env];
+const api = require("./json/api.json")[env];
 const logger = require("./logger");
-const logPath = require("./logs.json");
-const email = require("./email.json")[env];
+const logPath = require("./json/logs.json");
+const email = require("./json/email.json")[env];
+const lang = require("./json/lang.json");
 
 module.exports = {
 
@@ -21,6 +22,7 @@ module.exports = {
     APIMyUrl: api.myUrl,
     emailService: email.service,
     emailUser: email.user,
-    emailPassword: email.password
+    emailPassword: email.password,
+    lang: lang
 };
 

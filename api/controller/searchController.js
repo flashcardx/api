@@ -10,7 +10,7 @@ module.exports = function(app){
 
     app.get("/search/:criteria",controllerUtils.requireLogin,function(req,res){
         const criteria = S(req.params.criteria).replaceAll(" ", "+");
-        const url = `${config.APIUrl}?key=${config.APIKey}&q=${criteria}&lang=${req.user.lang}`
+        const url = `${config.APIUrl}/?key=${config.APIKey}&q=${criteria}&lang=${req.user.lang}`;
         logger.debug("requesting to: " + url);
         var results = cache.get(criteria);
         if(results){

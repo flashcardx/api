@@ -5,6 +5,10 @@ const validators = require("./validators/userValidators");
 const Schema = mongoose.Schema;
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
+const lang = config.lang;
+var langCodes = lang.map((value)=>{
+    return value.code;
+});
 
 const userSchema = new Schema({
     email:{
@@ -26,7 +30,7 @@ const userSchema = new Schema({
     lang: {
         type: String, 
         default: "en",
-        enum: ["cs", "da", "de", "en", "es", "fr", "id", "it", "hu", "nl", "no", "pl", "pt", "ro", "sk", "fi", "sv", "tr", "vi", "th", "bg", "ru", "el", "ja", "ko", "zh"]
+        enum: langCodes
     },
     cards: {
         type: [Schema.Types.ObjectId],
