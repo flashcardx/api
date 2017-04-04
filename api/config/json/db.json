@@ -1,16 +1,16 @@
 {
     "development":{
-        "host": "localhost",
-        "port": "27017",
-        "name": "flashcards",
-        "user": "pablo",
-        "pass": "1234"
+        "host": "HOST, EX:localhost",
+        "port": "FILL_DB_PORT",
+        "name": "FILL_DB_NAME",
+        "user": "FILL_DB_USER",
+        "pass": "FILL_DB_PASS"
     },
     "production":{
-        "host": "localhost",
-        "port": "27017",
-        "name": "flashcards",
-        "user": "pablo",
-        "pass": "1234"
+        "host": "HOST, EX:localhost",
+        "port": "FILL_DB_PORT",
+        "name": "FILL_DB_NAME",
+        "user": "FILL_DB_USER",
+        "pass": "FILL_DB_PASS"
     }
 }
