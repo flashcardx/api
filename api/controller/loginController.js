@@ -1,12 +1,13 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
-const controllerUtils = require("./utils");
 const userService = require(appRoot + "/service/userService");
 const emailVerification = require(appRoot + "/service/emailVerificationService");
 const logger = config.getLogger(__filename);
+const jwt = require('jsonwebtoken');
 
 module.exports = function(app){
+    const controllerUtils = require("./utils")(app);
 
     app.post("/signup",function(req, res){
         var user = {
@@ -28,9 +29,18 @@ module.exports = function(app){
         userService.findUser(req.body.email, req.body.password, function(result){
             if(result){
                 if(result.success){
-                    // sets a cookie with the user's info
-                    req.session.user = result.msg;
-                    res.json({success:true, msg:"welcome " + result.msg.email + "!"});
+                    var user = result.msg;
+                    user.password = undefined;
+                    jwt.sign(user, app.get('jwtSecret'), {
+                                expiresIn: config.APIJwtExpireTime 
+                    }, (err, token)=>{
+                        if(err){
+                            logger.error(err);
+                            res.json({success:false, msg:String(err)});
+                        }
+                        else
+                            res.json({success:true, token:token});
+                    });
                 }
                 else{
                     res.json(result);
@@ -45,21 +55,16 @@ module.exports = function(app){
         res.json(req.user);
     });
 
-    app.get("/logout", controllerUtils.requireLogin, function(req,res){
-        req.session.reset();
-        res.json({success:true, msg:"you logged out succesfully!"});
-    });
-
     app.get("/email-verification/:id", function(req, res){
         const id = req.params.id;
-        emailVerification.confirmUser(id, (msj)=>{
+        emailVerification.confirmUser(id, msj=>{
             res.json(msj);
         });
     });
 
     app.get("/resend-email-verification/:email", function(req, res){
         const email = req.params.email;
-        emailVerification.resendEmailVerification(email, (msj)=>{
+        emailVerification.resendEmailVerification(email, msj=>{
             res.json(msj);
         });
     });

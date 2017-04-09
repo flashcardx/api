@@ -1,12 +1,12 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
-const controllerUtils = require("./utils");
 const logger = config.getLogger(__filename);
 const requestify = require('requestify'); 
 const cache = require("memory-cache");
 const S = require("string");
 module.exports = function(app){
+    const controllerUtils = require("./utils")(app);
 
     app.get("/search/:criteria",controllerUtils.requireLogin,function(req,res){
         const criteria = S(req.params.criteria).replaceAll(" ", "+");

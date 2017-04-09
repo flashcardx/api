@@ -1,13 +1,13 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
-const controllerUtils = require("./utils");
 const logger = config.getLogger(__filename);
 const Cards = require(appRoot + "/models/cardModel");
 const cardService = require(appRoot + "/service/cardService");
 
 
 module.exports = function(app){
+    const controllerUtils = require("./utils")(app);
 
     app.post("/card", controllerUtils.requireLogin, function(req, res){
             var card = {

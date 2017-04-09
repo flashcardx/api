@@ -7,7 +7,7 @@ const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 
 nev.configure({
-    verificationURL: config.APIMyUrl + '/email-verification/${URL}',
+    verificationURL: config.urlWeb + '/email-verification/${URL}',
     persistentUserModel: User,
     tempUserCollection: 'tempusers',
     expirationTime: 86400, // 24 hours
@@ -51,12 +51,12 @@ function createTempUser(newUser, callback){
         // some sort of error
         if (err){
             logger.error(err);
-            return callback({succes:false, msg:String(err)});
+            return callback({success:false, msg:String(err)});
         }
 
         // user already exists in persistent collection...
         if (existingPersistentUser)
-            return callback({succes:false, msg:"User already exists"});
+            return callback({success:false, msg:"User already exists"});
         
 
         // a new user
@@ -65,15 +65,15 @@ function createTempUser(newUser, callback){
             nev.sendVerificationEmail(newUser.email, URL, function(err, info) {
                 if (err){
                     logger.error(err);
-                    return callback({succes:false, msg:String(err)});
+                    return callback({success:false, msg:String(err)});
                 }
                 logger.debug("neither user, nor temp user exists, a new temp user will be created" );
-                return callback({succes:true, msg:"confirmation email was sent to the user"});
+                return callback({success:true, msg:"confirmation email was sent to the user "+ newUser.name  + ", check your spam folder!"});
             });
         // user already exists in temporary collection...
         } else {
         logger.debug("user already exists in temporary collection");
-        return callback({succes:false, msg:"User is already pending verification"});
+        return callback({success:false, errorCode:1, msg:"User is already pending verification"});
         }
     });
 }
@@ -82,23 +82,23 @@ function confirmUser(url, callback){
     nev.confirmTempUser(url, function(err, user) {
         if(err){
                 logger.error(err);
-                return callback({succes:false, msg:String(err)});
+                return callback({success:false, msg:String(err)});
         }
         // user was found!
         if (user) {
               nev.sendConfirmationEmail(user.email, function(err, info) {
                 if(err){
-                    return callback({succes:false, msg:String(err)});
+                    return callback({success:false, msg:String(err)});
                     }
-                logger.debug("user confirmed ok,confirmation email was sent, info: " + info);
-                return callback({success:true, msj:"User registered ok"});
+                logger.debug("user confirmed ok, confirmation email was sent, info: " + info);
+                return callback({success:true, msg:"User "+ user.name+ " registered ok, you can sign in now!"});
             });
         }
         else{
             // user's data probably expired...
             // redirect to sign-up
              logger.debug("no user was found, user's data probably expired");
-             return callback({succes:false, msg:"no user was found, user's data probably expired"});  
+             return callback({success:false, msg:"no user was found, user's data probably expired"});  
         }
     });
 }
@@ -107,15 +107,15 @@ function resendEmailVerification(email, callback){
     nev.resendVerificationEmail(email, function(err, userFound) {
     if (err){
              logger.error(err);
-             return callback({succes:false, msg:String(err)});
+             return callback({success:false, msg:String(err)});
             }
     if (userFound){
         logger.debug("email re sended to: " + email);
-        return callback({succes:true, msj:"email resended" });
+        return callback({success:true, msg:"Email was resended to " + email + ", remember to check your spam folder!"});
     }
     else{
          logger.error("no user was found, user's data probably expired");
-         return callback({succes:false, msg:"no user was found, user's data probably expired"});
+         return callback({success:false, msg:"no user was found, user's data probably expired"});
         }
 });
 }

@@ -13,10 +13,13 @@ const middleware = require("./middleware");
 const controllers = require('./controller');
 const app = express();
 const logger = config.getLogger(__filename); 
+const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production'){
   require('longjohn');
 }
+
+app.set('jwtSecret', config.APIJwtSecret); 
 
 mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
 
