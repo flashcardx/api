@@ -15,10 +15,9 @@ module.exports = function(app){
                         // verifies secret and checks exp
                         jwt.verify(token, app.get('jwtSecret'), function(err, decoded) {      
                           if (err) {
-                            logger.error(err);
-                            return res.json({ success: false, message: 'Failed to authenticate token' });    
+                            return res.json({ success: false, msg: 'Failed to authenticate token' });    
                           } else {
-                                req.user = decoded._doc;// if everything is good, save to request for use in other routes
+                                req.userId = decoded.id;// if everything is good, save to request for use in other routes
                             next();
                           }
                         });

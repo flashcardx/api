@@ -23,6 +23,18 @@ function findUser(email, password, callback){
     }
 })};
 
+function findById(id, callback){
+    User.findById(id, (err, user)=>{
+        if(err){
+            logger.error(err);
+            callback({success:false, msg: String(error)});
+        }
+        else{
+            callback({success: true, msg: user});
+        }
+    });
+}
+
 function registerNewUser(user, callback){
      bcrypt.genSalt(10,  function(err, salt) {
             bcrypt.hash(user.password, salt, function(err, hash){
@@ -78,5 +90,6 @@ function deleteCardFromUser(cardId, userId){
 module.exports = {
     findUser : findUser,
     registerNewUser: registerNewUser,
-    deleteCardFromUser: deleteCardFromUser
+    deleteCardFromUser: deleteCardFromUser,
+    findById: findById
 };

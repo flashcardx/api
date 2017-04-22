@@ -6,7 +6,6 @@
         "key":"3968365-5443b188192b2d22a49cf77be",
         "cacheTime": "86400000",
         "maxSizeUploadFiles": "2097152",
-        "jwtSecret": "ewdrfd54rfd4refcr+54",
         "jwtExpireTime": "1h"
     },
     "production":{
@@ -16,7 +15,6 @@
         "key":"3968365-5443b188192b2d22a49cf77be",
         "cacheTime": "86400000",
         "maxSizeUploadFiles": "2097152",
-        "jwtSecret": "ewdrfd54rfd4refcr+54",
         "jwtExpireTime": "1h"
     }
 }

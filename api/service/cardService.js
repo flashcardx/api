@@ -54,7 +54,7 @@ function createCard(card, urls, userId, callback){
                                return linkCardUser(userId, cardModel)})
                            .then(results=>{
                                     logger.debug(results);
-                                    callback({success:true, msg:"card was created ok!"});
+                                    return callback({success:true, msg:"card was created ok!"});
                                 })
                             .catch(jsonMsj=>{
                                  logger.error(jsonMsj);

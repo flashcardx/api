@@ -20,7 +20,6 @@ module.exports = {
     APICacheTime: parseInt(api.cacheTime),
     APIMaxSizeUpFiles: parseInt(api.maxSizeUploadFiles),
     APIMyUrl: api.myUrl,
-    APIJwtSecret: api.jwtSecret,
     APIJwtExpireTime: api.jwtExpireTime,
     urlWeb: api.urlWeb,
     emailService: email.service,

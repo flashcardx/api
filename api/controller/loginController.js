@@ -29,8 +29,9 @@ module.exports = function(app){
         userService.findUser(req.body.email, req.body.password, function(result){
             if(result){
                 if(result.success){
-                    var user = result.msg;
-                    user.password = undefined;
+                    var user = {
+                        id: result.msg._id
+                    };
                     jwt.sign(user, app.get('jwtSecret'), {
                                 expiresIn: config.APIJwtExpireTime 
                     }, (err, token)=>{
@@ -52,7 +53,7 @@ module.exports = function(app){
     });
 
     app.get("/profile", controllerUtils.requireLogin,function(req, res){
-        res.json(req.user);
+        res.json(req.userId);
     });
 
     app.get("/email-verification/:id", function(req, res){
@@ -71,5 +72,15 @@ module.exports = function(app){
 
     app.get("/test", controllerUtils.requireLogin,function(req, res){
         res.json("this is a test");
+    });
+
+    app.get("/validateToken/:token", (req, res)=>{
+        jwt.verify(req.params.token, app.get('jwtSecret'), function(err, decoded) {
+                    if (err) {
+                        return res.json({ success: false});    
+                        } else {
+                            return res.json({success: true});
+                        }
+                    });
     });
 }

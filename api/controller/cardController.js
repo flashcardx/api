@@ -14,13 +14,13 @@ module.exports = function(app){
                 name: req.body.name,
                 description: req.body.description,
             };
-            cardService.createCard(card, req.body.urls, req.user._id,function(result){
+            cardService.createCard(card, req.body.urls, req.userId,function(result){
                 res.json(result);
             });
     } );
 
     app.get("/myCards", controllerUtils.requireLogin, function(req, res){
-        cardService.getCards(req.user._id, function(result){
+        cardService.getCards(req.userId, function(result){
             res.json(result);
         });
     });
@@ -31,10 +31,9 @@ module.exports = function(app){
         });
     });
     
-    //todo: verify that user ows that card before deleting it
     app.delete("/card/:id", controllerUtils.requireLogin, (req, res)=>{
         const id = req.params.id;
-        cardService.deleteCard(id, req.user._id, function(result){
+        cardService.deleteCard(id, req.userId, function(result){
             res.json(result);
         });
     });
