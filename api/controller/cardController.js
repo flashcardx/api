@@ -20,7 +20,9 @@ module.exports = function(app){
     } );
 
     app.get("/myCards", controllerUtils.requireLogin, function(req, res){
-        cardService.getCards(req.userId, function(result){
+        var lastId = req.query.last;
+        var limit = req.query.limit;
+        cardService.getCards(req.userId, lastId, limit,  function(result){
             res.json(result);
         });
     });

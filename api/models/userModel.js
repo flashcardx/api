@@ -40,7 +40,9 @@ const userSchema = new Schema({
         cardLimit:{
             type: Number,
             default: 150
-        },
+        }
+    },
+    preferences:{
         unlimitedMode:{
             type: Boolean,
             default: false    

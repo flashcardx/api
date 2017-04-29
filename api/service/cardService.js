@@ -7,6 +7,7 @@ const Img = require(appRoot + "/models/imgModel");
 const imgService = require("./imgService");
 const userService = require("./userService");
 const logger = config.getLogger(__filename);
+const mongoose = require("mongoose");
 
 function downloadSaveImgs(userId, cardModel, urls){
     return new Promise((resolve, reject)=>{
@@ -85,38 +86,38 @@ function validateCard(cardModel){
     });
 }
 
-function getCards(userId, callback){
+//lastPosition starts from 0
+function getCards(userId, lastId, limit, callback){
+    limit = parseInt(limit);
+    if(limit <= 0)
+        return callback({success: false, msg: "limit must be > 0"});
     userService.findById(userId, result=>{
           if(result.success === false)
-                return callback({success:false, msg:"User does not exist"});
+                return callback(result);
           const user = result.msg;
-          if(user.cards.length === 0)
-                return callback({success:true, msg:[]});
-          var cardsId = user.cards;
-          var results = [];
-          var lap = 0;
-          cardsId.forEach((cardId, index)=>{
-            Card.findById(cardId).exec().then(card=>{
-                results.push(card);
-                if(lap === (cardsId.length - 1)){
-                    sortCardArray(results);
-                    return callback({success:true, msg:results});
-                }
-                lap++;
-             }).catch((err)=>{
-                    logger.error(String(err));
-                    callback({success:false, msg:String(err)});
-                })
-            })
+         if(lastId){
+                Card.find({$and: [{'_id':{ $in: user.cards}}, {'_id':{$lt: lastId}}] }).sort({updated_at: 'desc'}).limit(limit).exec(
+                    (err, cards)=>{
+                        return returnCards(err, cards, callback);
+                    }
+                );    
+            }
+         else{
+             Card.find({'_id':{ $in: user.cards} }).sort({updated_at: 'desc'}).limit(limit).exec(
+                    (err, cards)=>{
+                        return returnCards(err, cards, callback);
+                    }
+                );    
+             }
         })
 }
 
-function sortCardArray(array){
-    array.sort(function(a,b){
-                        // Turn your strings into dates, and then subtract them
-                        // to get a value that is either negative, positive, or zero.
-                        return new Date(b.updated_at) - new Date(a.updated_at);
-                    });
+function returnCards(err, cards, callback){
+        if(err){
+                logger.error(err);
+                return callback({success:false, msg:String(err)});
+            }
+      return callback({success:true, msg:cards});
 }
 
 function getAllCards(lastId, callback){
