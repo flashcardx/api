@@ -44,10 +44,19 @@ function linkCardUser(userId, cardModel){
 
 function createCard(card, urls, userId, callback){
     var cardModel = new Card(card);
-    validateCard(cardModel).then(()=>{
+    var user;
+    validateCard(cardModel)
+                            .then(()=>{
+                                return userService.userCardLimitsOk(userId);
+                            })
+                            .then((result)=>{
+                                user = result;
                                 return imgService.downloadArray(urls, userId, callback)})
-                           .then(imgIds=>{
-                                cardModel.imgs = imgIds;
+                           .then(imgHashes=>{
+                                cardModel.creatorId = user._id;
+                                cardModel.creatorName = user.name;
+                                cardModel.lang = user.lang;
+                                cardModel.imgs = imgHashes;
                                 return saveCard(cardModel);
                            })
                            .then(()=>{
@@ -57,7 +66,7 @@ function createCard(card, urls, userId, callback){
                                     return callback({success:true, msg:"card was created ok!"});
                                 })
                             .catch(jsonMsj=>{
-                                 logger.error(jsonMsj);
+                                 logger.info(jsonMsj);
                                  return callback(jsonMsj);
                             });
 };
@@ -77,28 +86,46 @@ function validateCard(cardModel){
 }
 
 function getCards(userId, callback){
-    User.findById(userId).exec().then((user)=>{
-            if(!user)
+    userService.findById(userId, result=>{
+          if(result.success === false)
                 return callback({success:false, msg:"User does not exist"});
-            if(user.cards.length === 0)
+          const user = result.msg;
+          if(user.cards.length === 0)
                 return callback({success:true, msg:[]});
           var cardsId = user.cards;
           var results = [];
+          var lap = 0;
           cardsId.forEach((cardId, index)=>{
-            Card.findById(cardId).exec().then((card)=>{
+            Card.findById(cardId).exec().then(card=>{
                 results.push(card);
-                if(index === cardsId.length - 1)
+                if(lap === (cardsId.length - 1)){
+                    sortCardArray(results);
                     return callback({success:true, msg:results});
-             });
-            });
-        }).catch((err)=>{
-           logger.error(String(err));
-           callback({success:false, msg:String(err)});
-        });
-};
+                }
+                lap++;
+             }).catch((err)=>{
+                    logger.error(String(err));
+                    callback({success:false, msg:String(err)});
+                })
+            })
+        })
+}
 
-function getAllCards(callback){
-    Card.find({}, (err, cards)=>{
+function sortCardArray(array){
+    array.sort(function(a,b){
+                        // Turn your strings into dates, and then subtract them
+                        // to get a value that is either negative, positive, or zero.
+                        return new Date(b.updated_at) - new Date(a.updated_at);
+                    });
+}
+
+function getAllCards(lastId, callback){
+    var restrictions = {
+        'isDuplicated':{$eq: false}
+    }
+    if(lastId)
+        restrictions._id = {$lt: lastId}
+    Card.find(restrictions).sort({created_at: 'desc'}).limit(8).exec((err, cards)=>{
         if(err){
             logger.error(err);
             return callback({success:false, msg:String(err)});
@@ -106,6 +133,29 @@ function getAllCards(callback){
         return callback({success:true, msg:cards});
     });
 };
+
+
+function cardRecommendations(userId, lastId, callback){
+    userService.findById(userId, result=>{
+        if(!result.success)
+            return callback(result);
+        const user = result.msg;
+        var restrictions = {
+            'isDuplicated':{$eq: false},
+            'lang':user.lang,
+             'creatorId': {$ne: userId}
+        }
+        if(lastId)
+            restrictions._id = {$lt: lastId}
+        Card.find(restrictions,{}, { sort:{updated_at: 'desc'}}).limit(8).exec((err, cards)=>{
+            if(err){
+                logger.error(err);
+                return callback({success:false, msg:String(err)});
+            }
+            return callback({success:true, msg:cards});
+        });
+    });
+}
 
 function deleteCard(cardId, userId, callback){
     userService.deleteCardFromUser(cardId, userId)
@@ -115,8 +165,8 @@ function deleteCard(cardId, userId, callback){
                         .then(card=>{
                              if(!card)
                                 throw new Error("Card id does not exist");
-                             const imgsId = card.imgs
-                             return imgService.deleteImgsOnce(imgsId);
+                             const imgsHashes = card.imgs
+                             return imgService.deleteImgsOnce(imgsHashes);
                          })
                          .then(()=>{
                             return Card.find({ _id: cardId }).remove().exec();
@@ -134,5 +184,6 @@ module.exports = {
     createCard: createCard,
     getCards: getCards,
     getAllCards: getAllCards,
-    deleteCard: deleteCard
+    deleteCard: deleteCard,
+    cardRecommendations: cardRecommendations
 }

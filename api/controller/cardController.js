@@ -26,11 +26,19 @@ module.exports = function(app){
     });
 
     app.get("/allCards" , function(req, res){
-        cardService.getAllCards(function(result){
+        var lastId = req.query.lastId;
+        cardService.getAllCards(lastId, function(result){
             res.json(result);
         });
     });
-    
+
+    app.get("/discoverCards", controllerUtils.requireLogin, function(req, res){
+        var lastId = req.query.lastId;
+        cardService.cardRecommendations(req.userId, lastId ,result=>{
+            res.json(result);
+        });
+    });
+  
     app.delete("/card/:id", controllerUtils.requireLogin, (req, res)=>{
         const id = req.params.id;
         cardService.deleteCard(id, req.userId, function(result){

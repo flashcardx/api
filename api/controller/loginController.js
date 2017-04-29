@@ -26,7 +26,7 @@ module.exports = function(app){
             res.json({success:false, msg:"you must send user email and password in the request"});
             return;
         }
-        userService.findUser(req.body.email, req.body.password, function(result){
+        userService.loginUser(req.body.email, req.body.password, function(result){
             if(result){
                 if(result.success){
                     var user = {
@@ -39,7 +39,7 @@ module.exports = function(app){
                             logger.error(err);
                             res.json({success:false, msg:String(err)});
                         }
-                        else
+                        else 
                             res.json({success:true, token:token});
                     });
                 }

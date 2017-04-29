@@ -10,6 +10,7 @@ const zlib = require('zlib');
 const utils = require(appRoot + "/utils.js");
 const md5File = require('md5-file/promise');
 const Img = require(appRoot + "/models/imgModel");
+const AWSService = require("./AWSService");
 
 function getImgName(url, text){
      return text + Math.random() + S(url).strip(':', "/").s;
@@ -49,6 +50,7 @@ function deleteFile(filename){
     });
 };
 
+
 function saveImgDb(filename, hash, contentType){
     return new Promise((resolve, reject)=>{
         Img.findOne({ 'hash': hash}).exec().then((img=>{
@@ -56,26 +58,23 @@ function saveImgDb(filename, hash, contentType){
                 img.timesUsed++;
                 img.save((err)=>{
                     if(err)reject(err);
-                    return resolve(img);
+                    return resolve(hash);
                 });
                 return;
             }
             fsp.readFile(filename).then((data)=>{
             img = new Img;
-            logger.info("size of img before zip: " + utils.roughSizeOfObject(data));
-            zlib.deflate(data, (err, result)=>{
+            img.hash = hash;
+            img.save((err)=>{
                 if(err)
-                    throw err;
-                logger.info("size of img after zip: " + utils.roughSizeOfObject(result));
-                img.data.data = result;
-                img.contentType = contentType;
-                img.hash = hash;
-                img.save((err)=>{
-                    if(err)reject(err);
-                    resolve(img);
+                    return reject(err);
+                AWSService.saveToS3(hash, contentType, data, (err,data)=>{
+                    if(err)
+                        return reject(err);
+                    resolve(hash);
+                });
                     })
                 });
-            });
         }), err=>{
             reject(err);
         });
@@ -85,7 +84,7 @@ function saveImgDb(filename, hash, contentType){
 
 function downloadArray(urls, userId, callback){
     return new Promise((resolve, reject)=>{
-        var imgIds = [];
+        var imgHashes = [];
         var contentType;
         if(!urls || urls.length === 0)
             return resolve([]);
@@ -99,13 +98,13 @@ function downloadArray(urls, userId, callback){
             .then(hash=>{
                  return saveImgDb(imgPath, hash, contentType);
                     })
-            .then(img=>{
-                     imgIds.push(img._id);
+            .then(hash=>{
+                     imgHashes.push(hash);
                      return deleteFile(imgPath);
                     })
             .then(()=>{
-                    if(imgIds.length === urls.length)// if satisfies condition, this is the last cycle of the loop
-                        return resolve(imgIds);  
+                    if(imgHashes.length === urls.length)// if satisfies condition, this is the last cycle of the loop
+                        return resolve(imgHashes);  
                     })
                     .catch(err=>{
                         logger.error(err);
@@ -115,29 +114,14 @@ function downloadArray(urls, userId, callback){
     });
 };
 
-function getImg(id, callback){
-    Img.findById(id, (err, doc)=>{
-        if (err) return callback(err);
-        if(!doc) return callback("no img found");
-        logger.info("size of img before unzip: " + utils.roughSizeOfObject(doc.data.data));
-        zlib.inflate(doc.data.data, (err, result)=>{
-        logger.info("size of img after unzip: " + utils.roughSizeOfObject(result));
-            if(err)
-                throw err;
-            callback(null, doc.contentType, result);
-        });
-        
-    });
-}
 
-function deleteImgOnce(id, callback){
-    Img.findById(id).exec()
+
+function deleteImgOnce(hash, callback){
+    Img.findOne({ 'hash': hash}).exec()
                      .then(img=>{
                         img.timesUsed--;
                         if(img.timesUsed <= 0){
-                            img.remove(err=>{
-                                callback(err);
-                            });
+                            AWSService.removeFromS3(hash, callback);
                         }
                         else{
                             img.save((err)=>{
@@ -147,10 +131,13 @@ function deleteImgOnce(id, callback){
                         }
                      })
                      .catch(err=>{
+                        logger.error(err);
                         callback(err);
                      });
 
 };
+
+
 
 function deleteImgsOnce(imgsId){
     return new Promise((resolve, reject)=>{
@@ -169,6 +156,6 @@ function deleteImgsOnce(imgsId){
 
 module.exports = {
     downloadArray: downloadArray,
-    getImg: getImg,
+    getImg: AWSService.getImgFromS3,
     deleteImgsOnce: deleteImgsOnce
 }

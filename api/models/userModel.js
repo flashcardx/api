@@ -35,6 +35,19 @@ const userSchema = new Schema({
     cards: {
         type: [Schema.Types.ObjectId],
         default: []
+    },
+    plan:{
+        cardLimit:{
+            type: Number,
+            default: 150
+        },
+        unlimitedMode:{
+            type: Boolean,
+            default: false    
+        }
+    },
+    lastLogin:{
+        type: Date
     }
 });
 
