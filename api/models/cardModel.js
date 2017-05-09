@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const validators = require("./validators/cardValidators");
 const Schema = mongoose.Schema;
 const lang = config.lang;
+var AutoIncrement = require('mongoose-sequence');
+
 var langCodes = lang.map((value)=>{
     return value.code;
 });
@@ -18,7 +20,17 @@ const cardSchema = new Schema({
         type: String,
         validate: validators.descriptionValidator
     },
-    imgs: [String],
+    imgs: [{
+        hash:{
+            type:String
+        },
+        width:{
+            type:Number
+        },
+        height:{
+            type: Number
+        }
+    }],
     lang:{
         type: String, 
         default: "en",
@@ -28,10 +40,10 @@ const cardSchema = new Schema({
         type: Boolean,
         default: false
     },
-    creatorName:{
+    ownerName:{
         type:String
     },
-    creatorId:{
+    ownerId:{
          type: Schema.Types.ObjectId
     }
 },
@@ -40,6 +52,7 @@ const cardSchema = new Schema({
     }
 );
 
+cardSchema.plugin(AutoIncrement, {inc_field: 'counter'});
 const Card = mongoose.model('cards', cardSchema);
 
 module.exports = Card;

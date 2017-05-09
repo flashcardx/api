@@ -4,6 +4,12 @@
     "levelFile": "info",
     "levelConsole":"info"
 },
+ "pi":{
+    "access": "/logs/access.log",
+    "app": "/logs/app.log",
+    "levelFile": "info",
+    "levelConsole":"info"
+},
  "production":{
     "access": "/logs/access.log",
     "app": "/logs/app.log",

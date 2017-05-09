@@ -120,7 +120,7 @@ function userCardLimitsOk(userId){
             if(user.preferences.unlimitedMode)
                 return resolve(user);
             if(user.cards.length >= user.plan.cardLimit)
-                return reject({success:false, msg:"You do not have more space for new cards, delete some cards or activate unlimited mode!"});
+                return reject("You do not have more space for new cards, delete some cards or activate unlimited mode!");
             return resolve(user); 
                 
         })

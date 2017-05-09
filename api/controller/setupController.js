@@ -12,7 +12,7 @@ var response;
 module.exports = function(app){
 
     app.get("/setup", function(req, res){
-          if(env !== "development"){
+          if(env !== "development" && env !== "pi"){
             logger.warn(req.connection.remoteAddress + " tried to access /setup in " + env);
             res.send("setup not available at this environment");
           }

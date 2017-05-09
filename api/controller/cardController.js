@@ -14,29 +14,29 @@ module.exports = function(app){
                 name: req.body.name,
                 description: req.body.description,
             };
-            cardService.createCard(card, req.body.urls, req.userId,function(result){
+            cardService.createCard(card, req.body.imgs, req.userId,function(result){
                 res.json(result);
             });
     } );
 
     app.get("/myCards", controllerUtils.requireLogin, function(req, res){
-        var lastId = req.query.last;
+        var last = req.query.last;
         var limit = req.query.limit;
-        cardService.getCards(req.userId, lastId, limit,  function(result){
+        cardService.getCards(req.userId, last, limit,  function(result){
             res.json(result);
         });
     });
 
     app.get("/allCards" , function(req, res){
-        var lastId = req.query.lastId;
-        cardService.getAllCards(lastId, function(result){
+        var last = req.query.last;
+        cardService.getAllCards(last, function(result){
             res.json(result);
         });
     });
 
     app.get("/discoverCards", controllerUtils.requireLogin, function(req, res){
-        var lastId = req.query.lastId;
-        cardService.cardRecommendations(req.userId, lastId ,result=>{
+        var last = req.query.last;
+        cardService.cardRecommendations(req.userId, last , result=>{
             res.json(result);
         });
     });
@@ -44,6 +44,13 @@ module.exports = function(app){
     app.delete("/card/:id", controllerUtils.requireLogin, (req, res)=>{
         const id = req.params.id;
         cardService.deleteCard(id, req.userId, function(result){
+            res.json(result);
+        });
+    });
+
+    app.get("/duplicateCard/:id", controllerUtils.requireLogin, (req, res)=>{
+        const cardId = req.params.id;
+        cardService.duplicateCard(req.userId, cardId, result=>{
             res.json(result);
         });
     });
