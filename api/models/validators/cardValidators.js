@@ -5,12 +5,6 @@ var nameValidator = [
     validator: 'isLength',
     arguments: [1, 40],
     message: 'Name should be between {ARGS[0]} and {ARGS[1]} characters'
-  }),
-  validate({
-    validator: 'matches',
-    arguments: /^[a-z 0-9,.'-]+$/i,
-    passIfEmpty: true,
-    message: 'Name has invalid characters :('
   })
 ];
 
@@ -19,12 +13,6 @@ var descriptionValidator = [
     validator: 'isLength',
     arguments: [0, 70],
     message: 'Description should be between {ARGS[0]} and {ARGS[1]} characters'
-  }),
-  validate({
-    validator: 'matches',
-    arguments: /^[a-z 0-9,.'-]+$/i,
-    passIfEmpty: true,
-    message: 'Description has invalid characters :('
   })
 ];
 

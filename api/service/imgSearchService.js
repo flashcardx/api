@@ -13,32 +13,6 @@ const pixabayBaseUrl = `${config.APIPixabayUrl}/?key=${config.APIPixabayKey}`;
 const MAX_PER_PAGE = 20;
 const MINIMUM = 15;
 
-/*
-function search(criteria, lang, page, callback){
-
-                const cacheKey = criteria + lang + page;
-                const url = pixabayBaseUrl + `&q=${criteria}&lang=${lang}&page=${page}`;
-                var results = cache.get(cacheKey);
-                if(results){
-                    return callback({success:true, msg:results});
-                }
-                else{
-                    requestify.get(url).then(response=>{
-                        var resBody = response.getBody();
-                        if(resBody.totalHits <= MINIMUM){
-                            return completeResults(resBody, criteria, results=>{
-                                cache.put(cacheKey, results, config.APICacheTime);
-                                return callback({success:true, msg:results});
-                            });
-                        }
-                        else{
-                            cache.put(cacheKey, resBody, config.APICacheTime);
-                            return callback({success:true, msg:resBody});
-                        }
-                    });
-                }
-}
-*/
 
 function search(criteria, lang, page, callback){
                 const cacheKey = criteria + lang + page;
@@ -75,7 +49,6 @@ function searchPage1(criteria, lang, page, callback){
                                 else
                                     result.hits = results2.slice(0, nedded);
                                 result.totalHits = result.hits.length;
-                                cache.put(cacheKey, result, config.APICacheTime);
                                 return callback(result);
                             }
                             else{

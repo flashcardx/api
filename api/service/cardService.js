@@ -67,9 +67,9 @@ function createCard(card, imgs, userId, callback){
                                     logger.debug(results);
                                     return callback({success:true, msg:"card was created ok!"});
                                 })
-                            .catch(msj=>{
-                                 logger.info(msj);
-                                 return callback({success:false, msj:msj});
+                            .catch(msg=>{
+                                 logger.info(msg);
+                                 return callback({success:false, msg:msg});
                             });
 };
 

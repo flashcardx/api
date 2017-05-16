@@ -2,15 +2,10 @@
 start mongo with mongod --auth
 
 use flashcards
-db.createUser( { user: "pablo",
-                 pwd: "1234",
-                 customData: { employeeId: 12345 },
-                 roles: [ { role: "clusterAdmin", db: "admin" },
-                          { role: "readAnyDatabase", db: "admin" },
-                          "readWrite"] },
-               { w: "majority" , wtimeout: 5000 } )
+db.createUser({user:"pablo", pwd:"0022884836", roles:[{role:"root", db:"admin"}]})
 
 db.auth('pablo','1234');
+db.auth('pablo','0022884836');
 db.collname.stats()
 
 -----------------------------------------------
