@@ -8,7 +8,7 @@ module.exports = function(app){
     logging(app);
     security(app);
     compressor(app);
-    app.use(bodyParser.json());
+    app.use(bodyParser.json({limit: '7mb'}));
     errorHandling(app); // always let it at the end
 
 };
