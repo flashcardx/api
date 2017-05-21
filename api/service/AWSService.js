@@ -38,7 +38,6 @@ function getImgFromS3(id, callback){
             return callback(err, null, null);
         }
         callback(null, data.ContentType, data.Body);
-        
 });
 }
 
@@ -46,7 +45,7 @@ function addTemporaryUrl(cards, callback){
     if(cards.length === 0)
         return callback({success:true, msg:[]});
     var cardIndex = 0;
-    var expireAfter = 60 * 60; //url expires after 60 minutes
+    var expireAfter = 60; //url expires after 60 seconds
     cards.forEach((card, i)=>{
         var imgs = card.imgs;
         var imgIndex = 0;

@@ -143,7 +143,7 @@ function downloadArray(imgs, userId, callback){
                 
                         }//end if url
         else if(img.data){
-            var hash = Date.now() + img.name;
+            var hash = Date.now() + Math.random() + img.name;
             registerNewImgDb(hash)
                 .then(()=>{
                       AWSService.saveToS3Buffer(hash, img.data, (err,data)=>{
