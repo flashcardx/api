@@ -75,6 +75,7 @@ function increaseImgsCounter(imgs){
 }
 
 
+
 function saveImgDb(filename, hash, contentType){
     return new Promise((resolve, reject)=>{
         Img.findOne({ 'hash': hash}).exec().then((img=>{
@@ -113,34 +114,70 @@ function downloadArray(imgs, userId, callback){
         if(!imgs || imgs.length === 0)
             return resolve([]);
         imgs.forEach((img)=>{
-            const imgPath = imgDir + "/" + getImgName(img.url, userId);
-            download(img.url, imgPath)
-            .then(ct=>{
-                contentType = ct;
-                return md5File(imgPath);
-            })
-            .then(hash=>{
-                 return saveImgDb(imgPath, hash, contentType);
-                    })
-            .then(hash=>{
-                     imgHashes.push({
-                         hash: hash,
-                         width: img.width,
-                         height: img.height
-                     });
-                     return deleteFile(imgPath);
-                    })
-            .then(()=>{
-                    if(imgHashes.length === imgs.length)// if satisfies condition, this is the last cycle of the loop
-                        return resolve(imgHashes);  
-                    })
-                    .catch(err=>{
-                        logger.error(err);
-                        return reject(String(err));
+            if(img.url){
+                            const imgPath = imgDir + "/" + getImgName(img.url, userId);
+                            download(img.url, imgPath)
+                            .then(ct=>{
+                                contentType = ct;
+                                return md5File(imgPath);
+                            })
+                            .then(hash=>{
+                                return saveImgDb(imgPath, hash, contentType);
+                                    })
+                            .then(hash=>{
+                                    imgHashes.push({
+                                        hash: hash,
+                                        width: img.width,
+                                        height: img.height
+                                    });
+                                    return deleteFile(imgPath);
+                                    })
+                            .then(()=>{
+                                    if(imgHashes.length === imgs.length)// if satisfies condition, this is the last cycle of the loop
+                                        return resolve(imgHashes);  
+                                    })
+                                    .catch(err=>{
+                                        logger.error(err);
+                                        return reject(String(err));
+                                    });
+                
+                        }//end if url
+        else if(img.data){
+            var hash = Date.now() + Math.random() + img.name;
+            registerNewImgDb(hash)
+                .then(()=>{
+                      AWSService.saveToS3Buffer(hash, img.data, (err,data)=>{
+                            if(err)
+                                return reject(err);
+                            imgHashes.push({
+                                    hash: hash,
+                                    width: img.width,
+                                    height: img.height
+                                });
+                            if(imgHashes.length === imgs.length)// if satisfies condition, this is the last cycle of the loop
+                                    return resolve(imgHashes);  
+                        });
+                })
+                .catch(err=>{
+                         logger.error(err);
+                         return reject(String(err));
                     });
-        });
+        }// end if img.data
+                });// end forEach
     });
 };
+
+function registerNewImgDb(hash){
+    return new Promise((resolve, reject)=>{
+        var img = new Img;
+        img.hash = hash;
+        img.save((err)=>{
+                if(err)
+                    return reject(err);
+                return resolve();
+        });
+    })
+}
 
 
 

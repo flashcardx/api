@@ -23,6 +23,12 @@ function saveToS3(key, contentType, data, callback){
     s3.putObject(params, callback);
 }
 
+function saveToS3Buffer(key, data, callback){
+    var params = {Bucket: bucketName, Key: key, Body: new Buffer(data)};
+    s3.putObject(params, callback);
+}
+
+
 function getImgFromS3(id, callback){
     var keyName = id;
     var bucketParams = {Bucket: bucketName, Key:keyName};
@@ -32,7 +38,6 @@ function getImgFromS3(id, callback){
             return callback(err, null, null);
         }
         callback(null, data.ContentType, data.Body);
-        
 });
 }
 
@@ -40,7 +45,7 @@ function addTemporaryUrl(cards, callback){
     if(cards.length === 0)
         return callback({success:true, msg:[]});
     var cardIndex = 0;
-    var expireAfter = 60 * 60; //url expires after 60 minutes
+    var expireAfter = 60; //url expires after 60 seconds
     cards.forEach((card, i)=>{
         var imgs = card.imgs;
         var imgIndex = 0;
@@ -79,6 +84,7 @@ function removeFromS3(hash, callback){
 
 module.exports = {
     saveToS3: saveToS3,
+    saveToS3Buffer: saveToS3Buffer,
     getImgFromS3: getImgFromS3,
     removeFromS3: removeFromS3,
     addTemporaryUrl:addTemporaryUrl

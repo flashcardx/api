@@ -1,0 +1,14 @@
+{
+    "development":{
+        "longmanAPIKey": "CvqVp4HEbQ0klr7Vx4Iae2TtBqaSmbIT",
+        "longmanUrlEnglish":"https://api.pearson.com/v2/dictionaries/ldoce5"
+    },
+    "pi":{
+        "longmanAPIKey": "CvqVp4HEbQ0klr7Vx4Iae2TtBqaSmbIT",
+        "longmanUrlEnglish":"https://api.pearson.com/v2/dictionaries/ldoce5"
+    },
+    "production":{
+        "longmanAPIKey": "CvqVp4HEbQ0klr7Vx4Iae2TtBqaSmbIT",
+        "longmanUrlEnglish":"https://api.pearson.com/v2/dictionaries/ldoce5"
+    }
+}
