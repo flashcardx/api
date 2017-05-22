@@ -2,7 +2,7 @@ const env = process.env.NODE_ENV || "development";
 const fs = require('fs');
 const bunyan = require("bunyan");
 const bformat = require('bunyan-format')  
-const formatOut = bformat({ outputMode: 'short' });
+const formatOut = bformat({ outputMode: 'short', levelInString: true});
 const logs = require("./json/logs.json")[env];
 const appRoot = require('app-root-path');
 

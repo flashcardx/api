@@ -46,6 +46,10 @@ const userSchema = new Schema({
         unlimitedMode:{
             type: Boolean,
             default: false    
+        },
+        autoComplete:{
+            type:Boolean,
+            default: true
         }
     },
     lastLogin:{

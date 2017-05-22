@@ -7,6 +7,7 @@ const logPath = require("./json/logs.json");
 const email = require("./json/email.json")[env];
 const credentials = require("./json/credentials.json")[env];
 const lang = require("./json/lang.json");
+const dictionaries = require("./json/dictionaries.json")[env]; 
 
 module.exports = {
 
@@ -27,6 +28,7 @@ module.exports = {
     emailUser: email.user,
     emailPassword: email.password,
     lang: lang,
-    AWSCredentials: credentials
+    AWSCredentials: credentials,
+    dictionaries: dictionaries
 };
 

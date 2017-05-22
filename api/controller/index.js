@@ -3,7 +3,7 @@ const loginController = require("./loginController");
 const searchController = require("./searchController");
 const cardController = require("./cardController");
 const imgController = require("./imgController");
-const helpController = require("./helpController");
+const preferencesController = require("./preferencesController");
 
 module.exports = function(app){
 
@@ -12,5 +12,5 @@ module.exports = function(app){
     searchController(app);
     cardController(app);
     imgController(app);
-    helpController(app);
+    preferencesController(app);
 };

@@ -6,6 +6,7 @@ const requestify = require('requestify');
 const cache = require("memory-cache");
 const S = require("string");
 const userService = require(appRoot + "/service/userService");
+const dictionaryService = require(appRoot + "/service/dictionaryService");
 const imgSearchService = require(appRoot + "/service/imgSearchService");
 const shutterstock = require('shutterstock');
 const shutterstockAPI = shutterstock.v2({
@@ -31,16 +32,10 @@ module.exports = function(app){
             });
         });
 
-        app.get("/search2/:criteria", (req, res)=>{
-                const criteria = req.params.criteria;
-                logger.error("criteria: " + criteria);
-                shutterstockAPI.image.search({query:criteria, per_page:5} ,function(err, data) {
-                    if (err){
-                        logger.error(err);
-                        res.json(String(err));
-                    }
-                    res.json(data);
-                });
+        app.get("/define/:word", controllerUtils.requireLogin, (req, res)=>{
+            dictionaryService.define(req.userId, word, r=>{
+                res.json(r);
+            });
         });
 
 };
