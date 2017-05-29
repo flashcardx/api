@@ -45,6 +45,10 @@ const cardSchema = new Schema({
     },
     ownerId:{
          type: Schema.Types.ObjectId
+    },
+    category:{
+        type:String,
+        default: ""
     }
 },
     {

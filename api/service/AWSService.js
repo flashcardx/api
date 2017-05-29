@@ -24,7 +24,7 @@ function saveToS3(key, contentType, data, callback){
 }
 
 function saveToS3Buffer(key, data, callback){
-    var params = {Bucket: bucketName, Key: key, Body: new Buffer(data)};
+    var params = {Bucket: bucketName, Key: key, Body: data};
     s3.putObject(params, callback);
 }
 
@@ -45,7 +45,7 @@ function addTemporaryUrl(cards, callback){
     if(cards.length === 0)
         return callback({success:true, msg:[]});
     var cardIndex = 0;
-    var expireAfter = 60; //url expires after 60 seconds
+    var expireAfter = 300; //url expires after 300 seconds
     cards.forEach((card, i)=>{
         var imgs = card.imgs;
         var imgIndex = 0;

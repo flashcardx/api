@@ -46,6 +46,7 @@ function linkCardUser(userId, cardModel){
 
 function createCard(card, imgs, userId, callback){
     var cardModel = new Card(card);
+    logger.error(cardModel);
     var user;
     validateCard(cardModel)
                             .then(()=>{
@@ -53,7 +54,8 @@ function createCard(card, imgs, userId, callback){
                             })
                             .then((result)=>{
                                 user = result;
-                                return imgService.downloadArray(imgs, userId, callback)})
+                                return imgService.downloadArray(imgs, userId, callback);
+                            })
                            .then(imgHashes=>{
                                 cardModel.ownerId = user._id;
                                 cardModel.ownerName = user.name;
@@ -63,6 +65,12 @@ function createCard(card, imgs, userId, callback){
                            })
                            .then(()=>{
                                return linkCardUser(userId, cardModel)})
+                           .then(()=>{
+                               return userService.createCategoryIfNew(userId, cardModel.category);
+                           })
+                           .then(()=>{
+                                return userService.decreaseCardCounter(user);
+                            })
                            .then(results=>{
                                     logger.debug(results);
                                     return callback({success:true, msg:"card was created ok!"});
@@ -160,6 +168,7 @@ function cardRecommendations(userId, last, callback){
 }
 
 function deleteCard(cardId, userId, callback){
+    var category;
     userService.deleteCardFromUser(cardId, userId)
                         .then(()=>{
                             return Card.findById(cardId).exec();
@@ -167,10 +176,17 @@ function deleteCard(cardId, userId, callback){
                         .then(card=>{
                              if(!card)
                                 throw new Error("Card id does not exist");
+                             category = card.category;
                              return imgService.deleteImgsOnce(card.imgs);
                          })
                          .then(()=>{
                             return Card.find({ _id: cardId }).remove().exec();
+                         })
+                         .then(()=>{
+                                return userService.increaseCardCounter(userId);
+                         })
+                         .then(()=>{
+                             return deleteCategoryIfEmpty(userId, category);
                          })
                          .then(()=>{
                              return callback({success:true, msg:"Card deleted ok"});
@@ -179,6 +195,23 @@ function deleteCard(cardId, userId, callback){
                             logger.error(err);
                             return callback({success:false, msg:String(err)});
                         });
+};
+
+function deleteCategoryIfEmpty(userId, category){
+    return new Promise((resolve, reject)=>{
+        if(!category)
+            return resolve();
+        Card.count({ownerId: userId, category: category}).exec().then(c=>{
+            if(c > 0)
+                return resolve();
+            userService.deleteCategory(userId, category).then(()=>{
+                return resolve();
+            })
+            .catch(err=>{
+                return reject(err);
+            });
+        })
+    });
 };
 
 function duplicateCard(userId, cardIdOld, callback){
@@ -215,6 +248,9 @@ function createDuplicatedCard(card, userId, callback){
                            .then(()=>{
                                return linkCardUser(userId, cardModel)
                             })
+                            .then(()=>{
+                                return userService.decreaseCardCounter(user);
+                            })
                            .then(results=>{
                                     logger.debug(results);
                                     return callback({success:true, msg:"Card was duplicated ok!"});
@@ -227,11 +263,72 @@ function createDuplicatedCard(card, userId, callback){
     });
 }
 
+function setInitialCards(userId, callback){
+                var welcomeCard = {
+                    name: "Welcome!",
+                    description:"We are pleased you are here, hope you enjoy our tool, here are some tips worth to remember: <br/>"+
+                                "Your profile is linked with the languaje you choose when you signed up, you can change it in settings.<br/>"+
+                                "If you will create cards in other languaje than the one you have selected, please change this setting, otherwise other people could receive non relevant card recommendations.<br/>"+
+                                "Feel free to ask us anything, write us to: contact@flashcard-x.com",
+                    isDuplicated: true
+                 };
+                var imgs = [
+                    {
+                        url:"https://cdn.pixabay.com/photo/2016/11/21/15/38/dock-1846008_640.jpg?attachment",
+                        width: 640,
+                        height: 400
+                    }
+                ]
+                return createCard(welcomeCard, imgs, userId, callback);
+}
+
+function updateCard(id, userId, card, callback){
+    Card.findOne({ '_id': id, 'ownerId': userId }).exec().then(doc=>{
+            if(!doc){
+                logger.error("no card found for cardId: " + id + ", with and userId: " + userId + "(trying to update card)");
+                return callback({success:false, msg:"This card does not exist in the user collection"});
+            }
+            const oldCategory = doc.category;
+            doc.name = card.name;
+            doc.description = card.description;
+            doc.category = card.category;
+            doc.update(doc, (err, updatedCard)=>{
+                if(err){
+                    logger.error(err);
+                    return callback({success:false, msg: String(err)});
+                }
+                updateCategorys(userId, oldCategory, card.category, err=>{
+                if(err){
+                    logger.error(err);
+                    return callback({success:false, msg: String(err)});
+                }
+                    return callback({success:true, msg: updatedCard});
+                })
+            });
+    });
+}
+
+function updateCategorys(userId, deletedCategory, newCategory, callback){
+    deleteCategoryIfEmpty(userId, deletedCategory)
+        .then(()=>{
+            return userService.createCategoryIfNew(userId, newCategory);
+        })
+        .then(()=>{
+            return callback();
+        })
+        .catch(err=>{
+            return callback(err);
+        })
+}
+
+
 module.exports = {
     createCard: createCard,
     getCards: getCards,
     getAllCards: getAllCards,
     deleteCard: deleteCard,
     cardRecommendations: cardRecommendations,
-    duplicateCard: duplicateCard
+    duplicateCard: duplicateCard,
+    setInitialCards: setInitialCards,
+    updateCard: updateCard
 }

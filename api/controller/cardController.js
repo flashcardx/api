@@ -13,6 +13,7 @@ module.exports = function(app){
             var card = {
                 name: req.body.name,
                 description: req.body.description,
+                category: req.body.category
             };
             cardService.createCard(card, req.body.imgs, req.userId,function(result){
                 res.json(result);
@@ -53,6 +54,20 @@ module.exports = function(app){
         cardService.duplicateCard(req.userId, cardId, result=>{
             res.json(result);
         });
+    });
+
+    app.post("/updateCard/:cardId",  controllerUtils.requireLogin, (req, res)=>{
+        const cardId = req.params.cardId;
+        const userId = req.userId;
+        const card ={
+            name : req.body.name,
+            description : req.body.description,
+            category: req.body.category
+        }
+        cardService.updateCard(cardId, userId, card, r=>{
+            return res.json(r);
+        });
+
     });
 
 };

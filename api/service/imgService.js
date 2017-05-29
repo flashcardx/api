@@ -11,6 +11,9 @@ const utils = require(appRoot + "/utils.js");
 const md5File = require('md5-file/promise');
 const Img = require(appRoot + "/models/imgModel");
 const AWSService = require("./AWSService");
+const imagemin = require('imagemin');
+const imageminJpegtran = require('imagemin-jpegtran');
+const imageminPngquant = require('imagemin-pngquant');
 
 function getImgName(url, text){
      return text + Math.random() + S(url).strip(':', "/").s;
@@ -146,7 +149,16 @@ function downloadArray(imgs, userId, callback){
             var hash = Date.now() + Math.random() + img.name;
             registerNewImgDb(hash)
                 .then(()=>{
-                      AWSService.saveToS3Buffer(hash, img.data, (err,data)=>{
+                        return imagemin.buffer(new Buffer(img.data),  {
+                                                plugins: [
+                                                    imageminJpegtran(),
+                                                    imageminPngquant({quality: '60-80'})
+                                                ]
+                                            })
+                        }
+                )
+                .then((data)=>{
+                      AWSService.saveToS3Buffer(hash, data, (err,data)=>{
                             if(err)
                                 return reject(err);
                             imgHashes.push({

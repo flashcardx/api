@@ -6,6 +6,7 @@ var User = require(appRoot + '/models/userModel'),
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 
+
 nev.configure({
     verificationURL: config.urlWeb + '/email-verification/${URL}',
     persistentUserModel: User,
@@ -78,30 +79,7 @@ function createTempUser(newUser, callback){
     });
 }
 
-function confirmUser(url, callback){    
-    nev.confirmTempUser(url, function(err, user) {
-        if(err){
-                logger.error(err);
-                return callback({success:false, msg:String(err)});
-        }
-        // user was found!
-        if (user) {
-              nev.sendConfirmationEmail(user.email, function(err, info) {
-                if(err){
-                    return callback({success:false, msg:String(err)});
-                    }
-                logger.debug("user confirmed ok, confirmation email was sent, info: " + info);
-                return callback({success:true, msg:"User "+ user.name+ " registered ok, you can sign in now!"});
-            });
-        }
-        else{
-            // user's data probably expired...
-            // redirect to sign-up
-             logger.debug("no user was found, user's data probably expired");
-             return callback({success:false, msg:"no user was found, user's data probably expired"});  
-        }
-    });
-}
+
 
 function resendEmailVerification(email, callback){
     nev.resendVerificationEmail(email, function(err, userFound) {
@@ -122,6 +100,38 @@ function resendEmailVerification(email, callback){
 
 module.exports = {
     createTempUser: createTempUser,
-    confirmUser: confirmUser,
     resendEmailVerification: resendEmailVerification
 };
+
+const cardService = require("./cardService");
+
+function confirmUser(url, callback){    
+    nev.confirmTempUser(url, function(err, user) {
+        if(err){
+                logger.error(err);
+                return callback({success:false, msg:String(err)});
+        }
+        // user was found!
+        if (user) {
+              nev.sendConfirmationEmail(user.email, function(err, info) {
+                if(err){
+                    return callback({success:false, msg:String(err)});
+                }
+                logger.debug("user confirmed ok, confirmation email was sent, info: " + info);
+                cardService.setInitialCards(user._id, r=>{
+                    if(r.success === false)
+                        return callback(r);
+                    return callback({success:true, msg:"User "+ user.name+ " registered ok, you can sign in now!"});
+                });
+            });
+        }
+        else{
+            // user's data probably expired...
+            // redirect to sign-up
+             logger.debug("no user was found, user's data probably expired");
+             return callback({success:false, msg:"no user was found, user's data probably expired"});  
+        }
+    });
+}
+
+module.exports.confirmUser = confirmUser;

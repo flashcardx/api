@@ -11,7 +11,7 @@ var nameValidator = [
 var descriptionValidator = [
   validate({
     validator: 'isLength',
-    arguments: [0, 70],
+    arguments: [0, 850],
     message: 'Description should be between {ARGS[0]} and {ARGS[1]} characters'
   })
 ];

@@ -39,11 +39,11 @@ const userSchema = new Schema({
     plan:{
         cardLimit:{
             type: Number,
-            default: 150
+            default: 200
         }
     },
     preferences:{
-        unlimitedMode:{
+        recycleMode:{
             type: Boolean,
             default: false    
         },
@@ -51,6 +51,10 @@ const userSchema = new Schema({
             type:Boolean,
             default: true
         }
+    },
+    categories:{
+        type: [String],
+        default: []
     },
     lastLogin:{
         type: Date

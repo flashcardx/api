@@ -32,7 +32,8 @@ module.exports = function(app){
             });
         });
 
-        app.get("/define/:word", controllerUtils.requireLogin, (req, res)=>{
+        app.get("/examples/:word", controllerUtils.requireLogin, (req, res)=>{
+            const word = req.params.word;
             dictionaryService.define(req.userId, word, r=>{
                 res.json(r);
             });

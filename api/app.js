@@ -1,6 +1,6 @@
 /*
     ©2017 FlashCardX By: Pablo Nicolas Marino,
-    https://github.com/pablonm3/FlashCardX/
+    http://www.flashcard-x.com
         Powered By: https://pixabay.com/
 */
 const bunyan = require("bunyan");

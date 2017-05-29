@@ -1,14 +1,14 @@
 {
     "development":{
-        "pearsonAPIKey": "CvqVp4HEbQ0klr7Vx4Iae2TtBqaSmbIT",
-        "UrlEnglish":"https://api.pearson.com/v2/dictionaries/ldoce5/entries"
+        "englishAPIKey": "c33780e013fe8659f0705009e370288bd902da1cd47ad4a48",
+        "UrlEnglish":"http://api.wordnik.com:80/v4/word.json"
     },
     "pi":{
-        "pearsonAPIKey": "CvqVp4HEbQ0klr7Vx4Iae2TtBqaSmbIT",
-        "UrlEnglish":"https://api.pearson.com/v2/dictionaries/ldoce5/entries"
+        "englishAPIKey": "c33780e013fe8659f0705009e370288bd902da1cd47ad4a48",
+        "UrlEnglish":"http://api.wordnik.com:80/v4/word.json"
     },
     "production":{
-        "englishAPIKey": "CvqVp4HEbQ0klr7Vx4Iae2TtBqaSmbIT",
+        "englishAPIKey": "c33780e013fe8659f0705009e370288bd902da1cd47ad4a48",
         "UrlEnglish":"http://api.wordnik.com:80/v4/word.json"
     }
 }
