@@ -27,6 +27,19 @@ function loginUser(email, password, callback){
     }
 })};
 
+function loginFbUser(fbId, callback){
+    User.findOne({ 'facebook.id': fbId}, function (err, user) {
+        logger.debug("looking for user by fb id: " + fbId +" result: " + user);
+        if (err) throw err;
+        if(!user)
+            callback(user);
+        else{
+            callback({success:true, msg:user});
+            registerUserLogin(user);
+            }
+        });
+}
+
 function registerUserLogin(userModel){
     const date = new Date();
     userModel.lastLogin = date;
@@ -181,6 +194,47 @@ function getCategories(userId, callback){
         });
 }
 
+function getPlan(userId, callback){
+    findById(userId, (result)=>{
+            if(result.success === false)
+                return callback(result);
+            var user = result.msg;
+            return callback({success: true, msg:user.plan});
+        });
+}
+
+function getUserLang(userId, callback){
+    findById(userId, (result)=>{
+            if(result.success === false)
+                return callback(result);
+            var user = result.msg;
+            return callback({success: true, msg:user.lang});
+        });
+}
+
+function updateLang(userId, lang, callback){
+        User.findOne({ '_id': userId}).exec().then(doc=>{
+            if(!doc){
+                logger.error("No user found for userId: " + id + "(trying to update user language)");
+                return callback({success:false, msg:"This user does not exist"});
+            }
+            doc.lang = lang;
+            doc.validate(function(err) {
+                  if(err){
+                    logger.error(err);
+                    return callback({success:false, msg: "The languaje is not valid"});
+                }
+                    doc.update(doc, (err, updatedUser)=>{
+                        if(err){
+                            logger.error(err);
+                            return callback({success:false, msg: String(err)});
+                        }
+                            return callback({success:true, msg: updatedUser});
+                    });
+                });
+    });
+}
+
 module.exports = {
     loginUser : loginUser,
     deleteCardFromUser: deleteCardFromUser,
@@ -191,7 +245,12 @@ module.exports = {
     increaseCardCounter: increaseCardCounter,
     createCategoryIfNew: createCategoryIfNew,
     deleteCategory: deleteCategory,
-    getCategories: getCategories
+    getCategories: getCategories,
+    getPlan: getPlan,
+    getUserLang: getUserLang,
+    updateLang: updateLang,
+    loginFbUser: loginFbUser,
+    registerNewFbUser: registerNewFbUser
 };
 
 const emailVerification = require("./emailVerificationService");
@@ -206,3 +265,25 @@ function registerNewUser(user, callback){
 };
 
 module.exports.registerNewUser= registerNewUser;
+
+const cardService = require("./cardService");
+
+function registerNewFbUser(user, callback){
+     	var newUser = new User();
+	    newUser.email = user.email;
+	    newUser.name = user.name;
+        newUser.password = "facebook";
+	    newUser.facebook.id = user.facebookId;
+	    newUser.facebook.token = user.facebookToken;
+	    newUser.save(err=>{
+	    			if(err){
+                        logger.error(err);
+	    				return  callback({success: false, msg:"could not register facebook user, " + String(err)});;
+                        }
+                          cardService.setInitialCards(newUser._id, r=>{
+                    if(r.success === false)
+                        return callback(r);
+                    return loginFbUser(user.facebookId, callback);
+                    });
+            })
+};
