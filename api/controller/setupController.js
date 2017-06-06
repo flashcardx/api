@@ -12,17 +12,17 @@ var response;
 module.exports = function(app){
 
     app.get("/setup", function(req, res){
-          if(env !== "development" && env !== "pi"){
+         /* if(env !== "development" && env !== "pi"){
             logger.warn(req.connection.remoteAddress + " tried to access /setup in " + env);
             res.send("setup not available at this environment");
           }
-          else{
+          else{*/
             response = res;
             logger.warn("database is about to be dropped");
             mongoose.connection.db.dropDatabase();
             createCollections().then(createUsers)
                                .then(finish);
-          }
+      /*    }*/
     });
 };
 

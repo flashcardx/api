@@ -32,15 +32,8 @@ module.exports = function(app){
                     var user = {
                         id: result.msg._id
                     };
-                    jwt.sign(user, app.get('jwtSecret'), {
-                                expiresIn: config.APIJwtExpireTime 
-                    }, (err, token)=>{
-                        if(err){
-                            logger.error(err);
-                            res.json({success:false, msg:String(err)});
-                        }
-                        else 
-                            res.json({success:true, token:token});
+                    return generateToken(user, (r)=>{
+                        return res.json(r);
                     });
                 }
                 else{
@@ -83,4 +76,61 @@ module.exports = function(app){
                         }
                     });
     });
+
+    app.post("/fbLogin", (req, res)=>{
+        if(!req.body.facebookId){
+            return res.json({success:false, msg:"you must send user's facebookId in the request"});
+        }
+
+        userService.loginFbUser(req.body.facebookId, function(result){
+            if(result){
+                if(result.success){
+                     var user = {
+                        id: result.msg._id
+                    };
+                    return generateToken(user, r=>{
+                        return res.json(r);
+                    });
+                }
+                else{
+                    res.json(result);
+                }
+            }
+            else
+                res.json({success:false, msg:"user does not exist"});
+        });
+
+    });
+
+    app.post("/fbSignup",function(req, res){
+        var user = {
+            email: req.body.email,
+            name: req.body.name,
+            facebookId: req.body.facebookId,
+            facebookToken: req.body.facebookToken
+        };
+        userService.registerNewFbUser(user, function(result){
+            if(result.success === false)
+                return res.json(result);
+             var user = {
+                        id: result.msg._id
+                    };
+            return generateToken(user, (r)=>{
+                        return res.json(r);
+                    });
+                });
+        });
+
+    function generateToken(object, callback){
+        jwt.sign(object, app.get('jwtSecret'), {
+                                    expiresIn: config.APIJwtExpireTime 
+                        }, (err, token)=>{
+                            if(err){
+                                logger.error(err);
+                                return callback({success:false, msg:String(err)});
+                            }
+                            else 
+                                return callback({success:true, token:token});
+                        });
+    }
 }

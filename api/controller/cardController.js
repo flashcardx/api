@@ -23,7 +23,8 @@ module.exports = function(app){
     app.get("/myCards", controllerUtils.requireLogin, function(req, res){
         var last = req.query.last;
         var limit = req.query.limit;
-        cardService.getCards(req.userId, last, limit,  function(result){
+        var category = req.query.category;
+        cardService.getCards(req.userId, last, limit, category, function(result){
             res.json(result);
         });
     });

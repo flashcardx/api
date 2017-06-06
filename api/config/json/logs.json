@@ -1,7 +1,7 @@
 { "development":{
     "access": "/logs/access.log",
     "app": "/logs/app.log",
-    "levelFile": "info",
+    "levelFile": "error",
     "levelConsole":"info"
 },
  "pi":{
@@ -13,7 +13,7 @@
  "production":{
     "access": "/logs/access.log",
     "app": "/logs/app.log",
-    "levelFile": "warn",
+    "levelFile": "error",
     "levelConsole":"warn"
  }
 }

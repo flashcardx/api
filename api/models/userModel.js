@@ -37,9 +37,17 @@ const userSchema = new Schema({
         default: []
     },
     plan:{
+        type:{
+            type:String,
+            default:"Basic"
+        },
+        maxLimit:{
+            type: Number,
+            default:300
+        },
         cardLimit:{
             type: Number,
-            default: 200
+            default: 300
         }
     },
     preferences:{
@@ -58,6 +66,14 @@ const userSchema = new Schema({
     },
     lastLogin:{
         type: Date
+    },
+    facebook:{
+        id: {
+            type: String,
+            unique: [true, 'facebookId already in use'], 
+            sparse: true
+        },
+        token: String
     }
 });
 

@@ -13,6 +13,28 @@ module.exports = function(app){
         userService.getCategories(userId, r=>{
             return res.json(r);
         })
+    });
+
+    app.get("/userPlan", controllerUtils.requireLogin, (req, res)=>{
+        const userId = req.userId;
+        userService.getPlan(userId, r=>{
+            return res.json(r);
+        })
+    });
+
+    app.get("/userLang", controllerUtils.requireLogin, (req, res)=>{
+        const userId = req.userId;
+        userService.getUserLang(userId, r=>{
+            return res.json(r);
+        })
+    });
+
+     app.get("/updateUserLang/:lang",  controllerUtils.requireLogin, (req, res)=>{
+        const lang = req.params.lang;
+        const userId = req.userId;
+        userService.updateLang(userId, lang, r=>{
+            return res.json(r);
+        });
 
     });
 

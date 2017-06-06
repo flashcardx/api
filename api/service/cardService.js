@@ -46,7 +46,6 @@ function linkCardUser(userId, cardModel){
 
 function createCard(card, imgs, userId, callback){
     var cardModel = new Card(card);
-    logger.error(cardModel);
     var user;
     validateCard(cardModel)
                             .then(()=>{
@@ -96,7 +95,7 @@ function validateCard(cardModel){
 }
 
 //lastPosition starts from 0
-function getCards(userId, last, limit, callback){
+function getCards(userId, last, limit, category, callback){
     limit = parseInt(limit);
     if(limit <= 0)
         return callback({success: false, msg: "limit must be > 0"});
@@ -104,20 +103,16 @@ function getCards(userId, last, limit, callback){
           if(result.success === false)
                 return callback(result);
           const user = result.msg;
-         if(last){
-                Card.find({$and: [{'_id':{ $in: user.cards}}, {updated_at:{$lt: last}}] }).sort({updated_at: 'desc'}).limit(limit).exec(
+          var query = [{'_id':{ $in: user.cards}}];
+          if(last)
+            query.push({updated_at:{$lt: last}});
+          if(category !== undefined)
+            query.push({category:category});
+         Card.find({$and: query }).sort({updated_at: 'desc'}).limit(limit).exec(
                     (err, cards)=>{
                          return returnCards(err, cards, callback);
                     }
-                );    
-            }
-         else{
-             Card.find({'_id':{ $in: user.cards} }).sort({updated_at: 'desc'}).limit(limit).exec(
-                    (err, cards)=>{
-                        return returnCards(err, cards, callback);
-                    }
-                );    
-             }
+                );
         })
 }
 
