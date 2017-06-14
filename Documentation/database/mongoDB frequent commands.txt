@@ -10,7 +10,7 @@ db.collname.stats()
 
 -----------------------------------------------
 
-db.users.update({'user':'pablo'},{$set:{cards:[ObjectId('583247768fa769bfcc93907e')]}})
+db.users.update({'_id':'5934b38c4f56033eb48f5c5f'},{$set:{facebook.email:'juanma_1417@hotmail.com'}})
 
 //The $addToSet operator adds a value to an array unless the value is already present,
 //in which case $addToSet does nothing to that array.

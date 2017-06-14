@@ -9,10 +9,9 @@ const lrSchema = new Schema({
     userEmail:{
         type: String
     },
-    date:{
-        type: Date
-    }
+    date: { type: Date, expires: '8h', default: Date.now }
 });
+
 
 const model = mongoose.model('loginRegistry', lrSchema);
 

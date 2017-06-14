@@ -9,8 +9,8 @@ const preferencesService = require("./preferencesService");
 const commons = require("./dictionaryServiceCommons");
 const cache = require("memory-cache");
 
-function defineEnglish(word, callback){
-   const cacheKey = "en" + word ;
+function examplesEnglish(word, callback){
+   const cacheKey = "en-ex" + word ;
    var results = cache.get(cacheKey);
                 if(results){
                     return callback({success:true, msg:results});
@@ -18,18 +18,57 @@ function defineEnglish(word, callback){
    const url = dictionaries.UrlEnglish + "/" + word +"/examples?includeDuplicates=false&useCanonical=true&skip=0&limit=5&api_key=" + dictionaries.englishAPIKey;
    requestify.get(url).then(response=>{
             const resBody = response.getBody();
-            const text = parseEnglishResult(resBody.examples);
+            const text = parseEnglishResultExamples(resBody.examples);
             cache.put(cacheKey, text, config.APICacheTime);
             return callback({success:true, msg:text});
     }); 
 }
 
-function parseEnglishResult(r){
+function defineEnglish(word, callback){
+   const cacheKey = "en-def" + word ;
+   var results = cache.get(cacheKey);
+                if(results){
+                    return callback({success:true, msg:results});
+                }
+   const url = dictionaries.UrlEnglish + "/" + word +"/definitions?limit=5&includeRelated=true&sourceDictionaries=all&useCanonical=false&includeTags=false&api_key=" + dictionaries.englishAPIKey;
+   requestify.get(url).then(response=>{
+            const resBody = response.getBody();
+            const text = parseEnglishResultDefine(resBody);
+            cache.put(cacheKey, text, config.APICacheTime);
+            return callback({success:true, msg:text});
+    }); 
+}
+
+function parseEnglishResultExamples(r){
     var text = "";
     for(var i=0; i < r.length && i < 3; i++){
-        text += r[i].text +"\n";
+        text += "-" + r[i].text +"\n";
     }
     return text;
+}
+
+function parseEnglishResultDefine(r){
+    var text = "";
+    for(var i=0; i < r.length && i < 5; i++){
+        text += "-" + r[i].partOfSpeech +", "+ r[i].text +"\n";
+    }
+    return text;
+}
+
+function examples(userId, word, callback){
+    userService.findById(userId, (r)=>{
+        if(r.success === false)
+            return callback(r);
+        var user = r.msg;
+        if(user.preferences.autoComplete === false)
+            return callback({success:false, msg: "autocomplete mode is off for user"});
+        switch(user.lang){
+            case "en":  return examplesEnglish(word, callback);
+            default: preferencesService.turnOffAutocomplete(user, result=>{
+                        return callback({success:false, msg:"Current languaje is not supported, autocomplete is available for: " + commons.SUPPORTED_LANGS});
+                    });
+        }
+     });
 }
 
 function define(userId, word, callback){
@@ -48,6 +87,8 @@ function define(userId, word, callback){
      });
 }
 
+
 module.exports = {
-    define: define
+    define: define,
+    examples: examples
 }

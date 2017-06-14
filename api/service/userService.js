@@ -19,7 +19,7 @@ function loginUser(email, password, callback){
             bcrypt.compare(password, user.password, function(err, result){
                 if(result){
                     callback({success:true, msg:user});
-                    registerUserLogin(user);
+                    registerUserLogin(user, user.email);
                 }
                 else
                     callback({success:false, msg:"invalid email or password"});
@@ -35,17 +35,17 @@ function loginFbUser(fbId, callback){
             callback(user);
         else{
             callback({success:true, msg:user});
-            registerUserLogin(user);
+            registerUserLogin(user, user.facebook.email);
             }
         });
 }
 
-function registerUserLogin(userModel){
+function registerUserLogin(userModel, userEmail){
     const date = new Date();
     userModel.lastLogin = date;
     const registry = {
         userId: userModel._id,
-        userEmail: userModel.email,
+        userEmail: userEmail,
         date: date
     }
     const registryModel = new LoginRegistryModel(registry); 
@@ -270,9 +270,8 @@ const cardService = require("./cardService");
 
 function registerNewFbUser(user, callback){
      	var newUser = new User();
-	    newUser.email = user.email;
+	    newUser.facebook.email = user.email;
 	    newUser.name = user.name;
-        newUser.password = "facebook";
 	    newUser.facebook.id = user.facebookId;
 	    newUser.facebook.token = user.facebookToken;
 	    newUser.save(err=>{

@@ -13,7 +13,7 @@ var langCodes = lang.map((value)=>{
 const userSchema = new Schema({
     email:{
         type:String,
-        required: [true, 'email is required'],
+        sparse: true,
         unique: [true, 'email already in use, choose a different one'], 
         uniqueCaseInsensitive: true,
         validate: validators.emailValidator
@@ -24,8 +24,7 @@ const userSchema = new Schema({
         validate: validators.nameValidator
     }, 
     password: {
-        type:String, 
-        required: [true, 'password is required']
+        type:String
     },
     lang: {
         type: String, 
@@ -73,7 +72,11 @@ const userSchema = new Schema({
             unique: [true, 'facebookId already in use'], 
             sparse: true
         },
-        token: String
+        token: String,
+        email:{
+            type: String,
+            unique: [true, 'email already in use, choose a different one']
+        }
     }
 });
 
