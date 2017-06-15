@@ -95,8 +95,12 @@ function validateCard(cardModel){
 }
 
 //lastPosition starts from 0
-function getCards(userId, last, limit, category, callback){
+function getCards(userId, last, limit, category, sort, callback){
     limit = parseInt(limit);
+    if(!sort || (sort!=="asc" && sort!=="desc")){
+        logger.error("sort argument invalid(should be asc or desc), got: " + sort);
+        sort= "asc";
+    }
     if(limit <= 0)
         return callback({success: false, msg: "limit must be > 0"});
     userService.findById(userId, result=>{
@@ -104,11 +108,15 @@ function getCards(userId, last, limit, category, callback){
                 return callback(result);
           const user = result.msg;
           var query = [{'_id':{ $in: user.cards}}];
-          if(last)
-            query.push({updated_at:{$lt: last}});
+          if(last){
+            if(sort==="desc")
+                query.push({updated_at:{$lt: last}});
+            else
+                query.push({updated_at:{$gt: last}});
+          }
           if(category !== undefined)
             query.push({category:category});
-         Card.find({$and: query }).sort({updated_at: 'desc'}).limit(limit).exec(
+         Card.find({$and: query }).sort({updated_at: sort}).limit(limit).exec(
                     (err, cards)=>{
                          return returnCards(err, cards, callback);
                     }

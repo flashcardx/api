@@ -24,7 +24,8 @@ module.exports = function(app){
         var last = req.query.last;
         var limit = req.query.limit;
         var category = req.query.category;
-        cardService.getCards(req.userId, last, limit, category, function(result){
+        var sort = req.query.sort;
+        cardService.getCards(req.userId, last, limit, category, sort, function(result){
             res.json(result);
         });
     });

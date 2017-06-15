@@ -42,11 +42,11 @@ const userSchema = new Schema({
         },
         maxLimit:{
             type: Number,
-            default:300
+            default:400
         },
         cardLimit:{
             type: Number,
-            default: 300
+            default: 400
         }
     },
     preferences:{
