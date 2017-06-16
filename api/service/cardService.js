@@ -95,34 +95,38 @@ function validateCard(cardModel){
 }
 
 //lastPosition starts from 0
-function getCards(userId, last, limit, category, sort, callback){
-    limit = parseInt(limit);
-    if(!sort || (sort!=="asc" && sort!=="desc")){
-        logger.error("sort argument invalid(should be asc or desc), got: " + sort);
-        sort= "asc";
+function getCards(userId, params, callback){
+    params.limit = parseInt(params.limit);
+    if(!params.sort || (params.sort!=="asc" && params.sort!=="desc")){
+        logger.error("sort argument invalid(should be asc or desc), got: " + params.sort);
+        params.sort= "asc";
     }
-    if(limit <= 0)
+    if(params.limit <= 0)
         return callback({success: false, msg: "limit must be > 0"});
     userService.findById(userId, result=>{
           if(result.success === false)
                 return callback(result);
           const user = result.msg;
           var query = [{'_id':{ $in: user.cards}}];
-          if(last){
-            if(sort==="desc")
-                query.push({updated_at:{$lt: last}});
+          if(params.last){
+            if(params.sort==="desc")
+                query.push({updated_at:{$lt: params.last}});
             else
-                query.push({updated_at:{$gt: last}});
+                query.push({updated_at:{$gt: params.last}});
           }
-          if(category !== undefined)
-            query.push({category:category});
-         Card.find({$and: query }).sort({updated_at: sort}).limit(limit).exec(
+          if(params.name){
+            query.push({name:{$regex : new RegExp(params.name, "i")}});
+          }
+          if(params.category !== undefined)
+            query.push({category:params.category});
+         Card.find({$and: query }).sort({updated_at: params.sort}).limit(params.limit).exec(
                     (err, cards)=>{
                          return returnCards(err, cards, callback);
                     }
                 );
         })
 }
+
 
 function returnCards(err, cards, callback){
         if(err){

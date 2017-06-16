@@ -21,11 +21,14 @@ module.exports = function(app){
     } );
 
     app.get("/myCards", controllerUtils.requireLogin, function(req, res){
-        var last = req.query.last;
-        var limit = req.query.limit;
-        var category = req.query.category;
-        var sort = req.query.sort;
-        cardService.getCards(req.userId, last, limit, category, sort, function(result){
+        var params ={
+            last: req.query.last,
+            limit: req.query.limit,
+            category: req.query.category,
+            sort: req.query.sort,
+            name: req.query.q
+        };
+        cardService.getCards(req.userId, params, function(result){
             res.json(result);
         });
     });
