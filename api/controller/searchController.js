@@ -18,7 +18,7 @@ module.exports = function(app){
     const controllerUtils = require("./utils")(app);
 
     app.get("/search/:criteria", controllerUtils.requireLogin, function(req,res){
-        userService.findById(req.userId, (result)=>{
+        userService.findById(req.userId, 'lang', (result)=>{
                 if(!result.success)
                     return res.json(result);
                 const user = result.msg;

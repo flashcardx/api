@@ -59,8 +59,8 @@ function registerUserLogin(userModel, userEmail){
     });
 }
 
-function findById(id, callback){
-    User.findById(id, (err, user)=>{
+function findById(id, fields, callback){
+    User.findById(id, fields, (err, user)=>{
          if(err){
             logger.error(err);
             return callback({success:false, msg: String(error)});
@@ -105,7 +105,7 @@ function deleteCardFromUser(cardId, userId){
 // returns true if recycle mode is activated
 function userCardLimitsOk(userId){
     return new Promise((resolve, reject)=>{
-        User.findById(userId, (err, user)=>{
+        User.findById(userId, 'preferences plan lang', (err, user)=>{
             if(err){
                 logger.error(err);
                 return reject(String(err));
@@ -134,7 +134,7 @@ function decreaseCardCounter(userModel){
 
 function increaseCardCounter(userId){
     return new Promise((resolve, reject)=>{
-        findById(userId, r=>{
+        findById(userId, 'plan', r=>{
             if(r.success === false)
                 return reject(r.msg);
             var userModel = r.msg;
@@ -186,7 +186,7 @@ function deleteCategory(userId, category){
 }
 
 function getCategories(userId, callback){
-    findById(userId, (result)=>{
+    findById(userId, 'categories', (result)=>{
             if(result.success === false)
                 return callback(result);
             var user = result.msg;
@@ -195,7 +195,7 @@ function getCategories(userId, callback){
 }
 
 function getPlan(userId, callback){
-    findById(userId, (result)=>{
+    findById(userId, 'plan',(result)=>{
             if(result.success === false)
                 return callback(result);
             var user = result.msg;
@@ -204,7 +204,7 @@ function getPlan(userId, callback){
 }
 
 function getUserLang(userId, callback){
-    findById(userId, (result)=>{
+    findById(userId,'lang', (result)=>{
             if(result.success === false)
                 return callback(result);
             var user = result.msg;

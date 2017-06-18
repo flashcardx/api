@@ -4,6 +4,7 @@ const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const Cards = require(appRoot + "/models/cardModel");
 const cardService = require(appRoot + "/service/cardService");
+const practiceCardsService = require(appRoot + "/service/practiceCardsService");
 
 
 module.exports = function(app){
@@ -73,6 +74,24 @@ module.exports = function(app){
             return res.json(r);
         });
 
+    });
+
+    app.get("/practiceCards",  controllerUtils.requireLogin, (req, res)=>{
+        const userId = req.userId;
+        practiceCardsService.listCards(userId, result=>{
+            return res.json(result);
+        });
+    });
+
+     app.post("/rankCard/:cardId", controllerUtils.requireLogin, (req, res)=>{
+        const userId = req.userId;
+        const cardId = req.params.cardId;
+        var params = {
+            performanceRating: req.body.performanceRating
+        };
+        practiceCardsService.rankCard(userId, cardId, params, result=>{
+            return res.json(result);
+        });
     });
 
 };

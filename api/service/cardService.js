@@ -29,7 +29,12 @@ function saveCard(cardModel){
 
 function linkCardUser(userId, cardModel){
     return new Promise((resolve, reject)=>{
-        User.findById(userId).exec().then((user)=>{
+        userService.findById(userId, 'cards', result=>{
+            if(result.success === false){
+                logger.error(result.msg);
+                return reject({success:false, msg:String(result.msg)});
+            }
+            var user = result.msg;
             user.cards.push(cardModel._id);
             user.save().then(()=>{
                 resolve(user);
@@ -37,10 +42,7 @@ function linkCardUser(userId, cardModel){
                  logger.error(String(err));
                  reject({success:false, msg:String(err)});
             });
-        }).catch((err)=>{
-           logger.error(String(err));
-           reject(String(err));
-        });
+        })
     });
 }
 
@@ -94,20 +96,20 @@ function validateCard(cardModel){
     });
 }
 
-//lastPosition starts from 0
+
 function getCards(userId, params, callback){
     params.limit = parseInt(params.limit);
     if(!params.sort || (params.sort!=="asc" && params.sort!=="desc")){
-        logger.error("sort argument invalid(should be asc or desc), got: " + params.sort);
+        logger.warn("sort argument invalid(should be asc or desc), got: " + params.sort);
         params.sort= "asc";
     }
     if(params.limit <= 0)
         return callback({success: false, msg: "limit must be > 0"});
-    userService.findById(userId, result=>{
+    userService.findById(userId, 'lang cards', result=>{
           if(result.success === false)
                 return callback(result);
           const user = result.msg;
-          var query = [{'_id':{ $in: user.cards}}];
+          var query = [{'_id':{ $in: user.cards}, 'lang':user.lang}];
           if(params.last){
             if(params.sort==="desc")
                 query.push({updated_at:{$lt: params.last}});
@@ -131,7 +133,7 @@ function getCards(userId, params, callback){
 function returnCards(err, cards, callback){
         if(err){
                 logger.error(err);
-                return callback({success:false, msg:String(err)});
+                return callback({success:false, msg:err});
             }
       return AWSService.addTemporaryUrl(cards, callback);
 }
@@ -153,7 +155,7 @@ function getAllCards(last, callback){
 
 
 function cardRecommendations(userId, last, callback){
-    userService.findById(userId, result=>{
+    userService.findById(userId,'lang', result=>{
         if(!result.success)
             return callback(result);
         const user = result.msg;
@@ -238,12 +240,12 @@ function duplicateCard(userId, cardIdOld, callback){
 }
 
 function createDuplicatedCard(card, userId, callback){
-    userService.findById(userId, (result)=>{
+    userService.findById(userId,'name plan', (result)=>{
         if(result.success===false)
             return callback(result);
         const user = result.msg;
         card.ownerName = user.name;
-        card.ownerId = user._id;
+        card.ownerId = userId;
         const cardModel = new Card(card);
         userService.userCardLimitsOk(userId)
                           .then(()=>{
@@ -337,5 +339,6 @@ module.exports = {
     cardRecommendations: cardRecommendations,
     duplicateCard: duplicateCard,
     setInitialCards: setInitialCards,
-    updateCard: updateCard
+    updateCard: updateCard,
+    returnCards: returnCards
 }

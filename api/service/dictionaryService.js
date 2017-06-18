@@ -56,7 +56,7 @@ function parseEnglishResultDefine(r){
 }
 
 function examples(userId, word, callback){
-    userService.findById(userId, (r)=>{
+    userService.findById(userId, 'preferences lang', (r)=>{
         if(r.success === false)
             return callback(r);
         var user = r.msg;
@@ -72,7 +72,7 @@ function examples(userId, word, callback){
 }
 
 function define(userId, word, callback){
-    userService.findById(userId, (r)=>{
+    userService.findById(userId, 'preferences lang', (r)=>{
         if(r.success === false)
             return callback(r);
         var user = r.msg;
