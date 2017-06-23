@@ -49,6 +49,20 @@ const cardSchema = new Schema({
     category:{
         type:String,
         default: ""
+    },
+    supermemo:{
+        easiness:{
+            type:Number,
+            default: 2.5
+        },
+        consecutiveCorrectAnswers:{
+            type: Number,
+            default: 0
+        },
+        nextDueDate:{
+            type: Date,
+            default: Date.now
+        }    
     }
 },
     {
@@ -57,6 +71,7 @@ const cardSchema = new Schema({
 );
 
 cardSchema.plugin(AutoIncrement, {inc_field: 'counter'});
+
 const Card = mongoose.model('cards', cardSchema);
 
 module.exports = Card;

@@ -6,7 +6,7 @@ const dictionaryCommons = require("./dictionaryServiceCommons");
 const logger = config.getLogger(__filename);
 
 function toggleAutocomplete(userId, callback){
-    userService.findById(userId, result=>{
+    userService.findById(userId, 'preferences lang', result=>{
         if(result.success === false)
             return callback(result);
         var user = result.msg;
@@ -26,7 +26,7 @@ function toggleAutocomplete(userId, callback){
 }
 
 function getPreferences(userId, callback){
-    userService.findById(userId, (result)=>{
+    userService.findById(userId,'preferences', (result)=>{
             if(result.success === false)
                 return callback(result);
             var user = result.msg;

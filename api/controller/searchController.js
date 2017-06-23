@@ -18,7 +18,7 @@ module.exports = function(app){
     const controllerUtils = require("./utils")(app);
 
     app.get("/search/:criteria", controllerUtils.requireLogin, function(req,res){
-        userService.findById(req.userId, (result)=>{
+        userService.findById(req.userId, 'lang', (result)=>{
                 if(!result.success)
                     return res.json(result);
                 const user = result.msg;
@@ -33,6 +33,13 @@ module.exports = function(app){
         });
 
         app.get("/examples/:word", controllerUtils.requireLogin, (req, res)=>{
+            const word = req.params.word;
+            dictionaryService.examples(req.userId, word, r=>{
+                res.json(r);
+            });
+        });
+
+        app.get("/define/:word", controllerUtils.requireLogin, (req, res)=>{
             const word = req.params.word;
             dictionaryService.define(req.userId, word, r=>{
                 res.json(r);
