@@ -1,14 +1,17 @@
 {
     "development":{
         "englishAPIKey": "c33780e013fe8659f0705009e370288bd902da1cd47ad4a48",
-        "UrlEnglish":"http://api.wordnik.com:80/v4/word.json"
+        "UrlEnglish":"http://api.wordnik.com:80/v4/word.json",
+        "autocomplete":"https://api.datamuse.com"
     },
     "pi":{
         "englishAPIKey": "c33780e013fe8659f0705009e370288bd902da1cd47ad4a48",
-        "UrlEnglish":"http://api.wordnik.com:80/v4/word.json"
+        "UrlEnglish":"http://api.wordnik.com:80/v4/word.json",
+        "autocomplete":"https://api.datamuse.com"
     },
     "production":{
         "englishAPIKey": "c33780e013fe8659f0705009e370288bd902da1cd47ad4a48",
-        "UrlEnglish":"http://api.wordnik.com:80/v4/word.json"
+        "UrlEnglish":"http://api.wordnik.com:80/v4/word.json",
+        "autocomplete":"https://api.datamuse.com"
     }
 }

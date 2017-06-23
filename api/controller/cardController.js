@@ -87,7 +87,7 @@ module.exports = function(app){
         const userId = req.userId;
         const cardId = req.params.cardId;
         var params = {
-            performanceRating: req.body.performanceRating
+            performanceRating: req.body.mark
         };
         practiceCardsService.rankCard(userId, cardId, params, result=>{
             return res.json(result);
