@@ -13,10 +13,15 @@ var langCodes = lang.map((value)=>{
 const userSchema = new Schema({
     email:{
         type:String,
+<<<<<<< HEAD
+=======
         sparse: true,
+>>>>>>> ff269a69432e5ddb5821ff38d2442821c9fdfee1
         unique: [true, 'email already in use, choose a different one'], 
         uniqueCaseInsensitive: true,
-        validate: validators.emailValidator
+        default: null,
+        validate: validators.emailValidator,
+        sparse: true
     },
     name: {
         type:String, 
@@ -24,8 +29,15 @@ const userSchema = new Schema({
         validate: validators.nameValidator
     }, 
     password: {
+<<<<<<< HEAD
+        default: null,
+        type: String,
+        validate: validators.passwordValidator,
+      }, 
+=======
         type:String
     },
+>>>>>>> ff269a69432e5ddb5821ff38d2442821c9fdfee1
     lang: {
         type: String, 
         default: "en",
@@ -69,6 +81,7 @@ const userSchema = new Schema({
     facebook:{
         id: {
             type: String,
+            default: null,
             unique: [true, 'facebookId already in use'], 
             sparse: true
         },

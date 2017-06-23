@@ -29,7 +29,7 @@ var emailValidator = [
 var passwordValidator = [
   validate({
     validator: 'isLength',
-    arguments: [4, 16],
+    arguments: [4, 60],
     message: 'password should be between {ARGS[0]} and {ARGS[1]} characters'
   }),
 
