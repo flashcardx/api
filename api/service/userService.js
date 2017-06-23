@@ -152,7 +152,7 @@ function createCategoryIfNew(userId, category){
     return new Promise((resolve, reject)=>{
             if(!category)
                 return resolve();
-            User.find({_id: userId, categories: category})
+            User.find({_id: userId, categories: category}, "_id")
             .exec().then((docs)=>{
                 if(docs.length === 0){
                     User.update( {_id: userId}, { $pushAll: {categories: [category]} }, (err,result)=>{

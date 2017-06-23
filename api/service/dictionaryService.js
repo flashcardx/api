@@ -87,8 +87,27 @@ function define(userId, word, callback){
      });
 }
 
+function suggest(userId, word, callback){
+    userService.findById(userId, 'lang', (r)=>{
+        if(r.success === false)
+            return callback(r);
+        var user = r.msg;
+        if(user.lang === "en" || user.lang === "es"){
+            var url = dictionaries.autocomplete  + "/sug?s=" + word;
+            requestify.get(url).then(response=>{
+                const resBody = response.getBody();
+                return callback({success:true, msg:resBody});
+            }); 
+        }
+        else
+            return callback({success:false, msg:"Current languaje is not supported"});
+     });
+}
+
+
 
 module.exports = {
     define: define,
-    examples: examples
+    examples: examples,
+    suggest: suggest
 }

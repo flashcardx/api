@@ -46,4 +46,11 @@ module.exports = function(app){
             });
         });
 
+         app.get("/suggest/:word", controllerUtils.requireLogin, (req, res)=>{
+            const word = req.params.word;
+            dictionaryService.suggest(req.userId, word, r=>{
+                res.json(r);
+            });
+        });
+
 };
