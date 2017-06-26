@@ -72,11 +72,12 @@ const userSchema = new Schema({
             unique: [true, 'facebookId already in use'], 
             sparse: true
         },
-        token: String,
+        token: String/*,
         email:{
             type: String,
-            unique: [true, 'email already in use, choose a different one']
-        }
+            unique: [true, 'email already in use, choose a different one'],
+            sparse:true
+        }*/
     }
 });
 
@@ -94,7 +95,12 @@ userSchema.post('save', function(error, doc, next) {
   }
 });
 
+
 const User = mongoose.model('users', userSchema);
 
+User.on('index', function(error) {
+  if(error)
+        logger.error(error.message);
+});
 
 module.exports = User;

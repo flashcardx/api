@@ -7,7 +7,7 @@
  "pi":{
     "access": "/logs/access.log",
     "app": "/logs/app.log",
-    "levelFile": "info",
+    "levelFile": "error",
     "levelConsole":"info"
 },
  "production":{

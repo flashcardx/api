@@ -10,7 +10,9 @@ const cache = require("memory-cache");
 
 
 function loginUser(email, password, callback){
-    User.findOne({ 'email': email}, function (err, user) {
+    if(!password || password==="")
+        return callback({success:false, msg:"invalid email or password"});
+    User.findOne({ 'email': email}, "password email _id",function (err, user) {
         logger.debug("looking for user: " + email +" result: " + user);
         if (err) throw err;
         if(!user)
@@ -28,14 +30,14 @@ function loginUser(email, password, callback){
 })};
 
 function loginFbUser(fbId, callback){
-    User.findOne({ 'facebook.id': fbId}, function (err, user) {
+    User.findOne({ 'facebook.id': fbId},"email _id", function (err, user) {
         logger.debug("looking for user by fb id: " + fbId +" result: " + user);
         if (err) throw err;
         if(!user)
             callback(user);
         else{
             callback({success:true, msg:user});
-            registerUserLogin(user, user.facebook.email);
+            registerUserLogin(user, user.email);
             }
         });
 }
@@ -235,6 +237,17 @@ function updateLang(userId, lang, callback){
     });
 }
 
+function findByEmail(email, fields, callback){
+    User.findOne({ 'email': email},fields, function (err, user) {
+        logger.debug("looking for user: " + email +" result: " + user);
+        if (err) throw err;
+        if(!user)
+           return callback(user);
+        return callback({success:true, msg:user});
+    }
+    )
+}
+
 module.exports = {
     loginUser : loginUser,
     deleteCardFromUser: deleteCardFromUser,
@@ -250,7 +263,8 @@ module.exports = {
     getUserLang: getUserLang,
     updateLang: updateLang,
     loginFbUser: loginFbUser,
-    registerNewFbUser: registerNewFbUser
+    registerNewFbUser: registerNewFbUser,
+    findByEmail: findByEmail
 };
 
 const emailVerification = require("./emailVerificationService");
@@ -270,7 +284,7 @@ const cardService = require("./cardService");
 
 function registerNewFbUser(user, callback){
      	var newUser = new User();
-	    newUser.facebook.email = user.email;
+	    newUser.email = user.email;
 	    newUser.name = user.name;
 	    newUser.facebook.id = user.facebookId;
 	    newUser.facebook.token = user.facebookToken;
@@ -280,9 +294,9 @@ function registerNewFbUser(user, callback){
 	    				return  callback({success: false, msg:"could not register facebook user, " + String(err)});;
                         }
                           cardService.setInitialCards(newUser._id, r=>{
-                    if(r.success === false)
-                        return callback(r);
-                    return loginFbUser(user.facebookId, callback);
-                    });
+                            if(r.success === false)
+                                return callback(r);
+                            return loginFbUser(user.facebookId, callback);
+                        });
             })
 };

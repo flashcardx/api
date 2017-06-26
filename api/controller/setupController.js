@@ -7,6 +7,8 @@ const Cards = require(appRoot + "/models/cardModel");
 const Users = require(appRoot + "/models/userModel");
 const logger = config.getLogger(__filename);
 
+
+
 // todo: translate db boilerplate logic to a service
 var response; 
 module.exports = function(app){
@@ -20,14 +22,30 @@ module.exports = function(app){
             response = res;
             logger.warn("database is about to be dropped");
             mongoose.connection.db.dropDatabase();
-            createCollections().then(createUsers)
-                               .then(finish);
+            createUsers()
+            .then(result=>{
+              var idRandomUser = result[0]._id;
+              return createCards(idRandomUser);
+            })
+            .then(finish);
       /*    }*/
     });
 };
 
-function createCollections(){
-            return Cards.create(seed.cards);
+function createCards(idRandomUser){
+    return new Promise((resolve, reject)=>{
+      const cardService = require(appRoot + "/service/cardService");
+      seed.cards.forEach((card, index)=>{
+        cardService.createCard(card, card.imgs, idRandomUser, (r)=>{
+          if(r.success === false){
+              logger.error(r.msg);
+              return reject(r);
+          }
+          if(index === seed.cards.length-1)
+            return resolve();
+        });
+      });
+    });
 }
 
 function createUsers(result){

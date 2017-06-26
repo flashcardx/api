@@ -45,7 +45,7 @@ function addTemporaryUrl(cards, callback){
     if(cards.length === 0)
         return callback({success:true, msg:[]});
     var cardIndex = 0;
-    var expireAfter = 300; //url expires after 300 seconds
+    var expireAfter = 600; //url expires after 600 seconds
     cards.forEach((card, i)=>{
         var imgs = card.imgs;
         var imgIndex = 0;

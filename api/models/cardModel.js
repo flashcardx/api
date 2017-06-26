@@ -1,5 +1,6 @@
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
+const logger = config.getLogger(__filename);
 const mongoose = require('mongoose');
 const validators = require("./validators/cardValidators");
 const Schema = mongoose.Schema;
@@ -50,6 +51,10 @@ const cardSchema = new Schema({
         type:String,
         default: ""
     },
+     counter:{
+        type:Number,
+        unique: true
+    },
     supermemo:{
         easiness:{
             type:Number,
@@ -61,7 +66,8 @@ const cardSchema = new Schema({
         },
         nextDueDate:{
             type: Date,
-            default: Date.now
+            default: Date.now,
+            index:true
         }    
     }
 },
@@ -71,7 +77,13 @@ const cardSchema = new Schema({
 );
 
 cardSchema.plugin(AutoIncrement, {inc_field: 'counter'});
+cardSchema.index({"updated_at": 1});
 
 const Card = mongoose.model('cards', cardSchema);
+
+Card.on('index', function(error) {
+    if(error)
+        logger.error(error.message);
+});
 
 module.exports = Card;

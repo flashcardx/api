@@ -1,6 +1,7 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
+const seed = require(appRoot + "/config/seed");
 const User = require(appRoot + "/models/userModel");
 const Card = require(appRoot + "/models/cardModel");
 const Img = require(appRoot + "/models/imgModel");
@@ -121,7 +122,7 @@ function getCards(userId, params, callback){
           }
           if(params.category !== undefined)
             query.push({category:params.category});
-         Card.find({$and: query }).sort({updated_at: params.sort}).limit(params.limit).exec(
+       Card.find({$and: query }).select("name description imgs category lang ownerName updated_at").sort({updated_at: params.sort}).limit(params.limit).exec(
                     (err, cards)=>{
                          return returnCards(err, cards, callback);
                     }
@@ -166,7 +167,7 @@ function cardRecommendations(userId, last, callback){
         }
         if(last)
             restrictions.counter = {$lt: last}
-        Card.find(restrictions,{}, { sort:{counter: 'desc'}}).limit(8).exec((err, cards)=>{
+        Card.find(restrictions,{}, { sort:{counter: 'desc'}}).limit(8).select("counter name description imgs lang ownerName updated_at").exec((err, cards)=>{
             if(err){
                 logger.error(err);
                 return callback({success:false, msg:String(err)});
@@ -224,7 +225,7 @@ function deleteCategoryIfEmpty(userId, category){
 };
 
 function duplicateCard(userId, cardIdOld, callback){
-        Card.findById(cardIdOld).exec().then(doc=>{
+        Card.findById(cardIdOld, "name description imgs").exec().then(doc=>{
             if(!doc){
                 logger.error("no card found for cardId: " + cardId + "(trying to duplicate card)");
                 return callback({success:false, msg:"This card does not exist anymore"});
@@ -273,26 +274,18 @@ function createDuplicatedCard(card, userId, callback){
 }
 
 function setInitialCards(userId, callback){
-                var welcomeCard = {
-                    name: "Welcome!",
-                    description:"We are pleased you are here, hope you enjoy our tool, here are some tips worth to remember: <br/>"+
-                                "Your profile is linked with the languaje you choose when you signed up, you can change it in settings.<br/>"+
-                                "If you will create cards in other languaje than the one you have selected, please change this setting, otherwise other people could receive non relevant card recommendations.<br/>"+
-                                "Feel free to ask us anything, write us to: contact@flashcard-x.com",
-                    isDuplicated: true
-                 };
-                var imgs = [
-                    {
-                        url:"https://cdn.pixabay.com/photo/2016/11/21/15/38/dock-1846008_640.jpg?attachment",
-                        width: 640,
-                        height: 400
-                    }
-                ]
-                return createCard(welcomeCard, imgs, userId, callback);
+            ownerUserEmail = seed.users[0].email;
+            userService.findByEmail(ownerUserEmail, "cards", result=>{
+                    if(result.success === false)
+                        return callback(result);
+                    var user = result.msg;
+                    cardIdOld = user.cards[0];
+                    return duplicateCard(userId, cardIdOld, callback);
+            })
 }
 
 function updateCard(id, userId, card, callback){
-    Card.findOne({ '_id': id, 'ownerId': userId }).exec().then(doc=>{
+    Card.findOne({ '_id': id, 'ownerId': userId }, "name description category _id").exec().then(doc=>{
             if(!doc){
                 logger.error("no card found for cardId: " + id + ", with and userId: " + userId + "(trying to update card)");
                 return callback({success:false, msg:"This card does not exist in the user collection"});
