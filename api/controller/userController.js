@@ -3,14 +3,14 @@ const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const userService = require(appRoot + "/service/userService");
-
+const categoryService = require(appRoot + "/service/categoryService");
 
 module.exports = function(app){
     const controllerUtils = require("./utils")(app);
 
     app.get("/categories", controllerUtils.requireLogin, (req, res)=>{
         const userId = req.userId;
-        userService.getCategories(userId, r=>{
+        categoryService.getCategories(userId, r=>{
             return res.json(r);
         })
     });

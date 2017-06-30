@@ -59,10 +59,6 @@ const userSchema = new Schema({
             default: true
         }
     },
-    categories:{
-        type: [String],
-        default: []
-    },
     lastLogin:{
         type: Date
     },
@@ -72,12 +68,7 @@ const userSchema = new Schema({
             unique: [true, 'facebookId already in use'], 
             sparse: true
         },
-        token: String/*,
-        email:{
-            type: String,
-            unique: [true, 'email already in use, choose a different one'],
-            sparse:true
-        }*/
+        token: String
     }
 });
 

@@ -150,51 +150,7 @@ function increaseCardCounter(userId){
     })
 }
 
-function createCategoryIfNew(userId, category){
-    return new Promise((resolve, reject)=>{
-            if(!category)
-                return resolve();
-            User.find({_id: userId, categories: category}, "_id")
-            .exec().then((docs)=>{
-                if(docs.length === 0){
-                    User.update( {_id: userId}, { $pushAll: {categories: [category]} }, (err,result)=>{
-                        logger.debug("results from update(new category) n: " + result.n + "ok: " + result.ok + ", n modified: " + result.nModified) ;
-                        if(err)
-                            return reject(err);
-                        if(result.nModified === 0)
-                            return reject("could not delete card");
-                        return resolve();
-                    });
-                }// end if err
-                else
-                    return resolve();
-            });
-    });
-}
 
-function deleteCategory(userId, category){
-         return new Promise((resolve, reject)=>{
-             if(!category)
-                return resolve();
-             User.update( {_id: userId}, { $pullAll: {categories: [category]} }, (err,result)=>{
-                logger.debug("results from update(delete category) n: " + result.n + "ok: " + result.ok + ", n modified: " + result.nModified) ;
-                if(err)
-                    return reject(err);
-                if(result.nModified === 0)
-                    return reject("could not delete category");
-                return resolve();
-             } );
-    });
-}
-
-function getCategories(userId, callback){
-    findById(userId, 'categories', (result)=>{
-            if(result.success === false)
-                return callback(result);
-            var user = result.msg;
-            return callback({success: true, msg:user.categories});
-        });
-}
 
 function getPlan(userId, callback){
     findById(userId, 'plan',(result)=>{
@@ -256,9 +212,6 @@ module.exports = {
     saveUser: saveUser,
     decreaseCardCounter: decreaseCardCounter,
     increaseCardCounter: increaseCardCounter,
-    createCategoryIfNew: createCategoryIfNew,
-    deleteCategory: deleteCategory,
-    getCategories: getCategories,
     getPlan: getPlan,
     getUserLang: getUserLang,
     updateLang: updateLang,

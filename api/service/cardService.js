@@ -10,6 +10,7 @@ const userService = require("./userService");
 const logger = config.getLogger(__filename);
 const mongoose = require("mongoose");
 const AWSService = require("./AWSService");
+const categoryService = require("./categoryService");
 
 function downloadSaveImgs(userId, cardModel, urls){
     return new Promise((resolve, reject)=>{
@@ -68,7 +69,7 @@ function createCard(card, imgs, userId, callback){
                            .then(()=>{
                                return linkCardUser(userId, cardModel)})
                            .then(()=>{
-                               return userService.createCategoryIfNew(userId, cardModel.category);
+                               return categoryService.createCategoryIfNew(userId, user.lang, cardModel.category);
                            })
                            .then(()=>{
                                 return userService.decreaseCardCounter(user);
@@ -214,7 +215,7 @@ function deleteCategoryIfEmpty(userId, category){
         Card.count({ownerId: userId, category: category}).exec().then(c=>{
             if(c > 0)
                 return resolve();
-            userService.deleteCategory(userId, category).then(()=>{
+            categoryService.deleteCategory(userId, category).then(()=>{
                 return resolve();
             })
             .catch(err=>{
@@ -313,7 +314,7 @@ function updateCard(id, userId, card, callback){
 function updateCategorys(userId, deletedCategory, newCategory, callback){
     deleteCategoryIfEmpty(userId, deletedCategory)
         .then(()=>{
-            return userService.createCategoryIfNew(userId, newCategory);
+            return categoryService.createCategoryIfNew(userId, newCategory);
         })
         .then(()=>{
             return callback();
