@@ -14,11 +14,11 @@ Date.prototype.addDays = function(days) {
 }
 
 function listCards(userId, callback){
-      userService.findById(userId, 'cards lang', result=>{
+      userService.findById(userId, 'lang', result=>{
           if(result.success === false)
                 return callback(result);
           const user = result.msg;
-          var query = [{'_id':{ $in: user.cards}, 'lang':user.lang, 'supermemo.nextDueDate':{$lt: new Date()}}]; 
+          var query = [{'ownerId': userId, 'lang':user.lang, 'supermemo.nextDueDate':{$lt: new Date()}}]; 
           Card.find({$and: query }).sort({'supermemo.nextDueDate':'asc'}).limit(8).exec()
           .then(cards=>{
                    return cardService.returnCards(null, cards, callback);

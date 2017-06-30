@@ -31,10 +31,6 @@ const userSchema = new Schema({
         default: "en",
         enum: langCodes
     },
-    cards: {
-        type: [Schema.Types.ObjectId],
-        default: []
-    },
     plan:{
         type:{
             type:String,

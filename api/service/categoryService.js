@@ -55,8 +55,7 @@ function deleteCategory(userId, category){
                  var lang = r.msg;
                 Category.find({ownerId: userId, lang: lang, name: category})
                 .remove().exec().then(result=>{
-                    logger.error("result: " + result);
-                    if(result)
+                    if(result.result.ok !== 1)
                         reject(result);
                     else
                         resolve();

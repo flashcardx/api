@@ -90,20 +90,6 @@ function saveUser(userModel, callback){
     });
 }
 
-function deleteCardFromUser(cardId, userId){
-    return new Promise((resolve, reject)=>{
-             User.update( {_id: userId}, { $pullAll: {cards: [{_id: cardId}]} }, (err,result)=>{
-                logger.debug("results from update(delete card) n: " + result.n + "ok: " + result.ok + ", n modified: " + result.nModified) ;
-                if(err)
-                    return reject(err);
-                if(result.nModified === 0)
-                    return reject("could not delete card");
-                return resolve("ok");
-             } );
-                        
-    });
-};
-
 // returns true if recycle mode is activated
 function userCardLimitsOk(userId){
     return new Promise((resolve, reject)=>{
@@ -206,7 +192,6 @@ function findByEmail(email, fields, callback){
 
 module.exports = {
     loginUser : loginUser,
-    deleteCardFromUser: deleteCardFromUser,
     findById: findById,
     userCardLimitsOk: userCardLimitsOk,
     saveUser: saveUser,

@@ -29,24 +29,6 @@ function saveCard(cardModel){
     });
 }
 
-function linkCardUser(userId, cardModel){
-    return new Promise((resolve, reject)=>{
-        userService.findById(userId, 'cards', result=>{
-            if(result.success === false){
-                logger.error(result.msg);
-                return reject({success:false, msg:String(result.msg)});
-            }
-            var user = result.msg;
-            user.cards.push(cardModel._id);
-            user.save().then(()=>{
-                resolve(user);
-                }, (err)=>{
-                 logger.error(String(err));
-                 reject({success:false, msg:String(err)});
-            });
-        })
-    });
-}
 
 function createCard(card, imgs, userId, callback){
     var cardModel = new Card(card);
@@ -66,8 +48,6 @@ function createCard(card, imgs, userId, callback){
                                 cardModel.imgs = imgHashes;
                                 return saveCard(cardModel);
                            })
-                           .then(()=>{
-                               return linkCardUser(userId, cardModel)})
                            .then(()=>{
                                return categoryService.createCategoryIfNew(userId, user.lang, cardModel.category);
                            })
@@ -107,11 +87,11 @@ function getCards(userId, params, callback){
     }
     if(params.limit <= 0)
         return callback({success: false, msg: "limit must be > 0"});
-    userService.findById(userId, 'lang cards', result=>{
+    userService.findById(userId, 'lang', result=>{
           if(result.success === false)
                 return callback(result);
           const user = result.msg;
-          var query = [{'_id':{ $in: user.cards}, 'lang':user.lang}];
+          var query = [{'ownerId': userId, 'lang':user.lang}];
           if(params.last){
             if(params.sort==="desc")
                 query.push({updated_at:{$lt: params.last}});
@@ -180,10 +160,7 @@ function cardRecommendations(userId, last, callback){
 
 function deleteCard(cardId, userId, callback){
     var category;
-    userService.deleteCardFromUser(cardId, userId)
-                        .then(()=>{
-                            return Card.findById(cardId).exec();
-                        })
+    Card.findById(cardId).exec()
                         .then(card=>{
                              if(!card)
                                 throw new Error("Card id does not exist");
@@ -197,7 +174,14 @@ function deleteCard(cardId, userId, callback){
                                 return userService.increaseCardCounter(userId);
                          })
                          .then(()=>{
-                             return deleteCategoryIfEmpty(userId, category);
+                             return userService.getUserLang(userId, r=>{
+                                if(r.success === false){
+                                    logger.error(r.msg);
+                                    return callback(r);
+                                }
+                                const lang = r.msg;
+                             return deleteCategoryIfEmpty(userId, lang, category);
+                             });
                          })
                          .then(()=>{
                              return callback({success:true, msg:"Card deleted ok"});
@@ -208,11 +192,11 @@ function deleteCard(cardId, userId, callback){
                         });
 };
 
-function deleteCategoryIfEmpty(userId, category){
+function deleteCategoryIfEmpty(userId, lang, category){
     return new Promise((resolve, reject)=>{
         if(!category)
             return resolve();
-        Card.count({ownerId: userId, category: category}).exec().then(c=>{
+        Card.count({ownerId: userId, category: category, lang: lang}).exec().then(c=>{
             if(c > 0)
                 return resolve();
             categoryService.deleteCategory(userId, category).then(()=>{
@@ -256,9 +240,6 @@ function createDuplicatedCard(card, userId, callback){
                            .then(()=>{
                                 return saveCard(cardModel);
                            })
-                           .then(()=>{
-                               return linkCardUser(userId, cardModel)
-                            })
                             .then(()=>{
                                 return userService.decreaseCardCounter(user);
                             })
@@ -276,17 +257,22 @@ function createDuplicatedCard(card, userId, callback){
 
 function setInitialCards(userId, callback){
             ownerUserEmail = seed.users[0].email;
-            userService.findByEmail(ownerUserEmail, "cards", result=>{
+            userService.findByEmail(ownerUserEmail, "_id", result=>{
                     if(result.success === false)
                         return callback(result);
                     var user = result.msg;
-                    cardIdOld = user.cards[0];
-                    return duplicateCard(userId, cardIdOld, callback);
+                    Card.findOne({'ownerId': user._id}).exec().then(doc=>{
+                        if(!doc){
+                            logger.error("no card found for cardId: " + id + ", with and userId: " + userId + "(trying to update card)");
+                            return callback({success:false, msg:"This card does not exist in the user collection"});
+                        }
+                        return duplicateCard(userId, doc, callback);
+                    });
             })
 }
 
 function updateCard(id, userId, card, callback){
-    Card.findOne({ '_id': id, 'ownerId': userId }, "name description category _id").exec().then(doc=>{
+    Card.findOne({ '_id': id}, "name description category _id").exec().then(doc=>{
             if(!doc){
                 logger.error("no card found for cardId: " + id + ", with and userId: " + userId + "(trying to update card)");
                 return callback({success:false, msg:"This card does not exist in the user collection"});
@@ -312,16 +298,23 @@ function updateCard(id, userId, card, callback){
 }
 
 function updateCategorys(userId, deletedCategory, newCategory, callback){
-    deleteCategoryIfEmpty(userId, deletedCategory)
-        .then(()=>{
-            return categoryService.createCategoryIfNew(userId, newCategory);
-        })
-        .then(()=>{
-            return callback();
-        })
-        .catch(err=>{
-            return callback(err);
-        })
+    userService.getUserLang(userId, r=>{
+        if(r.success === false){
+            logger.error(r.msg);
+            return callback(r);
+        }
+        const lang = r.msg;
+        deleteCategoryIfEmpty(userId, lang, deletedCategory)
+            .then(()=>{
+                return categoryService.createCategoryIfNew(userId, lang, newCategory);
+            })
+            .then(()=>{
+                return callback();
+            })
+            .catch(err=>{
+                return callback(err);
+            })
+    });
 }
 
 
