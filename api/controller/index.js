@@ -5,6 +5,7 @@ const cardController = require("./cardController");
 const imgController = require("./imgController");
 const preferencesController = require("./preferencesController");
 const userController = require("./userController");
+const classController = require("./classController");
 
 module.exports = function(app){
 
@@ -15,4 +16,5 @@ module.exports = function(app){
     imgController(app);
     preferencesController(app);
     userController(app);
+    classController(app);
 };

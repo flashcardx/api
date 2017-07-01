@@ -9,8 +9,6 @@ const logger = config.getLogger(__filename);
 
 
 
-// todo: translate db boilerplate logic to a service
-var response; 
 module.exports = function(app){
 
     app.get("/setup", function(req, res){
@@ -19,7 +17,6 @@ module.exports = function(app){
             res.send("setup not available at this environment");
           }
           else{*/
-            response = res;
             logger.warn("database is about to be dropped");
             mongoose.connection.db.dropDatabase();
             createUsers()
@@ -27,7 +24,10 @@ module.exports = function(app){
               var idRandomUser = result[0]._id;
               return createCards(idRandomUser);
             })
-            .then(finish);
+            .then(()=>{
+              logger.info("users were created ok");
+              res.send("setup succeded!");
+            });
       /*    }*/
     });
 };
@@ -52,10 +52,4 @@ function createUsers(result){
             logger.info("cards were created ok");
             return Users.create(seed.users);
 };
-
-function finish(results){
-        logger.info("users were created ok");
-        response.send("setup succeded!");
-}
-
 

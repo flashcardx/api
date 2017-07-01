@@ -100,10 +100,9 @@ function userCardLimitsOk(userId){
             }
             if(user.preferences.recycleMode)
                 return resolve(user);
-            if(user.plan.cardLimit <= 0)
-                return reject("You do not have more space for new cards, delete some cards or activate recycle mode!");
-            return resolve(user); 
-                
+            if(user.plan.cardsLeft <= 0)
+                return reject("You do not have more space for new cards, delete some cards!");
+            return resolve(user);
         })
     })
 }
@@ -111,7 +110,7 @@ function userCardLimitsOk(userId){
 
 function decreaseCardCounter(userModel){
     return new Promise((resolve, reject)=>{
-        userModel.plan.cardLimit--;
+        userModel.plan.cardsLeft--;
         saveUser(userModel, r=>{
             if(r.success === false)
                 return reject(r.msg);
@@ -126,7 +125,7 @@ function increaseCardCounter(userId){
             if(r.success === false)
                 return reject(r.msg);
             var userModel = r.msg;
-            userModel.plan.cardLimit++;
+            userModel.plan.cardsLeft++;
             saveUser(userModel, r=>{
                 if(r.success === false)
                     return reject(r.msg);
