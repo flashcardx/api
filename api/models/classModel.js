@@ -62,8 +62,25 @@ const classSchema = new Schema({
     usersLeft:{
         type: Number,
         default: 30
+    },
+    isPrivate:{
+        type: Boolean,
+        default: false
+    },
+    isFull:{
+        type: Boolean,
+        default: false
+    },
+    isActive:{
+        type: Boolean,
+        default: true
     }
-});
+},{
+    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+    }
+);
+
+classSchema.index({"updated_at": -1});
 
 classSchema.plugin(uniqueValidator, { message: 'That {PATH} for the class already exists, it has to be unique' });
 

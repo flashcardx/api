@@ -11,9 +11,12 @@ module.exports = function(app){
 
     app.post("/createClass",  controllerUtils.requireLogin, function(req, res){
         var Class = {
-            ownerId: req.userId,
+            owner:{
+                id: req.userId
+            },
             name: req.body.name,
-            description: req.body.description
+            description: req.body.description,
+            isPrivate: req.body.isPrivate
         }
         classService.create(Class, r=>{
             return res.json(r);
@@ -27,6 +30,21 @@ module.exports = function(app){
         });
     });
 
+    app.get("/searchClass/:name",  controllerUtils.requireLogin, function(req, res){
+        var classname = req.params.name;
+        classService.search(classname, req.userId, r=>{
+            return res.json(r);
+        });
+    });
+
+    app.get("/recommendClasses",  controllerUtils.requireLogin, function(req, res){
+        classService.recommendClasses(req.userId, r=>{
+            return res.json(r);
+        });
+    });
+
+
+    
     app.post("/addPeopleToClass",  controllerUtils.requireLogin, function(req, res){
         var users = req.body.users;
         var ownerId = req.userId;

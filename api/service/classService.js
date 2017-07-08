@@ -7,12 +7,14 @@ const classModel = require(appRoot + "/models/classModel");
 const logger = config.getLogger(__filename);
 const userService = require("./userService");
 const cardService = require("./cardService");
+const cache = require("memory-cache");
 
 function create(Class, callback){
     var userModel;
-    verifyOwnerLimits(Class.ownerId)
+    verifyOwnerLimits(Class.isPrivate, Class.owner.id)
     .then((user)=>{
         userModel = user;
+        Class.owner.name = user.name;
         return saveClassDb(Class, user.lang)
     })
     .then((classId)=>{
@@ -59,16 +61,18 @@ function saveClassDb(Class, lang){
     })
 }
 
-function verifyOwnerLimits(userId){
+function verifyOwnerLimits(isPrivate, userId){
     return new Promise((resolve, reject)=>{
-        userService.findById(userId, "classLimit classesLeft lang classes", r=>{
+        userService.findById(userId, "plan.type name classLimit classesLeft lang classes", r=>{
             if(r.success === false){
                 logger.error(r.msg);
                 return reject(r.msg);
             }
             const user = r.msg;
+            if(isPrivate === true && user.plan.type === "Basic")
+                return reject("user plan does not support private classes");
             if(user.classesLeft <= 0)
-                return reject("You can not create more classes, upgrade you plan for creating more classes");
+                return reject("You can not have more classes, max limit reached");
             return resolve(user);
         })
     });
@@ -78,7 +82,7 @@ function verifyOwnerLimits(userId){
 
 /**
  * This method will return ALL classes the user have,
- * most users will have less than 10 classes(ok), but if user
+ * most users will have less than 30 classes(ok), but if user
  * had a dangerous high number of classes example:10000
  * performance will blow up.
  * ADD PAGINATION IN FUTURE RELEASES
@@ -88,32 +92,90 @@ function listAll(userId, callback){
     userService.findById(userId, "classes lang -_id", r=>{
         if(r.success === false){
                 logger.error(r.msg);
-                return reject(r.msg);
+                return callback(r);
             }
-        const user = r.msg;
+        var user = r.msg;
         const length = user.classes.length;
-        var finalResult = [];
+        var finalResults = [];
         if(user.classes.length === 0)
             return callback({success:true, msg:[]});
-        user.classes.forEach((value, index)=>{
-            classModel.findOne({_id: value.id}, "description lang").exec().then(doc=>{
-            if(!doc){
-                logger.error("no class found for class name: " + value.name + ", with a userId: " + userId + "(trying to list all classes from user)");
-                return callback({success:false, msg:"This class does not exist"});
-            }
-            if(doc.lang  !== user.lang){
-                user.classes.splice(index, 1);// removes it from array
+        var processed1 = 0,
+            processed2 = 0;
+        user.classes.forEach((value, index, a)=>{
+            if(value.lang === user.lang){
+                classModel.findOne({_id: value.id, lang:user.lang, isActive:true}, "name description owner.name maxUsers usersLeft updated_at lang")
+                .lean()
+                .exec()
+                .then(doc=>{
+                    if(!doc){
+                        processed1++;
+                        if(processed1 + processed2 === length)
+                            return callback({success:true, msg:finalResults});
+                        return;
+                    }
+                    processed1++;
+                    finalResults.push(doc);
+                    if(processed1 + processed2 === length)
+                        return callback({success:true, msg:finalResults});
+                });
             }
             else
-                user.classes[index].description = doc.description;
-            if(index === length-1)
-                return callback({success:true, msg:user.classes});
-        });
+                processed2++;
+            if(processed1 + processed2 === length)
+                return callback({success:true, msg:finalResults});
+    }); //end foreach
     });
+}
+
+// returns user id and integrants so client can tell if is already joined to a class
+function search(name, userId, callback){
+    userService.getUserLang(userId, r=>{
+        if(r.success === false){
+                logger.error(r.msg);
+                return callback(r);
+            }
+        const lang = r.msg;
+        const cacheKey = lang + userId;
+        var results = cache.get(cacheKey);
+                if(results){
+                    return callback(results);
+                }
+        classModel.findOne({name:name, lang:lang}, "name description integrants.id owner maxUsers usersLeft updated_at lang")
+        .lean()
+        .exec().then(doc=>{
+            return callback({success:true, msg:doc, userId:userId});
+        })
+    });
+}
+
+// TODO: cache results for 24 hours
+function recommendClasses(userId, callback){
+    userService.getUserLang(userId, r=>{
+        if(r.success === false){
+                logger.error(r.msg);
+                return callback(r);
+            }
+        const lang = r.msg;
+        const cacheKey = lang + userId;
+        var results = cache.get(cacheKey);
+            if(results){
+                return callback({success:true, msg:results});
+            }
+        classModel.find({"owner.id":{$ne:userId}, "integrants.id":{$ne:userId}, lang:lang, isPrivate:false, isFull:false, }, "")
+        .sort('-updated_at')
+        .limit(8)
+        .lean()
+        .exec()
+        .then(r=>{
+            cache.put(cacheKey, r, config.APICacheTime);
+            return callback({success:true, msg: r});
+        });
     });
 }
 
 module.exports = {
     create: create,
-    listAll: listAll
+    listAll: listAll,
+    search: search,
+    recommendClasses: recommendClasses
 }

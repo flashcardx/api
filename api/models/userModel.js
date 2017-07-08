@@ -68,11 +68,11 @@ const userSchema = new Schema({
     },
     classLimit:{
         type: Number,
-        default: 1
+        default: 30
     },
     classesLeft:{
         type: Number, 
-        default: 1
+        default: 30
     },
     classes: [{
         lang: {
