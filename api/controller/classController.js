@@ -43,6 +43,13 @@ module.exports = function(app){
         });
     });
 
+    app.get("/joinClass/:classname",  controllerUtils.requireLogin, function(req, res){
+        const classname = req.params.classname;
+        classService.joinClass(classname, req.userId, r=>{
+            return res.json(r);
+        });
+    });
+
 
     
     app.post("/addPeopleToClass",  controllerUtils.requireLogin, function(req, res){

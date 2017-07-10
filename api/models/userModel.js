@@ -32,17 +32,17 @@ const userSchema = new Schema({
         enum: langCodes
     },
     plan:{
-        type:{
-            type:String,
-            default:"Basic"
+        isPremium:{
+            type:Boolean,
+            default:false
         },
         maxLimit:{
             type: Number,
-            default:300
+            default:400
         },
         cardsLeft:{
             type: Number,
-            default: 300
+            default: 400
         }
     },
     preferences:{

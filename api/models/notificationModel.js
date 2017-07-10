@@ -6,14 +6,14 @@ const logger = config.getLogger(__filename);
 
 const notifSchema = new Schema({
 
-     date: {
+    date: {
         type: Date,
-        expires: '6m',
+        expires: '4m',
         default: Date.now
     },
     type:{
         type:Number,
-        enum: ['fromUser', 'fromOwner']
+        enum: [0, 1]//0: for class,  1: for user
     },
     ownerId:{
         type: Schema.Types.ObjectId,
@@ -38,10 +38,10 @@ const notifSchema = new Schema({
 
 });
 
-const Notification = mongoose.model('Notification', notifSchema);
-notification.on('index', function(error) {
+const notificationModel = mongoose.model('Notification', notifSchema);
+notificationModel.on('index', function(error) {
   if(error)
         logger.error(error.message);
 });
 
-module.exports = notification;
+module.exports = notificationModel;

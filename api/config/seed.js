@@ -7,6 +7,12 @@ const users=[
         name: "pablo",
         password:bcrypt.hashSync("1234", bcrypt.genSaltSync(10)),
         lang:"en"
+    },
+    {
+        email: "pablo-n-m@hotmail.com",
+        name: "pablo",
+        password:bcrypt.hashSync("1234", bcrypt.genSaltSync(10)),
+        lang:"en"
     }
 ];
 const cards=[
