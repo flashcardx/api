@@ -226,7 +226,9 @@ function joinPublicClass(classModel, userId){
 }
 
 function joinPrivateClass(classModel, userId){
-    return reject("This feature is not ready yet!");
+     return new Promise((resolve, reject)=>{
+             reject("This feature is not ready yet!");
+     });
 }
 
 function verifyUserIsNotInClass(userId, classname){

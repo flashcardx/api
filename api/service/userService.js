@@ -93,7 +93,7 @@ function saveUser(userModel, callback){
 // returns true if recycle mode is activated
 function userCardLimitsOk(userId){
     return new Promise((resolve, reject)=>{
-        User.findById(userId, 'preferences plan lang', (err, user)=>{
+        User.findById(userId, 'preferences plan lang name', (err, user)=>{
             if(err){
                 logger.error(err);
                 return reject(String(err));

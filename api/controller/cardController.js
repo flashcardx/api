@@ -22,7 +22,7 @@ module.exports = function(app){
     } );
 
     app.get("/myCards", controllerUtils.requireLogin, function(req, res){
-        var params ={
+        var params = {
             last: req.query.last,
             limit: req.query.limit,
             category: req.query.category,
