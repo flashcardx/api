@@ -106,6 +106,12 @@ userSchema.post('save', function(error, doc, next) {
 });
 
 
+userSchema.pre('update', function(next) {
+  this.options.runValidators = true;
+  next();
+});
+
+
 const User = mongoose.model('users', userSchema);
 
 User.on('index', function(error) {

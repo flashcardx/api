@@ -80,11 +80,19 @@ const cardSchema = new Schema({
 cardSchema.plugin(AutoIncrement, {inc_field: 'counter'});
 cardSchema.index({"updated_at": 1});
 
+
+cardSchema.pre('update', function(next) {
+  this.options.runValidators = true;
+  next();
+});
+
 const Card = mongoose.model('cards', cardSchema);
 
 Card.on('index', function(error) {
     if(error)
         logger.error(error.message);
 });
+
+
 
 module.exports = Card;

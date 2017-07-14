@@ -19,6 +19,11 @@ const catSchema = new Schema({
     }
 });
 
+catSchema.pre('update', function(next) {
+  this.options.runValidators = true;
+  next();
+});
+
 const category = mongoose.model('category', catSchema);
 category.on('index', function(error) {
   if(error)
