@@ -5,13 +5,39 @@ const logger = config.getLogger(__filename);
 const requestify = require('requestify'); 
 const cache = require("memory-cache");
 const shutterstock = require('shutterstock');
+const pixabayBaseUrl = `${config.APIPixabayUrl}/?key=${config.APIPixabayKey}`;
+const MAX_PER_PAGE = 20;
+const MINIMUM = 15;
 const shutterstockAPI = shutterstock.v2({
   clientId: '2a32fb3e058e7de16156',
   clientSecret: '0d096f428d635dd82c83ed3b87116370c2825255',
 });
-const pixabayBaseUrl = `${config.APIPixabayUrl}/?key=${config.APIPixabayKey}`;
-const MAX_PER_PAGE = 20;
-const MINIMUM = 15;
+
+
+function searchBing(q, lang, clientIp, callback){
+    var url = config.BingUrl + "?q=" + q +"&mkt=" + lang + "&count=30";
+    logger.error("q: "+ clientIp);
+    if(!clientIp){
+        logger.error("client ip undefined, will be replaced with empty string, if this continues Bing may think it is ddos attack");
+        clientIp = "";
+    }
+    requestify.get(url, {   cache: {
+    	cache: true,
+    	expires: config.APICacheTime 
+    },
+    headers:{
+        "Ocp-Apim-Subscription-Key": config.BingKey,
+        "X-Search-ClientIP": clientIp
+    }})
+    .then(response=>{
+        var r = response.getBody();
+        return callback({success:true, msg:r});
+    })
+    .catch(err=>{
+        logger.error('Encountered error making request:' + JSON.stringify(err));
+        return callback({success:false, msg:r});
+    });
+}
 
 
 function search(criteria, lang, page, callback){
@@ -128,5 +154,6 @@ function completeResults(results, criteria, callback){
 
 
 module.exports = {
-        search: search
+        search: search,
+        searchBing: searchBing
     }

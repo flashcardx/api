@@ -16,26 +16,30 @@ const imageminJpegtran = require('imagemin-jpegtran');
 const imageminPngquant = require('imagemin-pngquant');
 
 function getImgName(url, text){
-     return text + Math.random() + S(url).strip(':', "/").s;
+     return text + Math.random() + new Date();
 };
 
 function download(uri, filename){
     return new Promise((resolve, reject)=>{
         request.head(uri, function(err, res, body){
+    
         if(err)
            return reject(err);
-        logger.debug('content-type:', res.headers['content-type']);
-        logger.debug('content-length:', res.headers['content-length']);
+        logger.debug('content-type: ' + res.headers['content-type']);
+        logger.debug('content-length: ' + res.headers['content-length']);
+        
         if(res.headers['content-type'] !== "image/jpeg" && res.headers['content-type'] !== "image/png")
-            return reject(new Error("Content-type of uri is not supported, uri: " + uri));
+            return reject(new Error("Content-type of uri is not supported, uri: " + uri +", content-type: " + res.headers['content-type']));
+        
         if(res.headers['content-length'] > config.APIMaxSizeUpFiles)
             return reject(new Error("size of file too big, size: " + res.headers['content-length']));
         request(uri).pipe(fs.createWriteStream(filename)).on('close',()=>{
             logger.debug(uri + " downloaded ok");
             resolve(res.headers['content-type']);
         })
-        .on("error", ()=>{
-            logger.debug("error when downloading file from: " + uri);
+        .on("error", (err)=>{
+            logger.error("error when downloading file from: " + uri);
+            logger.error("err: " + err);
             reject("error when downloading file");
         });
     })

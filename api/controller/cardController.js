@@ -86,10 +86,7 @@ module.exports = function(app){
      app.post("/rankCard/:cardId", controllerUtils.requireLogin, (req, res)=>{
         const userId = req.userId;
         const cardId = req.params.cardId;
-        var params = {
-            performanceRating: req.body.mark
-        };
-        practiceCardsService.rankCard(userId, cardId, params, result=>{
+        practiceCardsService.rankCard(userId, cardId, req.body.addDays, result=>{
             return res.json(result);
         });
     });

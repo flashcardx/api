@@ -35,9 +35,14 @@ module.exports = function(app){
         userService.updateLang(userId, lang, r=>{
             return res.json(r);
         });
-
     });
 
+    app.get("/getUserInfo",  controllerUtils.requireLogin, (req, res)=>{
+        const userId = req.userId;
+        userService.findById(userId, "name email -_id", r=>{
+            return res.json(r);
+        });
+    });
 
 
 }

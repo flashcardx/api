@@ -26,6 +26,7 @@ function listCards(userId, callback){
       });
 }
 
+/*
 function rankCard(userId, cardId, params, callback){
       if(params.performanceRating < 0 || params.performanceRating > 5){
             logger.error("performanceRating should be between 0 and 5 , got" + params.performanceRating);
@@ -60,6 +61,32 @@ function rankCard(userId, cardId, params, callback){
             });
       });
 };
+
+*/
+
+function rankCard(userId, cardId, addDays, callback){
+      addDays = parseFloat(addDays);
+      if(addDays <= 0){
+            logger.error("addDays should be bigger than , got" + addDays);
+            return callback({success:false, msg:"addDays should be bigger than , got" + addDays});
+      }
+
+      Card.findOne({ '_id': cardId, 'ownerId': userId }).exec().then(doc=>{
+            if(!doc){
+                logger.error("no card found for cardId: " + cardId + ", with and userId: " + userId + "(trying to rank card)");
+                return callback({success:false, msg:"This card does not exist in the user collection"});
+            }
+            var dateNow = new Date();
+            doc.supermemo.nextDueDate = dateNow.addDays(addDays);
+            doc.update(doc, (err, updatedCard)=>{
+                if(err){
+                    logger.error(err);
+                    return callback({success:false, msg: String(err)});
+                }
+                return callback({success:true});
+            });
+      });
+}
 
 module.exports = {
       listCards: listCards,

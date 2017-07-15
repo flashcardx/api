@@ -29,6 +29,8 @@ module.exports = {
     emailPassword: email.password,
     lang: lang,
     AWSCredentials: credentials,
-    dictionaries: dictionaries
+    dictionaries: dictionaries,
+    BingKey: api.BingKey,
+    BingUrl: api.BingUrl
 };
 

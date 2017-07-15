@@ -98,17 +98,9 @@ userSchema.plugin(uniqueValidator, { message: 'That {PATH} already exists, it ha
 userSchema.post('save', function(error, doc, next) {
   if (error.name === 'MongoError' && error.code === 11000) {
     logger.error(error);
-    //console.log(error);
-    //next(new Error('email must be unique'));
   } else {
     next(error);
   }
-});
-
-
-userSchema.pre('update', function(next) {
-  this.options.runValidators = true;
-  next();
 });
 
 

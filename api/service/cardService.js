@@ -263,8 +263,8 @@ function setInitialCards(userId, callback){
                     var user = result.msg;
                     Card.findOne({'ownerId': user._id}).exec().then(doc=>{
                         if(!doc){
-                            logger.error("no card found for cardId: " + id + ", with and userId: " + userId + "(trying to update card)");
-                            return callback({success:false, msg:"This card does not exist in the user collection"});
+                            logger.error("user not found for userId: " + user._id);
+                            return callback({success:false, msg:"This user does not exist"});
                         }
                         return duplicateCard(userId, doc, callback);
                     });
