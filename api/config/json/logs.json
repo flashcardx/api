@@ -2,18 +2,18 @@
     "access": "/logs/access.log",
     "app": "/logs/app.log",
     "levelFile": "error",
-    "levelConsole":"info"
+    "levelConsole":"debug"
 },
  "pi":{
     "access": "/logs/access.log",
     "app": "/logs/app.log",
     "levelFile": "error",
-    "levelConsole":"info"
+    "levelConsole":"debug"
 },
  "production":{
     "access": "/logs/access.log",
     "app": "/logs/app.log",
     "levelFile": "error",
-    "levelConsole":"warn"
+    "levelConsole":"error"
  }
 }

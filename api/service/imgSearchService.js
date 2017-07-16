@@ -15,8 +15,8 @@ const shutterstockAPI = shutterstock.v2({
 
 
 function searchBing(q, lang, clientIp, callback){
-    var url = config.BingUrl + "?q=" + q +"&mkt=" + lang + "&count=30";
-    logger.error("q: "+ clientIp);
+    var url = config.BingUrl + "?q=" + q +"&mkt=" + lang + "&count=30" + "&size=Medium";
+    logger.error("client ip: "+ clientIp);
     if(!clientIp){
         logger.error("client ip undefined, will be replaced with empty string, if this continues Bing may think it is ddos attack");
         clientIp = "";

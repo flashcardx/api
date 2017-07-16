@@ -24,7 +24,7 @@ module.exports = function(app){
                 const user = result.msg;
                 const criteria = S(req.params.criteria).replaceAll(" ", "+").s;
                 var page = 1;
-                if(req.query.page)
+                if( req.query.page)
                     page = req.query.page;
                imgSearchService.search(criteria, user.lang, page, result=>{
                     return res.json(result);
@@ -32,13 +32,13 @@ module.exports = function(app){
             });
         });
 
-          app.get("/searchBing/:criteria", controllerUtils.requireLogin, function(req,res){
+          app.get("/searchBing/:criteria/:clientIp", controllerUtils.requireLogin, function(req,res){
         userService.findById(req.userId, 'lang', (result)=>{
                 if(!result.success)
                     return res.json(result);
                 const user = result.msg;
                 const criteria = S(req.params.criteria).replaceAll(" ", "+").s;
-               imgSearchService.searchBing(criteria, user.lang, req.body.ip, result=>{
+               imgSearchService.searchBing(criteria, user.lang, req.params.clientIp, result=>{
                     return res.json(result);
                });
             });

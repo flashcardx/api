@@ -174,7 +174,7 @@ function recommendClasses(userId, callback){
 }
 
 function joinClass(classname, userId, callback){
-    verifyUserIsNotInClass(userId, classname)
+    verifyUserIsNotInClass(userId, classname, "usersLeft integrants name lang isPrivate")
     .then(classModel=>{
         if(classModel.isPrivate === false)
             return joinPublicClass(classModel, userId);
@@ -197,10 +197,31 @@ function joinPublicClass(classModel, userId){
                 return reject(r);
             }
             var userModel = r.msg;
+            joinUserClass(userModel, classModel)
+                .then(()=>{
+                    logger.error(3);
+                    return notificationService.notifyClassUserJoined(classModel.integrants, classModel.name, userModel.name);
+                })
+                .then(()=>{
+                    return resolve();
+                })
+                .catch(err=>{
+                    return reject(err);
+                });
+        })
+    });
+}
+
+function joinUserClass(userModel, classModel){
+    return new Promise((resolve, reject)=>{
+            if(userModel.classesLeft === 0)
+                return reject("User can not be in more classes, limit reached");
+            if(classModel.usersLeft === 0)
+                return reject("This class is full, can not add new users");
             userModel.classesLeft--;
             classModel.usersLeft--;
             classModel.integrants.push({
-                id: userId,
+                id: userModel._id,
                 name: userModel.name
             });
             userModel.classes.push({
@@ -213,15 +234,11 @@ function joinPublicClass(classModel, userId){
                     return userModel.save()
                 })
                 .then(()=>{
-                    return notificationService.insertNotificationClass(classModel._id, classModel.name, userModel.name);
-                })
-                .then(()=>{
                     return resolve();
                 })
                 .catch(err=>{
                     return reject(err);
                 });
-        })
     });
 }
 
@@ -231,9 +248,9 @@ function joinPrivateClass(classModel, userId){
      });
 }
 
-function verifyUserIsNotInClass(userId, classname){
+function verifyUserIsNotInClass(userId, classname, fields){
     return new Promise((resolve, reject)=>{
-        classModel.findOne({name:classname, "owner.id":{$ne:userId},"integrants.id":{$ne:userId}, "waiting.id":{$ne:userId}, isActive:true}, "usersLeft integrants name lang isPrivate")
+        classModel.findOne({name:classname, "owner.id":{$ne:userId},"integrants.id":{$ne:userId}, "waiting.id":{$ne:userId}, isActive:true}, fields)
         .exec()
         .then(r=>{
             if(!r)
@@ -243,10 +260,72 @@ function verifyUserIsNotInClass(userId, classname){
     });
 }
 
+
+function addUser(classname, userJoinerEmail, userRequesterId, callback){
+    userService.findByEmail(userJoinerEmail, "name classesLeft classes", r=>{
+            if(r.success === false)
+                return callback(r);
+            var user2Join = r.msg
+            if(user2Join.classesLeft === 0)
+                return callback({success:false, msg:"User can not be in more classes, limit reached"});
+            verifyUserIsNotInClass(user2Join._id, classname, "owner integrants usersLeft isPrivate name")
+            .then(Class=>{
+                    if(Class.isPrivate === true && Class.owner.id !== userRequesterId)
+                        return callback({success:false, msg:"Only the owner can add users to a private class"});
+                    if(Class.usersLeft === 0)
+                        return callback({success:false, msg:"This class is already full"});
+                    userService.findById(userRequesterId, "name -_id", r=>{
+                            if(r.success === false){
+                                logger.error(r.msg);
+                                return callback({success:false, msg:r.msg});
+                            }
+                            var requesterUser = r.msg;
+                            if(Class.isPrivate === true)
+                                return addUserPrivateClass(Class, user2Join);
+                            return addUserPublicClass(Class, user2Join, requesterUser.name);
+                        });
+                })
+            .then(()=>{
+                return callback({success:true});
+            })
+            .catch(err=>{
+                        logger.warn(err);
+                        return callback({success:false, msg:String(err)});
+                });
+    })
+}
+
+
+function addUserPublicClass(classModel, userModel, requesterName){
+    return new Promise((resolve, reject)=>{
+            joinUserClass(userModel, classModel)
+                .then(()=>{
+                    return notificationService.notifyClassUserAdded(classModel.integrants, classModel.name, userModel.name, requesterName);
+                })
+                .then(()=>{
+                    return notificationService.notifyUserWasAdded2Class(userModel._id, classModel.name, requesterName);
+                })
+                .then(()=>{
+                    return resolve();
+                })
+                .catch(err=>{
+                    logger.error("err: " + err);
+                    return reject(err);
+                });
+    });
+}
+
+function addUserPrivateClass(Class, userModel){
+    return new Promise((resolve, reject)=>{
+        return reject("This feature is not ready yet!");
+    });
+}
+
 module.exports = {
     create: create,
     listAll: listAll,
     search: search,
     recommendClasses: recommendClasses,
-    joinClass: joinClass
+    joinClass: joinClass,
+    addUser: addUser
 }

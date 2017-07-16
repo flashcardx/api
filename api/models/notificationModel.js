@@ -8,32 +8,19 @@ const notifSchema = new Schema({
 
     date: {
         type: Date,
-        expires: '4m',
+        expires: '3m',
         default: Date.now
-    },
-    type:{
-        type:Number,
-        enum: [0, 1]//0: for class,  1: for user
     },
     ownerId:{
         type: Schema.Types.ObjectId,
         index: true
     },
-    className: {
-        type: String
-    },
-    username:{
+    text:{
         type:String
     },
-    userId:{
-        type: Schema.Types.ObjectId
-    },
-    seen:{
-        type: Boolean,
-        default: false
-    },
-    classId: {
-        type: Schema.Types.ObjectId
+    priority:{
+        type: Number,
+        default: 0
     }
 
 });

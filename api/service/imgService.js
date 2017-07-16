@@ -19,21 +19,26 @@ function getImgName(url, text){
      return text + Math.random() + new Date();
 };
 
+const downloader = require('image-downloader');
 function download(uri, filename){
     return new Promise((resolve, reject)=>{
         request.head(uri, function(err, res, body){
     
         if(err)
            return reject(err);
-        logger.debug('content-type: ' + res.headers['content-type']);
+        logger.debug("headers: " + JSON.stringify(res.headers));
         logger.debug('content-length: ' + res.headers['content-length']);
-        
+        logger.debug('content-type: ' + res.headers['content-type']);
+
+        /*
         if(res.headers['content-type'] !== "image/jpeg" && res.headers['content-type'] !== "image/png")
             return reject(new Error("Content-type of uri is not supported, uri: " + uri +", content-type: " + res.headers['content-type']));
-        
+        */
+      
         if(res.headers['content-length'] > config.APIMaxSizeUpFiles)
             return reject(new Error("size of file too big, size: " + res.headers['content-length']));
-        request(uri).pipe(fs.createWriteStream(filename)).on('close',()=>{
+        request(uri, {headers:{"User-Agent": "NING/1.0"}})
+        .pipe(fs.createWriteStream(filename)).on('close',()=>{
             logger.debug(uri + " downloaded ok");
             resolve(res.headers['content-type']);
         })
@@ -44,6 +49,7 @@ function download(uri, filename){
         });
     })
     });
+
 };
 
 function deleteFile(filename){

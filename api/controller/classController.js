@@ -51,11 +51,12 @@ module.exports = function(app){
     });
 
 
-    
-    app.post("/addPeopleToClass",  controllerUtils.requireLogin, function(req, res){
-        var users = req.body.users;
-        var ownerId = req.userId;
-        classService.addPeople(users, ownerId, r=>{
+    //if manny users to add, call this endpoint for each user
+    app.post("/addUserToClass",  controllerUtils.requireLogin, function(req, res){
+        var joinerEmail = req.body.userEmail;
+        var classname = req.body.classname;
+        var requesterId = req.userId;
+        classService.addUser(classname, joinerEmail, requesterId, r=>{
             return res.json(r);
         });
     });

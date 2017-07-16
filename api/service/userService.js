@@ -181,9 +181,14 @@ function updateLang(userId, lang, callback){
 function findByEmail(email, fields, callback){
     User.findOne({ 'email': email},fields, function (err, user) {
         logger.debug("looking for user: " + email +" result: " + user);
-        if (err) throw err;
-        if(!user)
-           return callback(user);
+        if (err){
+            logger.error("error when getting user by email: " + email +", " + err);
+            return callback({success:false, msg:err});
+        }
+        if(!user){
+            logger.error("could not found user by email: " + email);
+           return callback({success:false, msg:"user not found"});
+        }
         return callback({success:true, msg:user});
     }
     )
