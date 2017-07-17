@@ -22,13 +22,44 @@ function notifyClassUserAdded(integrants, classname, userName, requesterName){
     });
 }
 
-function notifyUserWasAdded2Class(userId, classname, requesterName){
+function notifyClassUserLeft(integrants, classname, leaverName){
     return new Promise((resolve, reject)=>{
-        var msg = requesterName + " added you to the class: " + classname;
-        deliverMesagge2Users(msg, new Array(userId), 1);
+        var msg = leaverName + " left the class: " + classname;
+        deliverMesagge2Users(msg, integrants, 0);
         return resolve();
     });
 }
+
+function notifyClassUserWasRemoved(integrants, classname, leaverName, removerName){
+    return new Promise((resolve, reject)=>{
+        var msg = removerName + " removed "+ leaverName +" from the class: " + classname;
+        deliverMesagge2Users(msg, integrants, 0);
+        return resolve();
+    });
+}
+
+function notifyUserWasAdded2Class(userId, classname, requesterName){
+    return new Promise((resolve, reject)=>{
+        var msg = requesterName + " added you to the class: " + classname;
+        var u = {
+            id: userId 
+        };
+        deliverMesagge2Users(msg, new Array(u), 1);
+        return resolve();
+    });
+}
+
+function notifyUserWasRemoved(userLeaverId, classname, removerName){
+     return new Promise((resolve, reject)=>{
+        var msg = removerName + " removed you from the class: " + classname;
+        var u = {
+            id: userLeaverId
+        };
+        deliverMesagge2Users(msg, new Array(u), 1);
+        return resolve();
+    });
+}
+
 
 
 function deliverMesagge2Users(msg, users, priority){
@@ -44,7 +75,7 @@ function deliverMesagge2Users(msg, users, priority){
             notification.save().then(()=>{
                 logger.debug("notification saved ok");
             }, err=>{
-                logger.error("Could not save notification: " + String(err));
+                logger.error("Could not save notification: " + err);
             });
         });
 }
@@ -52,5 +83,8 @@ function deliverMesagge2Users(msg, users, priority){
 module.exports = {
     notifyClassUserJoined: notifyClassUserJoined,
     notifyClassUserAdded: notifyClassUserAdded,
-    notifyUserWasAdded2Class: notifyUserWasAdded2Class
+    notifyUserWasAdded2Class: notifyUserWasAdded2Class,
+    notifyClassUserLeft: notifyClassUserLeft,
+    notifyClassUserWasRemoved: notifyClassUserWasRemoved,
+    notifyUserWasRemoved: notifyUserWasRemoved
 }

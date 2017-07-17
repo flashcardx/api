@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const uniqueValidator = require('mongoose-unique-validator');
+const validators = require("./validators/classValidators");
 const lang = config.lang;
 var langCodes = lang.map((value)=>{
     return value.code;
@@ -12,10 +13,12 @@ var langCodes = lang.map((value)=>{
 const classSchema = new Schema({
     name:{
         type: String,
-        unique: true
+        unique: true,
+        validate: validators.nameValidator
     },
     description: {
-        type: String
+        type: String,
+        validate: validators.descriptionValidator
     },
     integrants: [{
         name:{
@@ -54,7 +57,9 @@ const classSchema = new Schema({
     },
     cardsLeft:{
         type: Number,
-        default: 1000
+        default: 1000,
+        min: [0, 'cards limit reached'],
+        max: [1000, 'cards limit reached']
     },
     cards: [Schema.Types.ObjectId],
     maxUsers:{
@@ -63,7 +68,9 @@ const classSchema = new Schema({
     },
     usersLeft:{
         type: Number,
-        default: 29
+        default: 29,
+        min: [0, 'users limit reached'],
+        max: [29, 'users limit reached']
     },
     isPrivate:{
         type: Boolean,
@@ -85,6 +92,12 @@ const classSchema = new Schema({
 classSchema.index({"updated_at": -1});
 
 classSchema.plugin(uniqueValidator, { message: 'That {PATH} for the class already exists, it has to be unique' });
+
+classSchema.pre('update', function(next) {
+  this.options.runValidators = true;
+  next();
+});
+
 
 const Class = mongoose.model('Class', classSchema);
 

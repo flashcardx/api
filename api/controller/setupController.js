@@ -27,7 +27,11 @@ module.exports = function(app){
             .then(()=>{
               logger.info("users were created ok");
               res.send("setup succeded!");
-            });
+            })
+            .catch(err=>{
+                    logger.error("err: " + err);
+                    return res.send({success:false, msg:err});
+                });
       /*    }*/
     });
 };

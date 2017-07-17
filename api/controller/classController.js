@@ -61,12 +61,29 @@ module.exports = function(app){
         });
     });
 
+    
 
-    //owner can remove everyone but himself, other users can just remove themselves
-    app.post("/removePeopleFromClass",  controllerUtils.requireLogin, function(req, res){
-        var users = req.body.users;
-        var ownerId = req.userId;
-        classService.removePeople(users, ownerId, r=>{
+     app.delete("/userFromClass",  controllerUtils.requireLogin, function(req, res){
+        const leaverId = req.body.leaverId;
+        const classname = req.body.classname;
+        const requesterId = req.userId;
+        classService.removeUser(classname, leaverId, requesterId, r=>{
+            return res.json(r);
+        });
+    });
+
+    app.get("/leaveClass/:classname",  controllerUtils.requireLogin, function(req, res){
+        const classname = req.params.classname;
+        const userId = req.userId;
+        classService.removeUser(classname, userId, userId, r=>{
+            return res.json(r);
+        });
+    });
+
+    app.get("/classIntegrants/:classname",  controllerUtils.requireLogin, function(req, res){
+        const classname = req.params.classname;
+        const userId = req.userId;
+        classService.getClassIntegrants(classname, userId, r=>{
             return res.json(r);
         });
     });

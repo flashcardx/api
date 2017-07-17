@@ -42,7 +42,9 @@ const userSchema = new Schema({
         },
         cardsLeft:{
             type: Number,
-            default: 400
+            default: 400,
+            min: [0, 'card limit reached'],
+            max: [400, 'card limit reached']
         }
     },
     preferences:{
@@ -72,7 +74,9 @@ const userSchema = new Schema({
     },
     classesLeft:{
         type: Number, 
-        default: 30
+        default: 30,
+        min: [0, 'class limit reached'],
+        max: [30, 'class limit reached']
     },
     classes: [{
         lang: {
@@ -101,6 +105,11 @@ userSchema.post('save', function(error, doc, next) {
   } else {
     next(error);
   }
+});
+
+userSchema.pre('update', function(next) {
+  this.options.runValidators = true;
+  next();
 });
 
 

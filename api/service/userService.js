@@ -167,7 +167,7 @@ function updateLang(userId, lang, callback){
                     logger.error(err);
                     return callback({success:false, msg: "The languaje is not valid"});
                 }
-                    doc.update(doc, (err, updatedUser)=>{
+                    doc.save(doc, (err, updatedUser)=>{
                         if(err){
                             logger.error(err);
                             return callback({success:false, msg: String(err)});
@@ -233,7 +233,7 @@ function registerNewFbUser(user, callback){
 	    newUser.save(err=>{
 	    			if(err){
                         logger.error(err);
-	    				return  callback({success: false, msg:"could not register facebook user, " + String(err)});;
+	    				return callback({success: false, msg:"could not register facebook user, " + String(err)});;
                         }
                           cardService.setInitialCards(newUser._id, r=>{
                             if(r.success === false)

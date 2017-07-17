@@ -44,5 +44,11 @@ module.exports = function(app){
         });
     });
 
+    app.get("/getUserName/:email",  controllerUtils.requireLogin, (req, res)=>{
+        userService.findByEmail(req.params.email, "name -_id", r=>{
+            return res.json(r);
+        });
+    });
+
 
 }

@@ -8,7 +8,7 @@ const notifSchema = new Schema({
 
     date: {
         type: Date,
-        expires: '3m',
+        expires: '90d',
         default: Date.now
     },
     ownerId:{

@@ -8,7 +8,7 @@ var nameValidator = [
   }),
   validate({
     validator: 'matches',
-    arguments: /^[a-z ,.'-]+$/i,
+    arguments: /^[a-z ,.' - @ 0-9]+$/i,
     passIfEmpty: true,
     message: 'Name has invalid characters :('
   })
