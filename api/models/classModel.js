@@ -14,6 +14,7 @@ const classSchema = new Schema({
     name:{
         type: String,
         unique: true,
+        sparse: true,
         validate: validators.nameValidator
     },
     description: {
@@ -61,7 +62,6 @@ const classSchema = new Schema({
         min: [0, 'cards limit reached'],
         max: [1000, 'cards limit reached']
     },
-    cards: [Schema.Types.ObjectId],
     maxUsers:{
         type: Number,
         default: 30
@@ -73,10 +73,6 @@ const classSchema = new Schema({
         max: [29, 'users limit reached']
     },
     isPrivate:{
-        type: Boolean,
-        default: false
-    },
-    isFull:{
         type: Boolean,
         default: false
     },

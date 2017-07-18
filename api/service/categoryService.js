@@ -5,10 +5,22 @@ const config = require(appRoot + "/config");
 const User = require(appRoot + "/models/userModel");
 const logger = config.getLogger(__filename);
 const Category = require(appRoot + "/models/categoryModel");
+const CategoryClass = require(appRoot + "/models/categoryClassModel");
 const userService = require("./userService");
 
 function saveCategory(cat, callback){
     var category = new Category(cat);
+    category.save(err=>{
+                    if(err){
+                            logger.error(String(err));
+                            return callback({success:false, msg: String(err)});     
+                        }
+                         return callback({success:true});
+                    });
+}
+
+function saveCategoryClass(cat, callback){
+    var category = new CategoryClass(cat);
     category.save(err=>{
                     if(err){
                             logger.error(String(err));
@@ -43,6 +55,32 @@ function createCategoryIfNew(userId, lang, catName){
     })
 }
 
+function createCategoryClassIfNew(classId, catName){
+    return new Promise((resolve, reject)=>{
+            if(!catName)
+                return resolve();
+            CategoryClass.find({ownerId: classId, name: catName}, "_id")
+            .exec()
+            .then(docs=>{
+                if(docs.length == 0){
+                    var newCat = {
+                        ownerId: classId,
+                        name: catName
+                    }
+                    saveCategoryClass(newCat, r=>{
+                        if(r.success === false)
+                            return reject();
+                        else
+                            return resolve();
+                    });
+                }
+                else
+                    resolve();
+            });
+    })
+}
+
+
                     
 
 function deleteCategory(userId, category){
@@ -54,7 +92,9 @@ function deleteCategory(userId, category){
                     reject(r);
                  var lang = r.msg;
                 Category.find({ownerId: userId, lang: lang, name: category})
-                .remove().exec().then(result=>{
+                .remove()
+                .exec()
+                .then(result=>{
                     if(result.result.ok !== 1)
                         reject(result);
                     else
@@ -63,6 +103,23 @@ function deleteCategory(userId, category){
              });
     });
 }
+
+function deleteCategoryClass(classId, category){
+         return new Promise((resolve, reject)=>{
+             if(!category)
+                return resolve();
+        CategoryClass.find({ownerId: classId, name: category})
+                .remove()
+                .exec()
+                .then(result=>{
+                    if(result.result.ok !== 1)
+                        reject(result);
+                    else
+                        resolve();
+                })
+        });
+ }
+
 
 function getCategories(userId, callback){
     userService.findById(userId, "lang", r=>{
@@ -76,8 +133,18 @@ function getCategories(userId, callback){
     });
 }
 
+function getCategoriesClass(classId, callback){
+        CategoryClass.find({ownerId: classId}, "name -_id")
+        .exec().then(docs=>{
+            return callback({success: true, msg:docs});
+        });
+}
+
 module.exports = {
     createCategoryIfNew: createCategoryIfNew,
     deleteCategory: deleteCategory,
-    getCategories: getCategories
+    getCategories: getCategories,
+    deleteCategoryClass: deleteCategoryClass,
+    createCategoryClassIfNew: createCategoryClassIfNew,
+    getCategoriesClass: getCategoriesClass
 }

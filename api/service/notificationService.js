@@ -60,7 +60,13 @@ function notifyUserWasRemoved(userLeaverId, classname, removerName){
     });
 }
 
-
+function notifyClassDeleted(classname, integrants, ownerName){
+      return new Promise((resolve, reject)=>{
+        var msg = ownerName + " deleted the class: "+ classname;
+        deliverMesagge2Users(msg, integrants, 1);
+        return resolve();
+    });
+}
 
 function deliverMesagge2Users(msg, users, priority){
         var n = {
@@ -80,11 +86,38 @@ function deliverMesagge2Users(msg, users, priority){
         });
 }
 
+function getNotifications(userId, callback){
+    var allNotifications = [];
+    notificationModel.find();
+    var restrictions = {
+             'ownerId': {$eq: userId}
+        }
+    notificationModel.find(restrictions)
+    .sort({priority:"desc", date:"desc"})
+    .limit(20)
+    .select("date text priority")
+    .exec()
+    .then(docs=>{
+        callback({success:true, msg: docs});
+       return notificationModel.update({ownerId:userId, priority:1}, {$set:{priority:0}})
+        .exec()
+    })
+    .then(r=>{
+        logger.debug("notifications updated ok, got: " + JSON.stringify(r));
+    })
+    .catch(err=>{
+                logger.err(err);
+                return callback({success:false, msg:String(err)});
+    });
+}
+
 module.exports = {
     notifyClassUserJoined: notifyClassUserJoined,
     notifyClassUserAdded: notifyClassUserAdded,
     notifyUserWasAdded2Class: notifyUserWasAdded2Class,
     notifyClassUserLeft: notifyClassUserLeft,
     notifyClassUserWasRemoved: notifyClassUserWasRemoved,
-    notifyUserWasRemoved: notifyUserWasRemoved
+    notifyUserWasRemoved: notifyUserWasRemoved,
+    getNotifications: getNotifications,
+    notifyClassDeleted: notifyClassDeleted
 }

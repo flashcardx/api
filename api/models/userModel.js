@@ -101,13 +101,20 @@ userSchema.plugin(uniqueValidator, { message: 'That {PATH} already exists, it ha
 
 userSchema.post('save', function(error, doc, next) {
   if (error.name === 'MongoError' && error.code === 11000) {
-    logger.error(error);
+    logger.warn(error);
   } else {
     next(error);
   }
 });
 
 userSchema.pre('update', function(next) {
+    logger.debug("update pre hook");
+  this.options.runValidators = true;
+  next();
+});
+
+userSchema.pre('findOneAndUpdate', function(next) {
+    logger.debug("findOneAndUpdate pre hook");
   this.options.runValidators = true;
   next();
 });
