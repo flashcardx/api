@@ -5,7 +5,7 @@
 */
 const bunyan = require("bunyan");
 const mongoose = require("mongoose");
-mongoose.Promise = require('bluebird');
+require('mongoose').Promise = global.Promise;
 const express = require("express");
 const packageJson = require("./package.json");
 const config = require("./config");

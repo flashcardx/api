@@ -105,12 +105,21 @@ module.exports = function(app){
         });
     });
 
-    app.get("/notifications",  controllerUtils.requireLogin, function(req, res){
+    app.get("/activity",  controllerUtils.requireLogin, function(req, res){
         const userId = req.userId;
-        notificationService.getNotifications(userId, r=>{
+        const last = req.query.last;
+        notificationService.getNotifications(userId, last, r=>{
             return res.json(r);
         });
     });
+
+    app.get("/activityCount",  controllerUtils.requireLogin, function(req, res){
+        const userId = req.userId;
+        notificationService.getNotificationsCount(userId,r=>{
+            return res.json(r);
+        });
+    });
+
 
     app.delete("/class/:classname",  controllerUtils.requireLogin, function(req, res){
         const classname = req.params.classname;

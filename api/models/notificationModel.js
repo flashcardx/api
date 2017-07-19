@@ -18,12 +18,17 @@ const notifSchema = new Schema({
     text:{
         type:String
     },
+    seen:{
+        type: Boolean,
+        default: false
+    },
     priority:{
         type: Number,
         default: 0
     }
 
 });
+
 
 const notificationModel = mongoose.model('Notification', notifSchema);
 notificationModel.on('index', function(error) {

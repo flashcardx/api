@@ -86,6 +86,8 @@ cardSchema.pre('update', function(next) {
   next();
 });
 
+
+
 const Card = mongoose.model('cards', cardSchema);
 
 Card.on('index', function(error) {

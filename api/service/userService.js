@@ -194,6 +194,10 @@ function findByEmail(email, fields, callback){
     )
 }
 
+function increaseNotificationCounter(userId){
+    return User.update({_id: userId}, {$inc:{"notificationCounter":1}}).exec();
+}
+
 module.exports = {
     loginUser : loginUser,
     findById: findById,
@@ -206,7 +210,8 @@ module.exports = {
     updateLang: updateLang,
     loginFbUser: loginFbUser,
     registerNewFbUser: registerNewFbUser,
-    findByEmail: findByEmail
+    findByEmail: findByEmail,
+    increaseNotificationCounter: increaseNotificationCounter
 };
 
 const emailVerification = require("./emailVerificationService");

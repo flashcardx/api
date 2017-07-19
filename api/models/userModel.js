@@ -78,6 +78,10 @@ const userSchema = new Schema({
         min: [0, 'class limit reached'],
         max: [30, 'class limit reached']
     },
+    notificationCounter:{
+        type: Number, 
+        default: 0
+    },
     classes: [{
         lang: {
             type: String,

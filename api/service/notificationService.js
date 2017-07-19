@@ -4,12 +4,13 @@ const mongoose = require('mongoose');
 const config = require(appRoot + "/config");
 const notificationModel = require(appRoot + "/models/notificationModel");
 const logger = config.getLogger(__filename);
+const userService = require("./userService");
 
 
 function notifyClassUserJoined(integrants, classname, userName){
     return new Promise((resolve, reject)=>{
         var msg = userName + " joined class: " + classname;
-        deliverMesagge2Users(msg, integrants, 0);
+        deliverMesaggeLP(msg, integrants);
         return resolve();
     });
 }
@@ -17,7 +18,7 @@ function notifyClassUserJoined(integrants, classname, userName){
 function notifyClassUserAdded(integrants, classname, userName, requesterName){
     return new Promise((resolve, reject)=>{
         var msg = requesterName + " added " + userName+" to the class: " + classname
-        deliverMesagge2Users(msg, integrants, 0);
+        deliverMesaggeLP(msg, integrants);
         return resolve();
     });
 }
@@ -25,7 +26,7 @@ function notifyClassUserAdded(integrants, classname, userName, requesterName){
 function notifyClassUserLeft(integrants, classname, leaverName){
     return new Promise((resolve, reject)=>{
         var msg = leaverName + " left the class: " + classname;
-        deliverMesagge2Users(msg, integrants, 0);
+        deliverMesaggeLP(msg, integrants);
         return resolve();
     });
 }
@@ -33,7 +34,7 @@ function notifyClassUserLeft(integrants, classname, leaverName){
 function notifyClassUserWasRemoved(integrants, classname, leaverName, removerName){
     return new Promise((resolve, reject)=>{
         var msg = removerName + " removed "+ leaverName +" from the class: " + classname;
-        deliverMesagge2Users(msg, integrants, 0);
+        deliverMesaggeLP(msg, integrants);
         return resolve();
     });
 }
@@ -44,7 +45,7 @@ function notifyUserWasAdded2Class(userId, classname, requesterName){
         var u = {
             id: userId 
         };
-        deliverMesagge2Users(msg, new Array(u), 1);
+        deliverMesaggeHP(msg, new Array(u));
         return resolve();
     });
 }
@@ -55,7 +56,7 @@ function notifyUserWasRemoved(userLeaverId, classname, removerName){
         var u = {
             id: userLeaverId
         };
-        deliverMesagge2Users(msg, new Array(u), 1);
+        deliverMesaggeHP(msg, new Array(u));
         return resolve();
     });
 }
@@ -63,51 +64,114 @@ function notifyUserWasRemoved(userLeaverId, classname, removerName){
 function notifyClassDeleted(classname, integrants, ownerName){
       return new Promise((resolve, reject)=>{
         var msg = ownerName + " deleted the class: "+ classname;
-        deliverMesagge2Users(msg, integrants, 1);
+        deliverMesaggeHP(msg, integrants);
         return resolve();
     });
 }
 
-function deliverMesagge2Users(msg, users, priority){
+function deliverMesaggeLP(msg, users){
         var n = {
-            text: msg,
-            priority: priority
+            text: msg
         };
         if(users.length > 30)
             return logger.error("Can not deliver messages to manny users, this method is syncronous, performance will blow up");
         users.forEach(i=>{
-            n.ownerId = i.id;
-            var notification = new notificationModel(n);
-            notification.save().then(()=>{
-                logger.debug("notification saved ok");
-            }, err=>{
-                logger.error("Could not save notification: " + err);
-            });
+                userService.findById(i.id, "-_id notificationCounter", r=>{
+                if(r.success === false){
+                   return logger.error("error when saving notification for userid: " + i.id +", could not find user " + r.msg);
+                }
+                n.priority = r.msg.notificationCounter;
+                n.ownerId = i.id;
+                var notification = new notificationModel(n);
+                notification.save().then(()=>{
+                    logger.debug("notification saved ok");
+                }, err=>{
+                    logger.error("Could not save notification: " + err);
+                });
+            })
         });
 }
 
-function getNotifications(userId, callback){
+function deliverMesaggeHP(msg, users){
+       var n = {
+            text: msg
+        };
+        if(users.length > 30)
+            return logger.error("Can not deliver messages to manny users, this method is syncronous, performance will blow up");
+        users.forEach(i=>{
+                userService.findById(i.id, "-_id notificationCounter", r=>{
+                if(r.success === false){
+                   return logger.error("error when saving notification for userid: " + i.id +", could not find user " + r.msg);
+                }
+                n.priority = r.msg.notificationCounter + 1;
+                n.ownerId = i.id;
+                var notification = new notificationModel(n);
+                notification.save().then(()=>{
+                    logger.debug("notification saved ok");
+                }, err=>{
+                    logger.error("Could not save notification: " + err);
+                });
+            })
+        });
+}
+
+function getNotifications(userId, last, callback){
     var allNotifications = [];
-    notificationModel.find();
-    var restrictions = {
+    var restrictions = [{
              'ownerId': {$eq: userId}
-        }
-    notificationModel.find(restrictions)
+        }]
+    if(last)
+        restrictions.push({"date":{$lt: last}});
+    notificationModel.find({$and: restrictions })
     .sort({priority:"desc", date:"desc"})
-    .limit(20)
-    .select("date text priority")
+    .limit(10)
+    .select("date text seen")
     .exec()
     .then(docs=>{
         callback({success:true, msg: docs});
-       return notificationModel.update({ownerId:userId, priority:1}, {$set:{priority:0}})
+
+   
+        var notifIds = docs.map(v=>{
+            return v.id;
+        });
+       return notificationModel.update({_id:{$in: notifIds},seen:false}, {$set:{seen:true}},
+                            {   multi: true })
         .exec()
+        .then(r=>{
+            logger.debug("update notifs: " + JSON.stringify(r));
+            return userService.increaseNotificationCounter(userId);
+        })
+    },
+    err=>{
+        logger.error("got error: " + err);
+        return callback({success:false, msg: "Could not get notifications"});
     })
     .then(r=>{
         logger.debug("notifications updated ok, got: " + JSON.stringify(r));
     })
     .catch(err=>{
-                logger.err(err);
-                return callback({success:false, msg:String(err)});
+                logger.error(err);
+    });
+}
+
+function getNotificationsCount(userId, callback){
+    var allNotifications = [];
+    logger.error("userId: " + userId);
+    notificationModel.count({"ownerId": userId, seen:false})
+    .exec()
+    .then(c=>{
+        logger.error("got: " + c);
+        callback({success:true, msg: c});
+    },
+    err=>{
+        logger.error("got error: " + err);
+        return callback({success:false, msg: "Could not get count of notifications"});
+    })
+    .then(r=>{
+        logger.debug("notifications updated ok, got: " + JSON.stringify(r));
+    })
+    .catch(err=>{
+                logger.error(err);
     });
 }
 
@@ -119,5 +183,6 @@ module.exports = {
     notifyClassUserWasRemoved: notifyClassUserWasRemoved,
     notifyUserWasRemoved: notifyUserWasRemoved,
     getNotifications: getNotifications,
-    notifyClassDeleted: notifyClassDeleted
+    notifyClassDeleted: notifyClassDeleted,
+    getNotificationsCount: getNotificationsCount 
 }
