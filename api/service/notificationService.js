@@ -5,7 +5,7 @@ const config = require(appRoot + "/config");
 const notificationModel = require(appRoot + "/models/notificationModel");
 const logger = config.getLogger(__filename);
 const userService = require("./userService");
-
+const ObjectId = require('mongoose').Types.ObjectId;
 
 function notifyClassUserJoined(integrants, classname, userName){
     return new Promise((resolve, reject)=>{
@@ -115,22 +115,26 @@ function deliverMesaggeHP(msg, users){
         });
 }
 
-function getNotifications(userId, last, callback){
+function getNotifications(userId, page, callback){
+    logger.error("userId: " + userId +", callback: " + JSON.stringify(callback));
     var allNotifications = [];
+    const elementsPerPage = 10;
     var restrictions = [{
              'ownerId': {$eq: userId}
         }]
-    if(last)
-        restrictions.push({"date":{$lt: last}});
+    var skip = 0;
+    if(page){
+        skip = elementsPerPage * page;
+    }
+    logger.error("skip: " + skip + ", page: " + page);
     notificationModel.find({$and: restrictions })
     .sort({priority:"desc", date:"desc"})
-    .limit(10)
-    .select("date text seen")
+    .skip(skip)
+    .limit(elementsPerPage)
+    .select("date text seen priority")
     .exec()
     .then(docs=>{
         callback({success:true, msg: docs});
-
-   
         var notifIds = docs.map(v=>{
             return v.id;
         });
@@ -157,7 +161,7 @@ function getNotifications(userId, last, callback){
 function getNotificationsCount(userId, callback){
     var allNotifications = [];
     logger.error("userId: " + userId);
-    notificationModel.count({"ownerId": userId, seen:false})
+    notificationModel.count({"ownerId": new ObjectId(userId), seen:false})
     .exec()
     .then(c=>{
         logger.error("got: " + c);

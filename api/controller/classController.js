@@ -31,6 +31,7 @@ module.exports = function(app){
         });
     });
 
+    // needed for duplicating card to class 
     app.get("/classesShort", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
         classService.listAllShort(userId, r=>{
@@ -107,8 +108,10 @@ module.exports = function(app){
 
     app.get("/activity",  controllerUtils.requireLogin, function(req, res){
         const userId = req.userId;
-        const last = req.query.last;
-        notificationService.getNotifications(userId, last, r=>{
+        const page = req.query.page;
+        logger.error("dfcwredf");
+        logger.error("page: " + page);
+        notificationService.getNotifications(userId, page, r=>{
             return res.json(r);
         });
     });

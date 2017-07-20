@@ -57,7 +57,7 @@ module.exports = function(app){
 
     app.get("/duplicateCard/:id", controllerUtils.requireLogin, (req, res)=>{
         const cardId = req.params.id;
-        cardService.duplicateCard(req.userId, cardId, result=>{
+        cardService.duplicateCard2User(req.userId, cardId, result=>{
             res.json(result);
         });
     });
