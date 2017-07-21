@@ -19,7 +19,6 @@ module.exports = {
     dbEvents: dbEvents,
     APIPixabayUrl: api.pixabayUrl,
     APIPixabayKey: api.pixabayKey,
-    APICacheTime: parseInt(api.cacheTime),
     APIMaxSizeUpFiles: parseInt(api.maxSizeUploadFiles),
     APIMyUrl: api.myUrl,
     APIJwtExpireTime: api.jwtExpireTime,

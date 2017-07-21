@@ -7,10 +7,13 @@ const classModel = require(appRoot + "/models/classModel");
 const logger = config.getLogger(__filename);
 const userService = require("./userService");
 const cardService = require("./cardService");
+const cacheService = require("./cacheService");
 const categoryService = require("./categoryService");
 const notificationService = require("./notificationService");
 const cache = require("memory-cache");
 const ObjectId = require('mongoose').Types.ObjectId;
+
+
 
 function create(Class, callback){
     var userModel;
@@ -84,7 +87,7 @@ function verifyOwnerLimits(isPrivate, userId){
 
 
 function listAll(userId, callback){
-    listAllByFields(userId, "name description owner.name maxUsers usersLeft updated_at lang", callback);
+    listAllByFields(userId, "name description isPrivate maxLimit cardsLeft owner.name maxUsers usersLeft updated_at lang", callback);
 }
 
 
@@ -155,15 +158,11 @@ function search(name, userId, callback){
                 return callback(r);
             }
         const lang = r.msg;
-        const cacheKey = lang + userId;
-        var results = cache.get(cacheKey);
-                if(results){
-                    return callback(results);
-                }
-        classModel.findOne({name:name, lang:lang, isActive:true}, "name description integrants.id owner maxUsers usersLeft updated_at")
+        classModel.findOne({name:name, lang:lang, isActive:true}, "name description cardsLeft integrants.id owner maxUsers usersLeft maxLimit")
         .lean()
         .exec()
         .then(doc=>{
+            logger.error("search results: " + JSON.stringify(doc));
             return callback({success:true, msg:doc, userId:userId});
         })
         .catch(err=>{
@@ -180,19 +179,30 @@ function recommendClasses(userId, callback){
                 return callback(r);
             }
         const lang = r.msg;
-        const cacheKey = lang + userId;
-        var results = cache.get(cacheKey);
-            if(results){
-                return callback({success:true, msg:results});
-            }
-        classModel.find({"owner.id":{$ne:userId}, "integrants.id":{$ne:userId}, lang:lang, isPrivate:false, usersLeft:{$gt:0}, isActive:true}, "name description owner.name updated_at -_id maxUsers usersLeft")
-        .sort('-updated_at')
-        .limit(8)
-        .lean()
-        .exec()
+        const cacheKey = userId + lang;
+        cacheService.getClassRecommendations(userId, lang)
         .then(r=>{
-            cache.put(cacheKey, r, config.APICacheTime);
-            return callback({success:true, msg: r});
+            logger.debug("cache got 1:" + JSON.stringify(r));
+            if(r){
+                callback({success:true, msg:r, userId:userId});
+                return Promise.resolve(null);
+            }
+            return Promise.resolve(1);
+        })
+        .then(Continue=>{
+            if(!Continue)
+                return Promise.resolve();
+            return classModel.find({"owner.id":{$ne:userId}, "integrants.id":{$ne:userId}, lang:lang, isPrivate:false, usersLeft:{$gt:0}, isActive:true}, "name description owner integrants updated_at maxLimit cardsLeft maxUsers usersLeft")
+                   .sort('-updated_at')
+                   .limit(9)
+                   .lean()
+                   .exec();
+        })
+        .then(r=>{
+            if(r){
+                cacheService.putClassRecommendations(userId, lang, r);
+                return callback({success:true, msg: r, userId: userId});
+            }
         })
         .catch(err=>{
                 logger.warn(err);
@@ -202,11 +212,16 @@ function recommendClasses(userId, callback){
 }
 
 function joinClass(classname, userId, callback){
+    var classId;
     verifyUserIsNotInClass(userId, classname, "usersLeft integrants name lang isPrivate")
     .then(classModel=>{
+        classId = classModel._id;
         if(classModel.isPrivate === false)
             return joinPublicClass(classModel, userId);
         return joinPrivateClass(classModel, userId);
+    })
+    .then(userLang=>{
+              return cacheService.popFromClassRecommendations(userId, userLang, classId);
     })
     .then(()=>{
         return callback({success:true});
@@ -219,7 +234,7 @@ function joinClass(classname, userId, callback){
 
 function joinPublicClass(classModel, userId){
     return new Promise((resolve, reject)=>{
-        userService.findById(userId, "name classes classesLeft", r=>{
+        userService.findById(userId, "name classes classesLeft lang", r=>{
             if(r.success === false){
                 logger.error(r.msg);
                 return reject(r);
@@ -230,7 +245,7 @@ function joinPublicClass(classModel, userId){
                     return notificationService.notifyClassUserJoined(classModel.integrants, classModel.name, userModel.name);
                 })
                 .then(()=>{
-                    return resolve();
+                    return resolve(userModel.lang);
                 })
                 .catch(err=>{
                     return reject(err);
@@ -292,22 +307,26 @@ function verifyUserIsNotInClass(userId, classname, fields){
 
 
 function addUser(classname, userJoinerEmail, userRequesterId, callback){
-    userService.findByEmail(userJoinerEmail, "name classesLeft classes", r=>{
+    userService.findByEmail(userJoinerEmail, "name classesLeft classes lang", r=>{
             if(r.success === false)
                 return callback(r);
             var user2Join = r.msg;
+            var classId;
             if(user2Join.classesLeft == 0)
                 return callback({success:false, msg:"User can not be in more classes, limit reached"});
             verifyUserIsNotInClass(user2Join._id, classname, "owner.id integrants.id usersLeft isPrivate name")
             .then(Class=>{
-                    if(Class.isPrivate == true && Class.owner.id != userRequesterId)
-                        return callback({success:false, msg:"Only the owner can add users to a private class"});
-                    if(Class.usersLeft == 0)
-                        return callback({success:false, msg:"This class is already full"});
+                    classId = Class._id;
+                    if(Class.isPrivate == true && Class.owner.id != userRequesterId){
+                        return Promise.reject("Only the owner can add users to a private class");
+                    }
+                    if(Class.usersLeft == 0){
+                        return Promise.reject("This class is already full");
+                    }
                     userService.findById(userRequesterId, "name -_id", r=>{
                             if(r.success == false){
                                 logger.error(r.msg);
-                                return callback({success:false, msg:r.msg});
+                                    return Promise.reject(r.msg);
                             }
                             var requesterUser = r.msg;
                             if(Class.isPrivate == true)
@@ -316,7 +335,10 @@ function addUser(classname, userJoinerEmail, userRequesterId, callback){
                         });
                 })
             .then(()=>{
-                return callback({success:true});
+                return cacheService.popFromClassRecommendations(user2Join._id, user2Join.lang, classId);
+            })
+            .then(()=>{
+                callback({success:true});
             })
             .catch(err=>{
                         logger.warn(err);

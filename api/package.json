@@ -49,6 +49,7 @@
     "mongoose-unique-validator": "^1.0.4",
     "mongoose-validator": "^1.2.5",
     "randomstring": "^1.1.5",
+    "redis": "^2.7.1",
     "request": "^2.81.0",
     "requestify": "^0.2.5",
     "shutterstock": "^0.13.0",

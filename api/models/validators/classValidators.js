@@ -5,6 +5,12 @@ var nameValidator = [
     validator: 'isLength',
     arguments: [0, 40],
     message: 'Name should be between {ARGS[0]} and {ARGS[1]} characters'
+  }),
+    validate({
+    validator: 'matches',
+    arguments: /[^/]+$/i,
+    passIfEmpty: true,
+    message: 'Class name has invalid characters :('
   })
 ];
 

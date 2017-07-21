@@ -3,7 +3,7 @@ const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const requestify = require('requestify'); 
-const cache = require("memory-cache");
+const cacheService = require("./cacheService");
 const shutterstock = require('shutterstock');
 const pixabayBaseUrl = `${config.APIPixabayUrl}/?key=${config.APIPixabayKey}`;
 const MAX_PER_PAGE = 20;
@@ -15,27 +15,40 @@ const shutterstockAPI = shutterstock.v2({
 
 
 function searchBing(q, lang, clientIp, callback){
-    var url = config.BingUrl + "?q=" + q +"&mkt=" + lang + "&count=30" + "&size=Medium";
-    logger.error("client ip: "+ clientIp);
+    logger.info("client ip: "+ clientIp);
     if(!clientIp){
         logger.error("client ip undefined, will be replaced with empty string, if this continues Bing may think it is ddos attack");
         clientIp = "";
     }
-    requestify.get(url, {   cache: {
-    	cache: true,
-    	expires: config.APICacheTime 
-    },
-    headers:{
-        "Ocp-Apim-Subscription-Key": config.BingKey,
-        "X-Search-ClientIP": clientIp
-    }})
+    cacheService.getBingResults(q, lang)
+    .then(r=>{
+            logger.debug("cache got 1:" + JSON.stringify(r));
+            if(r){
+                callback({success:true, msg:r});
+                return Promise.resolve(null);
+            }
+            return Promise.resolve(1);
+    })
+    .then(r=>{
+        if(!r)
+            return Promise.resolve();
+        var url = config.BingUrl + "?q=" + q +"&mkt=" + lang + "&count=30" + "&size=Medium";
+        return requestify.get(url, { 
+                    headers:{
+                    "Ocp-Apim-Subscription-Key": config.BingKey,
+                    "X-Search-ClientIP": clientIp
+                }})
+    })
     .then(response=>{
+        if(!response)
+            return callback({success:true, msg:[]});
         var r = response.getBody();
+        cacheService.putBingResults(q, lang, r);
         return callback({success:true, msg:r});
     })
     .catch(err=>{
         logger.error('Encountered error making request:' + JSON.stringify(err));
-        return callback({success:false, msg:r});
+        return callback({success:false, msg:err});
     });
 }
 
