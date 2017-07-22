@@ -72,7 +72,7 @@ module.exports = function(app){
                     if (err) {
                         return res.json({ success: false});    
                         } else {
-                            return res.json({success: true});
+                            return res.json({success: true, userId:decoded.id});
                         }
                     });
     });

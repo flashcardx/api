@@ -76,6 +76,7 @@ module.exports = function(app){
         const leaverId = req.body.leaverId;
         const classname = req.body.classname;
         const requesterId = req.userId;
+        logger.error("leaverId: " + leaverId + ", classname: " + classname);
         classService.removeUser(classname, leaverId, requesterId, r=>{
             return res.json(r);
         });
