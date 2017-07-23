@@ -12,9 +12,7 @@ module.exports = function(app){
 
     app.post("/class",  controllerUtils.requireLogin, function(req, res){
         var Class = {
-            owner:{
-                id: req.userId
-            },
+            owner: req.userId,
             name: req.body.name,
             description: req.body.description,
             isPrivate: req.body.isPrivate
@@ -98,7 +96,9 @@ module.exports = function(app){
         });
     });
 
-    // returns integrants, if the user is the owner too and if class is private
+    /*
+    IF NOT USED DELETE IT
+    // returns integrants(just ids), if the user is the owner too and if class is private
     app.get("/classInfo/:classname",  controllerUtils.requireLogin, function(req, res){
         const classname = req.params.classname;
         const userId = req.userId;
@@ -106,6 +106,7 @@ module.exports = function(app){
             return res.json(r);
         });
     });
+    */
 
     app.get("/activity",  controllerUtils.requireLogin, function(req, res){
         const userId = req.userId;

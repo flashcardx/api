@@ -42,10 +42,8 @@ function notifyClassUserWasRemoved(integrants, classname, leaverName, removerNam
 function notifyUserWasAdded2Class(userId, classname, requesterName){
     return new Promise((resolve, reject)=>{
         var msg = requesterName + " added you to the class: " + classname;
-        var u = {
-            id: userId 
-        };
-        deliverMesaggeHP(msg, new Array(u));
+        var u = [userId];
+        deliverMesaggeHP(msg, u);
         return resolve();
     });
 }
@@ -53,10 +51,8 @@ function notifyUserWasAdded2Class(userId, classname, requesterName){
 function notifyUserWasRemoved(userLeaverId, classname, removerName){
      return new Promise((resolve, reject)=>{
         var msg = removerName + " removed you from the class: " + classname;
-        var u = {
-            id: userLeaverId
-        };
-        deliverMesaggeHP(msg, new Array(u));
+        var u = [userLeaverId];
+        deliverMesaggeHP(msg, u);
         return resolve();
     });
 }
@@ -76,12 +72,12 @@ function deliverMesaggeLP(msg, users){
         if(users.length > 30)
             return logger.error("Can not deliver messages to manny users, this method is syncronous, performance will blow up");
         users.forEach(i=>{
-                userService.findById(i.id, "-_id notificationCounter", r=>{
+                userService.findById(i, "-_id notificationCounter", r=>{
                 if(r.success === false){
-                   return logger.error("error when saving notification for userid: " + i.id +", could not find user " + r.msg);
+                   return logger.error("error when saving notification for userid: " + i + ", could not find user " + r.msg);
                 }
                 n.priority = r.msg.notificationCounter;
-                n.ownerId = i.id;
+                n.ownerId = i;
                 var notification = new notificationModel(n);
                 notification.save().then(()=>{
                     logger.debug("notification saved ok");
@@ -93,18 +89,19 @@ function deliverMesaggeLP(msg, users){
 }
 
 function deliverMesaggeHP(msg, users){
+        logger.error("users: " + JSON.stringify(users));
        var n = {
             text: msg
         };
         if(users.length > 30)
             return logger.error("Can not deliver messages to manny users, this method is syncronous, performance will blow up");
         users.forEach(i=>{
-                userService.findById(i.id, "-_id notificationCounter", r=>{
+                userService.findById(i, "-_id notificationCounter", r=>{
                 if(r.success === false){
-                   return logger.error("error when saving notification for userid: " + i.id +", could not find user " + r.msg);
+                   return logger.error("error when saving notification for userid: " + i +", could not find user " + r.msg);
                 }
                 n.priority = r.msg.notificationCounter + 1;
-                n.ownerId = i.id;
+                n.ownerId = i;
                 var notification = new notificationModel(n);
                 notification.save().then(()=>{
                     logger.debug("notification saved ok");

@@ -32,17 +32,12 @@ module.exports = function(app){
             });
         });
 
-          app.get("/searchBing/:criteria/:clientIp", controllerUtils.requireLogin, function(req,res){
-        userService.findById(req.userId, 'lang', (result)=>{
-                if(!result.success)
-                    return res.json(result);
-                const user = result.msg;
+        app.get("/searchBing/:criteria/:clientIp", controllerUtils.requireLogin, function(req,res){
                 const criteria = S(req.params.criteria).replaceAll(" ", "+").s;
-               imgSearchService.searchBing(criteria, user.lang, req.params.clientIp, result=>{
+               imgSearchService.searchBing(criteria, req.params.clientIp, result=>{
                     return res.json(result);
                });
             });
-        });
 
         app.get("/examples/:word", controllerUtils.requireLogin, (req, res)=>{
             const word = req.params.word;

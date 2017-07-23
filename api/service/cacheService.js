@@ -16,13 +16,13 @@ if(env == "development")
 });
 
 //message already is a string, so does not need parsing
-function putBingResults(q, lang, msg){ 
-    var cacheKey = genKeyBingResults(q, lang);
+function putBingResults(q, msg){ 
+    var cacheKey = genKeyBingResults(q);
     client.set(cacheKey, JSON.stringify(msg), "EX", 604800); // value in seconds = 7 days
 }
 
-function getBingResults(q, lang){
-    var cacheKey = genKeyBingResults(q, lang);
+function getBingResults(q){
+    var cacheKey = genKeyBingResults(q);
     return new Promise((resolve, reject)=>{
           client.get(cacheKey, function (err, data) {
             if (err){
@@ -34,8 +34,8 @@ function getBingResults(q, lang){
     });
 }
 
-function genKeyBingResults(q, lang){
-    return "BingResults" + q + lang;
+function genKeyBingResults(q){
+    return "BingResults" + q;
 }
 
 

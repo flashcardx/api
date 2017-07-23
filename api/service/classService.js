@@ -17,10 +17,9 @@ const ObjectId = require('mongoose').Types.ObjectId;
 
 function create(Class, callback){
     var userModel;
-    verifyOwnerLimits(Class.isPrivate, Class.owner.id)
+    verifyOwnerLimits(Class.isPrivate, Class.owner)
     .then((user)=>{
         userModel = user;
-        Class.owner.name = user.name;
         return saveClassDb(Class, user.lang)
     })
     .then((classId)=>{
@@ -87,7 +86,7 @@ function verifyOwnerLimits(isPrivate, userId){
 
 
 function listAll(userId, callback){
-    listAllByFields(userId, "name description isPrivate maxLimit cardsLeft owner.name maxUsers usersLeft updated_at lang", callback);
+    listAllByFieldsPopulateOwner(userId, "name description isPrivate maxLimit cardsLeft owner maxUsers usersLeft updated_at lang", callback);
 }
 
 
@@ -147,6 +146,50 @@ function listAllByFields(userId, fields, callback){
     });
 }
 
+function listAllByFieldsPopulateOwner(userId, fields, callback){
+    userService.findById(userId, "classes lang -_id", r=>{
+        if(r.success === false){
+                logger.error(r.msg);
+                return callback(r);
+            }
+        var user = r.msg;
+        const length = user.classes.length;
+        var finalResults = [];
+        if(user.classes.length === 0)
+            return callback({success:true, msg:[]});
+        var processed1 = 0,
+            processed2 = 0;
+        user.classes.forEach((value, index, a)=>{
+            if(value.lang === user.lang){
+                classModel.findOne({_id: value.id, lang:user.lang, isActive:true}, fields)
+                .lean()
+                .populate("owner", "name")
+                .exec()
+                .then(doc=>{
+                    if(!doc){
+                        processed1++;
+                        if(processed1 + processed2 === length)
+                            return callback({success:true, msg:finalResults});
+                        return;
+                    }
+                    processed1++;
+                    finalResults.push(doc);
+                    if(processed1 + processed2 === length)
+                        return callback({success:true, msg:finalResults});
+                })
+                .catch(err=>{
+                logger.warn(err);
+                return callback({success:false, msg:String(err)});
+            });
+            }//end if
+            else
+                processed2++;
+            if(processed1 + processed2 === length)
+                return callback({success:true, msg:finalResults});
+    }); //end foreach
+    });
+}
+
 
 
 
@@ -158,7 +201,8 @@ function search(name, userId, callback){
                 return callback(r);
             }
         const lang = r.msg;
-        classModel.findOne({name:name, lang:lang, isActive:true}, "name description cardsLeft integrants.id owner maxUsers usersLeft maxLimit")
+        classModel.findOne({name:name, lang:lang, isActive:true}, "name description cardsLeft integrants owner maxUsers usersLeft maxLimit")
+        .populate("owner", "name")
         .lean()
         .exec()
         .then(doc=>{
@@ -192,9 +236,10 @@ function recommendClasses(userId, callback){
         .then(Continue=>{
             if(!Continue)
                 return Promise.resolve();
-            return classModel.find({"owner.id":{$ne:userId}, "integrants.id":{$ne:userId}, lang:lang, isPrivate:false, usersLeft:{$gt:0}, isActive:true}, "name description owner integrants updated_at maxLimit cardsLeft maxUsers usersLeft")
+            return classModel.find({"owner":{$ne:userId}, "integrants":{$ne:userId}, lang:lang, isPrivate:false, usersLeft:{$gt:0}, isActive:true}, "name description owner integrants updated_at maxLimit cardsLeft maxUsers usersLeft")
                    .sort('-updated_at')
                    .limit(9)
+                   .populate("owner", "name")
                    .lean()
                    .exec();
         })
@@ -213,7 +258,7 @@ function recommendClasses(userId, callback){
 
 function joinClass(classname, userId, callback){
     var classId;
-    verifyUserIsNotInClass(userId, classname, "usersLeft integrants name lang isPrivate")
+    verifyUserIsNotInClass(userId, classname, "usersLeft owner integrants name lang isPrivate")
     .then(classModel=>{
         classId = classModel._id;
         if(classModel.isPrivate === false)
@@ -242,7 +287,9 @@ function joinPublicClass(classModel, userId){
             var userModel = r.msg;
             joinUserClass(userModel, classModel)
                 .then(()=>{
-                    return notificationService.notifyClassUserJoined(classModel.integrants, classModel.name, userModel.name);
+                    var allIntegrants = classModel.integrants;
+                    allIntegrants.push(classModel.owner);
+                    return notificationService.notifyClassUserJoined(allIntegrants, classModel.name, userModel.name);
                 })
                 .then(()=>{
                     return resolve(userModel.lang);
@@ -262,10 +309,7 @@ function joinUserClass(userModel, classModel){
                 return reject("This class is full, can not add new users");
             userModel.classesLeft--;
             classModel.usersLeft--;
-            classModel.integrants.push({
-                id: userModel._id,
-                name: userModel.name
-            });
+            classModel.integrants.push(new ObjectId(userModel._id));
             userModel.classes.push({
                 id: classModel._id,
                 lang: classModel.lang,
@@ -290,8 +334,9 @@ function joinPrivateClass(classModel, userId){
 }
 
 function verifyUserIsNotInClass(userId, classname, fields){
+    logger.error(1);
     return new Promise((resolve, reject)=>{
-        classModel.findOne({name:classname, "owner.id":{$ne:userId},"integrants.id":{$ne:userId}, "waiting.id":{$ne:userId}, isActive:true}, fields)
+        classModel.findOne({name:classname, "owner":{$ne:userId},"integrants":{$ne:userId}, "waiting":{$ne:userId}, isActive:true}, fields)
         .exec()
         .then(r=>{
             if(!r)
@@ -314,10 +359,10 @@ function addUser(classname, userJoinerEmail, userRequesterId, callback){
             var classId;
             if(user2Join.classesLeft == 0)
                 return callback({success:false, msg:"User can not be in more classes, limit reached"});
-            verifyUserIsNotInClass(user2Join._id, classname, "owner.id integrants.id usersLeft isPrivate name")
+            verifyUserIsNotInClass(user2Join._id, classname, "owner integrants usersLeft isPrivate name")
             .then(Class=>{
                     classId = Class._id;
-                    if(Class.isPrivate == true && Class.owner.id != userRequesterId){
+                    if(Class.isPrivate == true && Class.owner != userRequesterId){
                         return Promise.reject("Only the owner can add users to a private class");
                     }
                     if(Class.usersLeft == 0){
@@ -352,7 +397,7 @@ function addUserPublicClass(classModel, userModel, requesterName){
     return new Promise((resolve, reject)=>{
             joinUserClass(userModel, classModel)
                 .then(()=>{
-                    var allIntegrants = classModel.integrants;
+                    var allIntegrants = classModel.integrants
                     allIntegrants.push(classModel.owner);
                     return notificationService.notifyClassUserAdded(allIntegrants, classModel.name, userModel.name, requesterName);
                 })
@@ -379,18 +424,19 @@ function removeUser(classname, leaverId, requesterId, callback){
      classModel.findOne({$and: [
                         {name:classname},
                         {isActive:true},
-                        {$or:[{"owner.id":{$eq:leaverId}}, {"integrants.id":{$eq:leaverId}}]},
-                        {$or:[{"owner.id":{$eq:requesterId}}, {"integrants.id":{$eq:requesterId}}]}
+                        {$or:[{"owner":{$eq:leaverId}}, {"integrants":{$eq:leaverId}}]},
+                        {$or:[{"owner":{$eq:requesterId}}, {"integrants":{$eq:requesterId}}]}
                         ]},
-                        "owner isPrivate integrants.id")
+                        "owner isPrivate integrants")
+        .populate("owner", "name")
         .lean()
         .exec()
         .then(Class=>{
             if(!Class)
                 return callback({success:false, msg:"either Class with the given classname does not exist(or not active) or user has not enough privileges"});
-            if(Class.owner.id == leaverId)
+            if(Class.owner._id == leaverId)
                 return callback({success:false, msg:"Class admin can not be removed"});
-            if(requesterId !== leaverId && Class.owner.id != requesterId)
+            if(requesterId !== leaverId && Class.owner._id != requesterId)
                 return callback({success:false, msg:"Only the class admin can remove other users"});
             var requesterName = Class.owner.name;
             var userLeaver
@@ -413,10 +459,10 @@ function removeUser(classname, leaverId, requesterId, callback){
                     userLeaver = doc;
                 return classModel.findOneAndUpdate({_id:Class._id},
                     {$inc:{"usersLeft": 1},
-                    $pull: {"integrants":{"id":new ObjectId(leaverId)}}
+                    $pull: {"integrants":new ObjectId(leaverId)}
                 },
                  {
-                         "fields": { "integrants.id":1, "owner.id":1}
+                         "fields": { "integrants":1, "owner":1}
                  }
                 )
                 .lean()
@@ -427,12 +473,13 @@ function removeUser(classname, leaverId, requesterId, callback){
                         logger.error("could not find user id");
                         return Promise.reject("could not find user");
                     }
-                var allIntegrants = updatedClass.integrants;
+                var integrantsButOwner = updatedClass.integrants;
+                var allIntegrants = integrantsButOwner;
                 allIntegrants.push(updatedClass.owner);
                 if(leaverId == requesterId)
                         return notificationService.notifyClassUserLeft(allIntegrants, classname, userLeaver.name);
                     else
-                        return notificationService.notifyClassUserWasRemoved(updatedClass.integrants, classname, userLeaver.name, requesterName);
+                        return notificationService.notifyClassUserWasRemoved(integrantsButOwner, classname, userLeaver.name, requesterName);
             })
             .then(()=>{
                        if(leaverId != requesterId){
@@ -451,9 +498,11 @@ function removeUser(classname, leaverId, requesterId, callback){
         });   
 }
 
+/*
+TODO : DELETE IT
 function getClassInfo(classname, userId, callback){
     classModel.findOne({$or:[{$and:[{name:classname}, {isActive:true}, {isPrivate:false}]},
-                        {$and: [ {name:classname}, {isActive:true}, {$or: [{"owner.id":{$eq:userId}}, {"integrants.id":{$eq:userId}}]}
+                        {$and: [ {name:classname}, {isActive:true}, {$or: [{"owner":{$eq:userId}}, {"integrants":{$eq:userId}}]}
                         ]}]},
                         "owner integrants isPrivate")
         .lean()
@@ -474,14 +523,16 @@ function getClassInfo(classname, userId, callback){
                 });
 }
 
+*/
+
 function mark4delete(classname, userId, callback){
     var classModel;
     var allIntegrants;
-    findByName(classname, "owner isActive integrants.id")
+    findByNamePopulateOwner(classname, "owner isActive integrants")
     .then(Class=>{
         if(!Class)
             return Promise.reject("Could not find class");
-        if(Class.owner.id != userId)
+        if(Class.owner._id != userId)
             return Promise.reject("only the admin can delete a class");
         classModel = Class;
         Class.isActive = false;
@@ -490,14 +541,12 @@ function mark4delete(classname, userId, callback){
     })
     .then(r=>{
             allIntegrants = classModel.integrants;
-            allIntegrants.push(classModel.owner);
+            allIntegrants.push(classModel.owner._id);
         return notificationService.notifyClassDeleted(classname, allIntegrants, classModel.owner.name);
     })
     .then(()=>{
-        var usersId = allIntegrants.map(v=>{
-            return v.id;
-        })
-        return deleteClassFromUsers(usersId, classModel._id)
+        logger.debug("all integrants: " + JSON.stringify(allIntegrants));
+        return deleteClassFromUsers(allIntegrants, classModel._id)
     })
     .then(r=>{
         logger.debug("result from update: " + JSON.stringify(r));
@@ -524,6 +573,13 @@ function findByName(classname, fields){
     return classModel.findOne({name:classname, isActive:true}, fields)
         .exec();
 }
+
+function findByNamePopulateOwner(classname, fields){
+    return classModel.findOne({name:classname, isActive:true}, fields)
+        .populate("owner", "name")
+        .exec();
+}
+
 
 function duplicateCard2Class(classname, cardId, userId, callback){
     logger.debug("classname: " + classname + ", userId: " + userId);
@@ -600,10 +656,22 @@ function findClassLean(classname, userId, fields){
     return classModel.findOne({$and: [
                         {name:classname},
                         {isActive:true},
-                        {$or:[{"owner.id":{$eq:userId}}, {"integrants.id":{$eq:userId}}]}
+                        {$or:[{"owner":{$eq:userId}}, {"integrants":{$eq:userId}}]}
                         ]},
                         fields)
         .lean()
+        .exec();
+}
+
+function findClassLeanPopulateOwner(classname, userId, fields){
+    return classModel.findOne({$and: [
+                        {name:classname},
+                        {isActive:true},
+                        {$or:[{"owner":{$eq:userId}}, {"integrants":{$eq:userId}}]}
+                        ]},
+                        fields)
+        .lean()
+        .populate("owner", "name")
         .exec();
 }
 
@@ -643,18 +711,33 @@ function getCategories(classname, userId, callback){
 }
 
 function getStats(classname, userId, callback){
-    findClassLean(classname, userId, "usersLeft maxUsers cardsLeft maxLimit")
+    findClassLeanPopulateOwner(classname, userId, "usersLeft maxUsers cardsLeft maxLimit owner integrants isPrivate")
     .then(Class=>{
         if(!Class)
             return Promise.reject("Either class does not exist or user is not in the class");
-        return callback({success:true, usersLeft: Class.usersLeft, maxUsers: Class.maxUsers,
-                         cardsLeft: Class.cardsLeft, maxCards: Class.maxLimit});
+        return callback({success:true, msg:Class});
     })
     .catch(err=>{
                     logger.error("err: " + err);
                     return callback({success:false, msg:err});
         });
 }
+
+function getClassIntegrants(classname, userId, callback){
+    classModel.findOne({$and: [
+                        {name:classname},
+                        {isActive:true},
+                        {$or:[{"owner":{$eq:userId}}, {"integrants":{$eq:userId}}]}
+                        ]},
+                        "integrants owner")
+        .lean()
+        .populate('integrants owner', 'name')
+        .exec()
+        .then(r=>{
+                logger.error("class integrants: " + JSON.stringify(r));
+        });
+}
+
 
 
 module.exports = {
@@ -665,7 +748,6 @@ module.exports = {
     joinClass: joinClass,
     addUser: addUser,
     removeUser: removeUser,
-    getClassInfo: getClassInfo,
     mark4delete: mark4delete,
     listAllShort: listAllShort,
     duplicateCard2Class: duplicateCard2Class,
@@ -673,5 +755,6 @@ module.exports = {
     updateCard: updateCard,
     getCategories: getCategories,
     getStats: getStats,
-    deleteCard: deleteCard
+    deleteCard: deleteCard,
+    getClassIntegrants: getClassIntegrants
 }
