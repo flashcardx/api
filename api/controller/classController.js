@@ -91,7 +91,9 @@ module.exports = function(app){
     app.get("/classIntegrants/:classname",  controllerUtils.requireLogin, function(req, res){
         const classname = req.params.classname;
         const userId = req.userId;
+        logger.error("before");
         classService.getClassIntegrants(classname, userId, r=>{
+            logger.error("about to respond: " + JSON.stringify(r));
             return res.json(r);
         });
     });
@@ -128,6 +130,8 @@ module.exports = function(app){
 
     app.delete("/class/:classname",  controllerUtils.requireLogin, function(req, res){
         const classname = req.params.classname;
+        logger.error("classname natural: " + classname);
+        logger.error("classname url decoded: " + decodeURIComponent(classname));
         const userId = req.userId;
         classService.mark4delete(classname, userId, r=>{
             return res.json(r);

@@ -734,7 +734,11 @@ function getClassIntegrants(classname, userId, callback){
         .populate('integrants owner', 'name')
         .exec()
         .then(r=>{
-                logger.error("class integrants: " + JSON.stringify(r));
+                return callback({succes:true, msg:r});
+        })
+        .catch(err=>{
+                    logger.error("err: " + err);
+                    return callback({success:false, msg:err});
         });
 }
 
