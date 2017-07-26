@@ -59,13 +59,20 @@ const classSchema = new Schema({
     isActive:{
         type: Boolean,
         default: true
+    },
+    rank:{      //represents the priority of a class to be listed in the class suggestions
+        type:Number,
+        default:0,
+        index: true
+    },
+    thumbnailHash:{
+          type:String
     }
 },{
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
     }
 );
 
-classSchema.index({"updated_at": -1});
 
 classSchema.plugin(uniqueValidator, { message: 'That {PATH} for the class already exists, it has to be unique' });
 

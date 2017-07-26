@@ -15,6 +15,15 @@ function notifyClassUserJoined(integrants, classname, userName){
     });
 }
 
+function notifyClassUserRemovedImg(integrants, classname, userName){
+    return new Promise((resolve, reject)=>{
+        var msg = userName + " removed the profile image from class: " + classname;
+        deliverMesaggeLP(msg, integrants);
+        return resolve();
+    });
+}
+
+
 function notifyClassUserAdded(integrants, classname, userName, requesterName){
     return new Promise((resolve, reject)=>{
         var msg = requesterName + " added " + userName+" to the class: " + classname
@@ -185,5 +194,6 @@ module.exports = {
     notifyUserWasRemoved: notifyUserWasRemoved,
     getNotifications: getNotifications,
     notifyClassDeleted: notifyClassDeleted,
-    getNotificationsCount: getNotificationsCount 
+    getNotificationsCount: getNotificationsCount,
+    notifyClassUserRemovedImg: notifyClassUserRemovedImg
 }

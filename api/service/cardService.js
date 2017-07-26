@@ -313,6 +313,22 @@ function duplicateCard2Class(Class, cardIdOld, username, callback){
         });
 }
 
+function duplicateCardUserClass(cardIdOld, userId, callback){
+        CardClass.findById(cardIdOld, "name description imgs").exec().then(doc=>{
+            if(!doc){
+                logger.error("no card found for cardId: " + cardIdOld + "(trying to duplicate card from class to user)");
+                return callback({success:false, msg:"This card does not exist anymore"});
+            }
+             var card = {
+                name: doc.name,
+                description: doc.description,
+                imgs: doc.imgs,
+                isDuplicated: true              
+            };
+            return createDuplicatedCard2User(card, userId, callback);
+        });
+}
+
 function createDuplicatedCard2Class(card, Class, username, callback){
         card.ownerName = username;
         card.ownerId = Class._id;
@@ -323,11 +339,12 @@ function createDuplicatedCard2Class(card, Class, username, callback){
                            })
                            .then(results=>{
                                     logger.debug(results);
-                                    return callback({success:true, msg:"Card was duplicated ok!"});
-                                })
+                                    logger.error("1");
+                                    return callback({success:true, msg:cardModel});
+                            })
                             .catch(jsonMsj=>{
                                  logger.warn(jsonMsj);
-                                 return callback(jsonMsj);
+                                 return callback({success:false, msg:jsonMsj});
                             });
 
 }
@@ -464,6 +481,11 @@ function updateCategorys(userId, deletedCategory, newCategory, callback){
     });
 }
 
+function findCardClassByIdLean(cardId, fields){
+    return CardClass.findById(cardId, fields)
+    .lean()
+    .exec();
+}
 
 module.exports = {
     createCard: createCard,
@@ -474,9 +496,11 @@ module.exports = {
     cardRecommendations: cardRecommendations,
     duplicateCard2User: duplicateCard2User,
     duplicateCard2Class: duplicateCard2Class,
+    duplicateCardUserClass: duplicateCardUserClass,
     setInitialCards: setInitialCards,
     updateCard: updateCard,
     updateCardClass: updateCardClass,
     returnCards: returnCards,
-    getClassCards: getClassCards
+    getClassCards: getClassCards,
+    findCardClassByIdLean: findCardClassByIdLean
 }

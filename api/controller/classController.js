@@ -5,6 +5,8 @@ const controllerUtils = require("./utils");
 const logger = config.getLogger(__filename);
 const Img = require(appRoot + "/models/imgModel");
 const classService = require(appRoot + "/service/classService");
+const userService = require(appRoot + "/service/userService");
+const feedService = require(appRoot + "/service/feedService");
 const notificationService = require(appRoot + "/service/notificationService");
 
 module.exports = function(app){
@@ -147,6 +149,16 @@ module.exports = function(app){
         });
     });
 
+    app.get("/duplicateCardClassUser/:classname/:cardId",  controllerUtils.requireLogin, function(req, res){
+        const cardId = req.params.cardId;
+        const classname = req.params.classname;
+        const userId = req.userId;
+        logger.error("duplicate 2 user, cardid: " + cardId + ", classname: " + classname);
+        classService.duplicateCard2User(classname, cardId, userId, r=>{
+            return res.json(r);
+        });
+    });
+
     app.get("/classCards/:classname", controllerUtils.requireLogin, function(req, res){
         var params = {
             last: req.query.last,
@@ -169,7 +181,9 @@ module.exports = function(app){
             description : req.body.description,
             category: req.body.category
         };
+        logger.error("update card name: " + card.name);
         classService.updateCard(classname, userId, cardId, card, r=>{
+            logger.error("result: " + JSON.stringify(r));
             return res.json(r);
         });
     });
@@ -198,5 +212,16 @@ module.exports = function(app){
             return res.json(r);
         });
     });
+
+    app.get("/feed", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;
+        var lastId = req.query.last;
+        userService.getFeed(userId, lastId, r=>{
+            return res.json(r);
+        });
+    });
+       
+
+    
 
 }

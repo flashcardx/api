@@ -2,7 +2,7 @@
     "access": "/logs/access.log",
     "app": "/logs/app.log",
     "levelFile": "error",
-    "levelConsole":"debug"
+    "levelConsole":"error"
 },
  "pi":{
     "access": "/logs/access.log",

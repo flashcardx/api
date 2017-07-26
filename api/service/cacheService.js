@@ -6,6 +6,7 @@ const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 
+/*
 if(env == "development")
     client.flushdb( function (err, succeeded) {
         if(err){
@@ -14,6 +15,7 @@ if(env == "development")
         }
         logger.warn("redis cache flushed result: " + succeeded); // will be true if successfull
 });
+*/
 
 //message already is a string, so does not need parsing
 function putBingResults(q, msg){ 
@@ -39,58 +41,9 @@ function genKeyBingResults(q){
 }
 
 
-function putClassRecommendations(userId, lang, msg){
-    var cacheKey = genKeyClassRecommend(userId, lang);
-    client.set(cacheKey, JSON.stringify(msg), "EX", 86400); // value in seconds = 24 hrs
-}
-
-function getClassRecommendations(userId, lang, msg){
-    var cacheKey = genKeyClassRecommend(userId, lang);
-    return new Promise((resolve, reject)=>{
-          client.get(cacheKey, function (err, data) {
-            if (err){
-                    logger.error("error when getting data from redis: " + err);
-                    return reject(err);
-                }
-            logger.info("redis got data: " + JSON.stringify(data));
-            return resolve(JSON.parse(data));
-        });
-    });
-}
-
-function popFromClassRecommendations(userId, lang, classId){
-    return getClassRecommendations(userId, lang)
-          .then(data=>{
-              if(!data)
-                return Promise.resolve();
-
-              var classes = data.filter(c=>{
-                  return c._id != classId;
-              })
-              if(classes.length == data.length)
-                    return Promise.resolve();
-              putClassRecommendations(userId, lang, classes);
-              return Promise.resolve();
-          })
-        .catch(err=>{
-            return Promise.reject(err);
-        })
-}
-
-function genKeyClassRecommend(userId, lang){
-    return "classRecommend" + userId + lang;
-}
-
-
-
-
 
 
 module.exports = {
-
-    putClassRecommendations: putClassRecommendations,
-    getClassRecommendations: getClassRecommendations,
-    popFromClassRecommendations: popFromClassRecommendations,
     putBingResults: putBingResults,
     getBingResults: getBingResults
 

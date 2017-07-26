@@ -4,6 +4,8 @@ const bcrypt = require("bcryptjs");
 const mongoose = require('mongoose');
 const config = require(appRoot + "/config");
 const User = require(appRoot + "/models/userModel");
+const feedService = require(appRoot + "/service/feedService");
+const AWSService = require(appRoot + "/service/AWSService");
 const LoginRegistryModel = require(appRoot + "/models/loginRegistryModel");
 const logger = config.getLogger(__filename);
 const cache = require("memory-cache");
@@ -75,7 +77,22 @@ function findById(id, fields, callback){
     });
 }
 
-
+function findByIdLean(id, fields, callback){
+    User.findById(id, fields)
+        .lean()
+        .exec()
+        .then(user=>{
+                if(!user){
+                    logger.error("User with the given id not found");
+                    return callback({success:false, msg: "User with the given id not found"});
+                }
+                return callback({success: true, msg: user});
+        })
+        .catch(err=>{
+                logger.error(err);
+                return callback({success:false, msg: String(error)});
+        });
+}
 
 function saveUser(userModel, callback){
     userModel.save(function(error){
@@ -98,7 +115,7 @@ function userCardLimitsOk(userId){
                 logger.error(err);
                 return reject(String(err));
             }
-            if(user.preferences.recycleMode)
+            if(user.preferences.recycleMode == true)
                 return resolve(user);
             if(user.plan.cardsLeft <= 0)
                 return reject("You do not have more space for new cards, delete some cards!");
@@ -211,7 +228,9 @@ module.exports = {
     loginFbUser: loginFbUser,
     registerNewFbUser: registerNewFbUser,
     findByEmail: findByEmail,
-    increaseNotificationCounter: increaseNotificationCounter
+    increaseNotificationCounter: increaseNotificationCounter,
+    findByIdLean: findByIdLean,
+    getFeed: getFeed
 };
 
 const emailVerification = require("./emailVerificationService");
@@ -247,3 +266,54 @@ function registerNewFbUser(user, callback){
                         });
             })
 };
+
+
+function getFeed(userId, lastId, callback){
+    var userLang;
+    findByIdLean(userId, "classes lang", r=>{
+            logger.error("before getting feed: " + JSON.stringify(r));
+            if(r.success == false){
+                logger.error("error when getting user: " + r.msg);
+                return callback({success:false, msg:r.msg});
+            }
+            if(r.msg.classes.length == 0)
+                return callback({success:true, msg:[]});
+            userLang = r.msg.lang;
+        feedService.getFeed(userId, userLang, lastId)
+        .then(r=>{
+                logger.error("activities: " +JSON.stringify(r));
+                var feed = [];
+                var processed = 0;
+                r.results.forEach((obj, i)=>{
+                    if(obj.type == "card"){
+                        cardService.findCardClassByIdLean(obj.object, "name description imgs ownerName category updated_at")
+                        .then(card=>{
+                            logger.error("find card class lean got:" + JSON.stringify(card));
+                            if(!card)
+                                logger.error("no card found for activity(trying to fetch user feed): " + JSON.stringify(obj));
+                            card.id = obj.id;
+                            feed.push(AWSService.replaceImgsUrl(card));
+                            processed++;
+                            if(processed == r.results.length)
+                                return callback({success:true, msg:feed});
+                        })
+                        .catch(err=>{
+                                logger.error("no card found for activity(trying to fetch user feed): " + JSON.stringify(obj));                        
+                                Promise.reject(err);
+                                throw new Exception(err);    
+                        })
+                    }
+                    else{
+                        feed.push(obj);    
+                        processed++;
+                        if(processed == r.results.length)
+                            return callback({success:true, msg:feed});
+                    }
+                });
+            })
+            .catch(err=>{
+                logger.error("userfeed error: " + err);
+                return callback({success:false, msg:err});
+            })
+    })
+}

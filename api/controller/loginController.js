@@ -2,6 +2,7 @@ const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const userService = require(appRoot + "/service/userService");
+const AWSService = require(appRoot + "/service/AWSService");
 const emailVerification = require(appRoot + "/service/emailVerificationService");
 const logger = config.getLogger(__filename);
 const jwt = require('jsonwebtoken');
@@ -28,7 +29,7 @@ module.exports = function(app){
         }
         userService.loginUser(req.body.email, req.body.password, function(result){
             if(result){
-                if(result.success){
+                if(result.success==true){
                     var user = {
                         id: result.msg._id
                     };
@@ -84,7 +85,7 @@ module.exports = function(app){
 
         userService.loginFbUser(req.body.facebookId, function(result){
             if(result){
-                if(result.success){
+                if(result.success == true){
                      var user = {
                         id: result.msg._id
                     };

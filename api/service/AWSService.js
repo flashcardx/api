@@ -13,9 +13,7 @@ if(env==="production"){
         useAccelerateEndpoint: true
     });
 }
-
 var s3 = new AWS.S3();
-
 var bucketName = credentials.bucketName;
 
 function saveToS3(key, contentType, data, callback){
@@ -41,37 +39,17 @@ function getImgFromS3(id, callback){
 });
 }
 
+//IMAGES FROM CLOUD FRONT
 function addTemporaryUrl(cards, callback){
     if(cards.length === 0)
         return callback({success:true, msg:[]});
-    var cardIndex = 0;
     var expireAfter = 600; //url expires after 600 seconds
     cards.forEach((card, i)=>{
-        var imgs = card.imgs;
-        var imgIndex = 0;
-        if(imgs.length === 0){
-            cardIndex++;
-            if(cardIndex === cards.length)
-                return callback({success:true, msg: cards});
-        }
-        else
-            cardIndex++;
-        imgs.forEach((img, j)=>{
-            var params = {Bucket: bucketName, Key:img.hash, Expires: expireAfter};
-            s3.getSignedUrl('getObject', params, (err, url)=>{
-                imgIndex++;
-                if(err){
-                    logger.error(err);
-                    return callback({success:false, msg: String(err)});
-                }
-                cards[i].imgs[j].hash = url;
-                if(cardIndex === cards.length && imgIndex === card.imgs.length)
-                    return callback({success:true, msg: cards});
-            });
-
-        });
-    })
+        cards[i] = replaceImgsUrl(cards[i]);
+    });
+    return callback({success:true, msg: cards});
 }
+
 
 function removeFromS3(hash, callback){
     var bucketParams = {Bucket: bucketName, Key:hash};
@@ -82,11 +60,19 @@ function removeFromS3(hash, callback){
         });
 };
 
+function replaceImgsUrl(card){
+    card.imgs.forEach((img, j)=>{
+                card.imgs[j].hash = "http://d32suzxs6u0rur.cloudfront.net/"+img.hash;
+        });
+    return card;
+}
+
 module.exports = {
     saveToS3: saveToS3,
     saveToS3Buffer: saveToS3Buffer,
     getImgFromS3: getImgFromS3,
     removeFromS3: removeFromS3,
-    addTemporaryUrl:addTemporaryUrl
+    addTemporaryUrl: addTemporaryUrl,
+    replaceImgsUrl: replaceImgsUrl
 }
 

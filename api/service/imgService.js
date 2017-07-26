@@ -255,5 +255,6 @@ module.exports = {
     downloadArray: downloadArray,
     getImg: AWSService.getImgFromS3,
     deleteImgsOnce: deleteImgsOnce,
-    increaseImgsCounter: increaseImgsCounter
+    increaseImgsCounter: increaseImgsCounter,
+    deleteImgOnce: deleteImgOnce
 }
