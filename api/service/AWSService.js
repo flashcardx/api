@@ -54,9 +54,11 @@ function addTemporaryUrl(cards, callback){
 function removeFromS3(hash, callback){
     var bucketParams = {Bucket: bucketName, Key:hash};
     s3.deleteObject(bucketParams, function(err, data) {
-        if (err)
-            return callback(err);
-        return callback();
+        if (err){
+            logger.error("error when removing image from s3: " + err);   
+            return callback({success:false, msg:err});
+        }
+        return callback({success:true});
         });
 };
 

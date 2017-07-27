@@ -221,15 +221,16 @@ function deleteImgOnce(hash, callback){
                             });
                         }
                         else{
-                            img.save((err)=>{
-                            if(err)callback(err);
-                            return callback();
+                            img.save(err=>{
+                            if(err)
+                                callback({success:false, msg:err});
+                            return callback({success:true});
                             });
                         }
                      })
                      .catch(err=>{
                         logger.error(err);
-                        callback(err);
+                        callback({success:false, msg:err});
                      });
 
 };

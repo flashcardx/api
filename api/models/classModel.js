@@ -10,6 +10,8 @@ var langCodes = lang.map((value)=>{
     return value.code;
 });
 
+
+
 const classSchema = new Schema({
     name:{
         type: String,
@@ -65,8 +67,9 @@ const classSchema = new Schema({
         default:0,
         index: true
     },
-    thumbnailHash:{
-          type:String
+    thumbnail:{
+        type: String,
+        ref: "img"
     }
 },{
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }

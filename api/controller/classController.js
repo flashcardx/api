@@ -222,21 +222,14 @@ module.exports = function(app){
     });
     var fs = require('fs');
     var md5 = require('md5');
-    app.post("/uploadClassProfileImage", controllerUtils.requireLogin, (req, res)=>{
+    app.post("/uploadClassProfileImage/:classname", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
-        var file = req.body;
-        fs.writeFile("temp/test", new Buffer(file), function(err) {
-    if(err) {
-        return console.log(err);
-    }
-
-    console.log("The file was saved!");
-}); 
+        var classname = req.body.classname;
+        var file = new Buffer(req.body);
         console.log("size: " + file.size);
-        logger.error("before: " + new Date().getTime());
-        logger.error("md5: " + md5(new Buffer(file)));
-        logger.error("after: " + new Date().getTime());
-       
+        classService.setProfilePicture(file, classname, userId, r=>{
+            return res.json(r);
+        });
     });
     
 

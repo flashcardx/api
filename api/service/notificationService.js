@@ -15,6 +15,16 @@ function notifyClassUserJoined(integrants, classname, userName){
     });
 }
 
+function newThumbnail(classname, allIntegrants, userId){
+    userService.findByIdLean(userId, "name", r=>{
+        if(r.success == false)
+            return logger.error("error when finding user for sending notifications: " + err);
+        var name = r.msg.name;
+        var msg = name + " changed the profile image for class: " + classname;
+        deliverMesaggeLP(msg, allIntegrants, userId);
+    }) 
+}
+
 function notifyClassUserRemovedImg(integrants, classname, userName){
     return new Promise((resolve, reject)=>{
         var msg = userName + " removed the profile image from class: " + classname;
@@ -74,13 +84,15 @@ function notifyClassDeleted(classname, integrants, ownerName){
     });
 }
 
-function deliverMesaggeLP(msg, users){
+function deliverMesaggeLP(msg, users, notSend){
         var n = {
             text: msg
         };
         if(users.length > 30)
             return logger.error("Can not deliver messages to manny users, this method is syncronous, performance will blow up");
         users.forEach(i=>{
+                if(i == notSend)
+                    return;
                 userService.findById(i, "-_id notificationCounter", r=>{
                 if(r.success === false){
                    return logger.error("error when saving notification for userid: " + i + ", could not find user " + r.msg);
@@ -195,5 +207,6 @@ module.exports = {
     getNotifications: getNotifications,
     notifyClassDeleted: notifyClassDeleted,
     getNotificationsCount: getNotificationsCount,
-    notifyClassUserRemovedImg: notifyClassUserRemovedImg
+    notifyClassUserRemovedImg: notifyClassUserRemovedImg,
+    newThumbnail: newThumbnail
 }

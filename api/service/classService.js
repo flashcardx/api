@@ -3,17 +3,19 @@ const appRoot = require('app-root-path');
 const mongoose = require('mongoose');
 const config = require(appRoot + "/config");
 const User = require(appRoot + "/models/userModel");
+const Img = require(appRoot + "/models/imgModel");
 const classModel = require(appRoot + "/models/classModel");
 const logger = config.getLogger(__filename);
 const userService = require("./userService");
 const cardService = require("./cardService");
 const cacheService = require("./cacheService");
+const imgService = require("./imgService");
+const AWSService = require("./AWSService");
 const feedService = require("./feedService");
 const categoryService = require("./categoryService");
 const notificationService = require("./notificationService");
 const cache = require("memory-cache");
 const ObjectId = require('mongoose').Types.ObjectId;
-
 
 
 function create(Class, callback){
@@ -789,8 +791,40 @@ function getClassIntegrants(classname, userId, callback){
         });
 }
 
-function setThumbnail(classname, userId, image,callback){
-    // notify users when someone sets a new image
+function setThumbnail(classname, userId, buffer, callback){
+        var classModel;
+        findClass(classname, userId, "thumbnail")
+        .populate("thumbnail", "hash integrants owner")
+        .then(Class=>{
+            // delete old image from db and s3
+            var imgHash = Class.thumbnail.hash;
+            imgService.removeImgOnce(imgHash, r=>{
+                if(r.success == false)
+                    return callback(r);
+                newThumbnail = new Img();
+                newThumbnail.hash = newThumbnail._id;
+                Class.thumbnail = newThumbnail.hash;
+                newThumbnail.save(err=>{
+                    if (err)
+                        logger.error("error when saving thumbnail: "+err);
+                })
+                Class.save(err=>{
+                    if (err)
+                        logger.error("error when saving thumbnail: "+err);
+                })
+                var allIntegrants = Class.integrants;
+                allIntegrants.push(Class.owner);
+                AWSService.saveToS3Buffer(Class.thumbnail, buffer,r=>{
+                    logger.error("img saved to s3: " + JSON.stringify(r));
+                    notificationService.newThumbnail(classname, allIntegrants, userId);
+                    return callback({success:true});
+                });
+            });
+        })
+        .catch(err=>{
+                    logger.error("err: " + err);
+                    return callback({success:false, msg:"could not find class"});
+        });
 }
 
 // if notify == true notify users
