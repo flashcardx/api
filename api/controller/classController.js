@@ -220,14 +220,21 @@ module.exports = function(app){
             return res.json(r);
         });
     });
-    
+    var fs = require('fs');
     var md5 = require('md5');
     app.post("/uploadClassProfileImage", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
         var file = req.body;
+        fs.writeFile("temp/test", new Buffer(file), function(err) {
+    if(err) {
+        return console.log(err);
+    }
+
+    console.log("The file was saved!");
+}); 
         console.log("size: " + file.size);
         logger.error("before: " + new Date().getTime());
-        logger.error("md5: " + md5(file));
+        logger.error("md5: " + md5(new Buffer(file)));
         logger.error("after: " + new Date().getTime());
        
     });
