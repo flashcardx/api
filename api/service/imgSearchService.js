@@ -16,13 +16,13 @@ const shutterstockAPI = shutterstock.v2({
 
 function searchBing(q, clientIp, callback){
     logger.info("client ip: "+ clientIp);
+    logger.info("searching: " + q);
     if(!clientIp){
         logger.error("client ip undefined, will be replaced with empty string, if this continues Bing may think it is ddos attack");
         clientIp = "";
     }
     cacheService.getBingResults(q)
     .then(r=>{
-            logger.debug("cache got 1:" + JSON.stringify(r));
             if(r){
                 callback({success:true, msg:r});
                 return Promise.resolve(null);
@@ -35,13 +35,13 @@ function searchBing(q, clientIp, callback){
         var url = config.BingUrl + "?q=" + q  + "&count=35" + "&size=Medium";
         return requestify.get(url, { 
                     headers:{
-                    "Ocp-Apim-Subscription-Key": config.BingKey,
-                    "X-Search-ClientIP": clientIp
+                    "Ocp-Apim-Subscription-Key": config.BingKey
+                    //,"X-Search-ClientIP": clientIp
                 }})
     })
     .then(response=>{
         if(!response)
-            return callback({success:true, msg:[]});
+            return; 
         var r = response.getBody();
         cacheService.putBingResults(q, r);
         return callback({success:true, msg:r});

@@ -37,6 +37,9 @@ const cardSchema = new Schema({
     category:{
         type:String,
         default: ""
+    },
+    classname:{
+        type: String
     }
 },
     {

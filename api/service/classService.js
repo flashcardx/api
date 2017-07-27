@@ -569,7 +569,7 @@ function findByNamePopulateOwner(classname, fields, fields2){
 
 function duplicateCard2Class(classname, cardId, userId, callback){
     var cardId;
-    findClassLean(classname, userId, "cardsLeft")
+    findClassLean(classname, userId, "cardsLeft name")
         .then(Class=>{
             if(!Class)
                     return Promise.reject("Either class does not exist or user is not in the class");

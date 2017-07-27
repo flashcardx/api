@@ -62,7 +62,7 @@ function removeFromS3(hash, callback){
 
 function replaceImgsUrl(card){
     card.imgs.forEach((img, j)=>{
-                card.imgs[j].hash = "http://d32suzxs6u0rur.cloudfront.net/"+img.hash;
+                card.imgs[j].hash = credentials.cloudfrontUrl + img.hash;
         });
     return card;
 }

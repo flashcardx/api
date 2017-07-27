@@ -279,16 +279,18 @@ function getFeed(userId, lastId, callback){
             if(r.msg.classes.length == 0)
                 return callback({success:true, msg:[]});
             userLang = r.msg.lang;
+        logger.error(1);
         feedService.getFeed(userId, userLang, lastId)
         .then(r=>{
-                logger.error("activities: " +JSON.stringify(r));
+                logger.error("raw feed: " + JSON.stringify(r));
                 var feed = [];
                 var processed = 0;
+                if(r.results.length == 0)
+                    return callback({success:true, msg:[]});
                 r.results.forEach((obj, i)=>{
                     if(obj.type == "card"){
-                        cardService.findCardClassByIdLean(obj.object, "name description imgs ownerName category updated_at")
+                        cardService.findCardClassByIdLean(obj.object, "name description imgs ownerName category updated_at classname")
                         .then(card=>{
-                            logger.error("find card class lean got:" + JSON.stringify(card));
                             if(!card)
                                 logger.error("no card found for activity(trying to fetch user feed): " + JSON.stringify(obj));
                             card.id = obj.id;

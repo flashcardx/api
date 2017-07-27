@@ -37,10 +37,11 @@ function unfollowClass(classname, userId, lang){
 
 function getFeed(userId, lang, lastId){
     logger.error("get user feed for: " + userId + ", lang: " + lang);
+    logger.error("lastid:" + lastId);
     userFeed = client.feed('timeline', lang+userId);
-    var restrictions = [{limit:10}];
+    var restrictions = {limit:10};
     if(lastId)
-        restrictions.push({id_lt: lastId});
+        restrictions.id_lt = lastId;
     return userFeed.get(restrictions); //returns promise
 }
 

@@ -34,13 +34,13 @@ const classSchema = new Schema({
     },
     maxLimit:{
         type:Number,
-        default: 1000
+        default: 3000
     },
     cardsLeft:{
         type: Number,
-        default: 1000,
+        default: 3000,
         min: [0, 'cards limit reached'],
-        max: [1000, 'cards limit reached']
+        max: [3000, 'cards limit reached']
     },
     maxUsers:{
         type: Number,

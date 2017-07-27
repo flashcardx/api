@@ -220,8 +220,17 @@ module.exports = function(app){
             return res.json(r);
         });
     });
+    
+    var md5 = require('md5');
+    app.post("/uploadClassProfileImage", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;
+        var file = req.body;
+        console.log("size: " + file.size);
+        logger.error("before: " + new Date().getTime());
+        logger.error("md5: " + md5(file));
+        logger.error("after: " + new Date().getTime());
        
-
+    });
     
 
 }

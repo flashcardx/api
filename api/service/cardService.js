@@ -307,7 +307,8 @@ function duplicateCard2Class(Class, cardIdOld, username, callback){
              var card = {
                 name: doc.name,
                 description: doc.description,
-                imgs: doc.imgs            
+                imgs: doc.imgs,
+                classname: Class.name           
             };
             return createDuplicatedCard2Class(card, Class, username, callback);
         });
@@ -339,7 +340,6 @@ function createDuplicatedCard2Class(card, Class, username, callback){
                            })
                            .then(results=>{
                                     logger.debug(results);
-                                    logger.error("1");
                                     return callback({success:true, msg:cardModel});
                             })
                             .catch(jsonMsj=>{
