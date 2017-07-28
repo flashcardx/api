@@ -64,9 +64,15 @@ function removeFromS3(hash, callback){
 
 function replaceImgsUrl(card){
     card.imgs.forEach((img, j)=>{
-                card.imgs[j].hash = credentials.cloudfrontUrl + img.hash;
+                card.imgs[j].hash = getImgUrl(img.hash);
         });
     return card;
+}
+
+function getImgUrl(id){
+    if(!id)
+        return undefined;
+    return credentials.cloudfrontUrl + id;
 }
 
 module.exports = {
@@ -75,6 +81,7 @@ module.exports = {
     getImgFromS3: getImgFromS3,
     removeFromS3: removeFromS3,
     addTemporaryUrl: addTemporaryUrl,
-    replaceImgsUrl: replaceImgsUrl
+    replaceImgsUrl: replaceImgsUrl,
+    getImgUrl: getImgUrl
 }
 

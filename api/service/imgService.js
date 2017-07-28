@@ -14,10 +14,58 @@ const AWSService = require("./AWSService");
 const imagemin = require('imagemin');
 const imageminJpegtran = require('imagemin-jpegtran');
 const imageminPngquant = require('imagemin-pngquant');
+var thumb = require('node-thumbnail').thumb;
+var gm = require('gm').subClass({imageMagick: true});
+
+
+
+///returns filename from the thumbnail
+function generateThumbnailAndSaveToS3(name, buffer, callback){
+    var src = imgDir +"/"+ name;
+    logger.error("src: " + src);
+    fs.writeFile(src, buffer, function(err) {
+        if(err) {
+            return logger.error(err);
+        }
+        logger.error("saved");
+        gm(src)
+            .resize(150, 150, "!")
+            .noProfile()
+            .write(src, err=>{
+               if(err){
+                   logger.error(err);
+                   return callback({success:false, msg:err});
+               }
+                fsp.readFile(src).
+                then(data=>{
+                    logger.error("name: " + name);
+                    AWSService.saveToS3Buffer(name, data, r=>{
+                        logger.error("result: " + JSON.stringify(r));
+                        deleteFile(src)
+                        .then(()=>{
+                            return callback(r);
+                        })
+                        .catch(err=>{
+                            logger.error(err);
+                            return callback({success:false, msg:err});
+                         });
+                    });
+                })
+                 .catch(err=>{
+                         logger.error(err);
+                         return callback({success:false, msg:err});
+                    });
+            });
+        }); 
+
+}
+
+
 
 function getImgName(url, text){
      return text + Math.random() + new Date();
 };
+
 
 const downloader = require('image-downloader');
 function download(uri, filename){
@@ -257,5 +305,6 @@ module.exports = {
     getImg: AWSService.getImgFromS3,
     deleteImgsOnce: deleteImgsOnce,
     increaseImgsCounter: increaseImgsCounter,
-    deleteImgOnce: deleteImgOnce
+    deleteImgOnce: deleteImgOnce,
+    generateThumbnailAndSaveToS3: generateThumbnailAndSaveToS3
 }

@@ -220,14 +220,22 @@ module.exports = function(app){
             return res.json(r);
         });
     });
-    var fs = require('fs');
-    var md5 = require('md5');
+    
     app.post("/uploadClassProfileImage/:classname", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
-        var classname = req.body.classname;
+        var classname = req.params.classname;
         var file = new Buffer(req.body);
-        console.log("size: " + file.size);
-        classService.setProfilePicture(file, classname, userId, r=>{
+        classService.changeProfilePicture(classname, userId, file, r=>{
+            logger.error("result: " + JSON.stringify(r));
+            return res.json(r);
+        });
+    });
+
+    app.delete("/deleteClassProfileImage/:classname", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;
+        var classname = req.params.classname;
+        classService.deleteProfilePicture(classname, userId, r=>{
+            logger.error("result: " + JSON.stringify(r));
             return res.json(r);
         });
     });

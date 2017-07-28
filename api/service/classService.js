@@ -90,7 +90,16 @@ function verifyOwnerLimits(isPrivate, userId, fields){
 
 
 function listAll(userId, callback){
-    listAllByFieldsPopulateOwner(userId, "name description isPrivate maxLimit cardsLeft owner maxUsers usersLeft updated_at lang", callback);
+    listAllByFieldsPopulateOwner(userId, "name thumbnail description isPrivate maxLimit cardsLeft owner maxUsers usersLeft updated_at lang", r=>{
+        if(r.success == false)
+            return callback(r);
+        var Classes = r.msg;
+        Classes.forEach(c=>{
+            c.thumbnail = AWSService.getImgUrl(c.thumbnail);
+        })
+        logger.error("Class: " + JSON.stringify(Classes));
+        return callback({success:true, msg:Classes});
+    });
 }
 
 
@@ -205,11 +214,14 @@ function search(name, userId, callback){
                 return callback(r);
             }
         const lang = r.msg;
-        classModel.findOne({name:name, lang:lang, isActive:true}, "name description cardsLeft integrants owner maxUsers usersLeft maxLimit")
+        classModel.findOne({name:name, lang:lang, isActive:true}, "name thumbnail description cardsLeft integrants owner maxUsers usersLeft maxLimit")
         .populate("owner", "name")
         .lean()
         .exec()
         .then(doc=>{
+            if(!doc)
+                return callback({success:true});
+            doc.thumbnail = AWSService.getImgUrl(doc.thumbnail);
             logger.error("search results: " + JSON.stringify(doc));
             return callback({success:true, msg:doc, userId:userId});
         })
@@ -227,7 +239,7 @@ function recommendClasses(userId, callback){
                 return callback(r);
             }
         const lang = r.msg;
-        classModel.find({"owner":{$ne:userId}, "integrants":{$ne:userId}, lang:lang, isPrivate:false, usersLeft:{$gt:0}, isActive:true}, "name description owner integrants updated_at maxLimit cardsLeft maxUsers usersLeft")
+        classModel.find({"owner":{$ne:userId}, "integrants":{$ne:userId}, lang:lang, isPrivate:false, usersLeft:{$gt:0}, isActive:true}, "name thumbnail description owner integrants updated_at maxLimit cardsLeft maxUsers usersLeft")
         .sort('-rank')
         .limit(5)
         .populate("owner", "name")
@@ -235,6 +247,9 @@ function recommendClasses(userId, callback){
         .exec()
         .then(r=>{
             if(r){
+                r.forEach(c=>{
+                    c.thumbnail = AWSService.getImgUrl(c.thumbnail);
+                })
                 return callback({success:true, msg: r, userId: userId});
             }
         })
@@ -484,32 +499,6 @@ function removeUser(classname, leaverId, requesterId, callback){
         });   
 }
 
-/*
-TODO : DELETE IT
-function getClassInfo(classname, userId, callback){
-    classModel.findOne({$or:[{$and:[{name:classname}, {isActive:true}, {isPrivate:false}]},
-                        {$and: [ {name:classname}, {isActive:true}, {$or: [{"owner":{$eq:userId}}, {"integrants":{$eq:userId}}]}
-                        ]}]},
-                        "owner integrants isPrivate")
-        .lean()
-        .exec()
-        .then(Class=>{
-            if(!Class)
-                    return callback({success:false, msg:"Either class does not exist or user does not have enough privileges"});
-            var allIntegrants = Class.integrants;
-            allIntegrants.push(Class.owner);
-            var isAdmin = false;
-            if(Class.owner.id === userId)
-                isAdmin: true;
-            return callback({success:true, msg:allIntegrants, isAdmin:isAdmin, isPrivate: Class.isPrivate});
-        })
-        .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
-                });
-}
-
-*/
 
 function mark4delete(classname, userId, callback){
     var classModel;
@@ -712,6 +701,19 @@ function findClass(classname, userId, fields){
         .exec();
 }
 
+function findClassLeanPopulateThumbnail(classname, userId, fields){
+    return classModel.findOne({$and: [
+                        {name:classname},
+                        {isActive:true},
+                        {$or:[{"owner":{$eq:userId}}, {"integrants":{$eq:userId}}]}
+                        ]},
+                        fields)
+        .populate("thumbnail", "hash")
+        .lean()
+        .exec();
+}
+
+
 function findClassLeanPopulateOwner(classname, userId, fields){
     return classModel.findOne({$and: [
                         {name:classname},
@@ -760,10 +762,11 @@ function getCategories(classname, userId, callback){
 }
 
 function getStats(classname, userId, callback){
-    findClassLeanPopulateOwner(classname, userId, "usersLeft maxUsers cardsLeft maxLimit owner integrants isPrivate")
+    findClassLeanPopulateOwner(classname, userId, "usersLeft thumbnail maxUsers cardsLeft maxLimit owner integrants isPrivate")
     .then(Class=>{
         if(!Class)
             return Promise.reject("Either class does not exist or user is not in the class");
+        Class.thumbnail = AWSService.getImgUrl(Class.thumbnail);
         return callback({success:true, msg:Class});
     })
     .catch(err=>{
@@ -791,34 +794,44 @@ function getClassIntegrants(classname, userId, callback){
         });
 }
 
-function setThumbnail(classname, userId, buffer, callback){
-        var classModel;
-        findClass(classname, userId, "thumbnail")
-        .populate("thumbnail", "hash integrants owner")
-        .then(Class=>{
-            // delete old image from db and s3
-            var imgHash = Class.thumbnail.hash;
-            imgService.removeImgOnce(imgHash, r=>{
-                if(r.success == false)
-                    return callback(r);
+function setImage(Class, userId, buffer, callback){
                 newThumbnail = new Img();
                 newThumbnail.hash = newThumbnail._id;
-                Class.thumbnail = newThumbnail.hash;
                 newThumbnail.save(err=>{
-                    if (err)
-                        logger.error("error when saving thumbnail: "+err);
-                })
-                Class.save(err=>{
-                    if (err)
-                        logger.error("error when saving thumbnail: "+err);
-                })
-                var allIntegrants = Class.integrants;
-                allIntegrants.push(Class.owner);
-                AWSService.saveToS3Buffer(Class.thumbnail, buffer,r=>{
-                    logger.error("img saved to s3: " + JSON.stringify(r));
-                    notificationService.newThumbnail(classname, allIntegrants, userId);
-                    return callback({success:true});
+                        if (err){
+                                logger.error("error when saving thumbnail: "+err);
+                                return callback({success:false, msg:err});
+                        }
+                        classModel.update({_id:Class._id}, {$set:{thumbnail: newThumbnail.hash}})
+                        .exec()
+                        .then(r=>{
+                            var allIntegrants = Class.integrants;
+                            allIntegrants.push(Class.owner);
+                            imgService.generateThumbnailAndSaveToS3(newThumbnail.hash, buffer, r=>{
+                                logger.error("img saved to s3: " + JSON.stringify(r));
+                                notificationService.newThumbnail(Class.name, allIntegrants, userId);
+                                return callback({success:true});
+                            });
+                        })
+                        .catch(err=>{
+                            logger.error(err);
+                            return callback({success:false, msg: err});
+                        });
                 });
+}
+
+function changeProfilePicture(classname, userId, buffer, callback){
+        findClassLeanPopulateThumbnail(classname, userId, "thumbnail owner integrants name")
+        .then(Class=>{
+            if(!Class.thumbnail){
+                logger.error("NO THUMBNAIL");
+                return setImage(Class, userId, buffer, callback);
+            }
+            var imgHash = Class.thumbnail.hash;
+            imgService.deleteImgOnce(imgHash, r=>{
+                if(r.success == false)
+                    return callback(r);
+                return setImage(Class, userId, buffer, callback);
             });
         })
         .catch(err=>{
@@ -827,54 +840,39 @@ function setThumbnail(classname, userId, buffer, callback){
         });
 }
 
-// if notify == true notify users
-function deleteThumbnail(classname, userId, callback, notify){
-    var classModel;
-    findClass(classname, userId, "thumbnailHash integrants owner")
-    .then(Class=>{
-        classModel = Class;
-        if(!Class){
-            return callback({success:false, msg:"Class does not exist, or user is not in it"});     
-        }
-        if(!Class.thumbnail)
-            return callback({success:true});
-        imgService.deleteImgOnce(Class.thumbnailHash)
-        .then(r=>{
-                classModel.thumbnail = undefined;
-                classModel.save().then(()=>{
-                    return Promise.resolve();
-                }, err=>{
-                    logger.error(String(err));
-                    return Promise.reject(String(err));
-                });
-        })
-        .then(()=>{
-            if(notify == false)
-                return Promise.resolve();
-            userService.findByIdLean(userId, "name", r=>{
-                if(r.success == false){
-                    logger.error(r.msg);
-                    return Promise.resolve();
-                }
-                var user = r.msg;
-                var allIntegrants = classModel.integrants;
-                allIntegrants.push(classModel.owner);
-                return notifyService.notifyClassUserRemovedImg(allIntegrants, classModel.name, user.name);
-            })
-        })
-        .then(()=>{
-            return callback({success:true});
+
+
+function deleteProfilePicture(classname, userId, callback){
+        findClassLeanPopulateThumbnail(classname, userId, "thumbnail owner integrants name")
+        .then(Class=>{
+            if(!Class.thumbnail){
+                return callback({success:true});
+            }
+            var imgHash = Class.thumbnail.hash;
+            imgService.deleteImgOnce(imgHash, r=>{
+                if(r.success == false)
+                    return callback(r);
+                classModel.update({_id:Class._id}, {$set:{thumbnail: undefined}})
+                        .exec()
+                        .then(r=>{
+                            logger.error("Image removed! needs to notify ");
+                            //notify users
+                            return callback({success:true});
+                        })
+                        .catch(err=>{
+                            logger.error("err: " + err);
+                            return callback({success:false, msg:"could not find class"});
+                        });
+            });
         })
         .catch(err=>{
                     logger.error("err: " + err);
-                    return callback({success:false, msg:err});
+                    return callback({success:false, msg:"could not find class"});
         });
-    })
-     .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
-    });
 }
+
+
+
 
 
 module.exports = {
@@ -894,5 +892,7 @@ module.exports = {
     getStats: getStats,
     deleteCard: deleteCard,
     getClassIntegrants: getClassIntegrants,
-    duplicateCard2User: duplicateCard2User
+    duplicateCard2User: duplicateCard2User,
+    changeProfilePicture: changeProfilePicture,
+    deleteProfilePicture: deleteProfilePicture
 }
