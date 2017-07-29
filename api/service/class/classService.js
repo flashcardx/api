@@ -6,14 +6,14 @@ const User = require(appRoot + "/models/userModel");
 const Img = require(appRoot + "/models/imgModel");
 const classModel = require(appRoot + "/models/classModel");
 const logger = config.getLogger(__filename);
-const userService = require("./userService");
-const cardService = require("./cardService");
-const cacheService = require("./cacheService");
-const imgService = require("./imgService");
-const AWSService = require("./AWSService");
-const feedService = require("./feedService");
-const categoryService = require("./categoryService");
-const notificationService = require("./notificationService");
+const userService = require(appRoot + "/service/userService");
+const cardService = require(appRoot + "/service/cardService");
+const cacheService = require(appRoot + "/service/cacheService");
+const imgService = require(appRoot + "/service/imgService");
+const AWSService = require(appRoot + "/service/AWSService");
+const feedService = require(appRoot + "/service/feedService");
+const categoryService = require(appRoot + "/service/categoryService");
+const notificationService = require(appRoot + "/service/notificationService");
 const cache = require("memory-cache");
 const ObjectId = require('mongoose').Types.ObjectId;
 
@@ -291,7 +291,7 @@ function joinPublicClass(classModel, userId){
                 .then(()=>{
                     var allIntegrants = classModel.integrants;
                     allIntegrants.push(classModel.owner);
-                    return notificationService.notifyClassUserJoined(allIntegrants, classModel.name, userModel.name);
+                    return notificationService.notifyClassUserJoined(allIntegrants, classModel.name, userModel.name, userId);
                 })
                 .then(()=>{
                     return resolve(userModel.lang);
@@ -336,7 +336,6 @@ function joinPrivateClass(classModel, userId){
 }
 
 function verifyUserIsNotInClass(userId, classname, fields){
-    logger.error(1);
     return new Promise((resolve, reject)=>{
         classModel.findOne({name:classname, "owner":{$ne:userId},"integrants":{$ne:userId}, "waiting":{$ne:userId}, isActive:true}, fields)
         .exec()
@@ -378,7 +377,7 @@ function addUser(classname, userJoinerEmail, userRequesterId, callback){
                             var requesterUser = r.msg;
                             if(Class.isPrivate == true)
                                 return addUserPrivateClass(Class, user2Join);
-                            return addUserPublicClass(Class, user2Join, requesterUser.name);
+                            return addUserPublicClass(Class, user2Join, requesterUser.name, userRequesterId);
                         });
                 })
             .then(()=>{
@@ -393,13 +392,13 @@ function addUser(classname, userJoinerEmail, userRequesterId, callback){
 }
 
 
-function addUserPublicClass(classModel, userModel, requesterName){
+function addUserPublicClass(classModel, userModel, requesterName, requesterId){
     return new Promise((resolve, reject)=>{
             joinUserClass(userModel, classModel)
                 .then(()=>{
                     var allIntegrants = classModel.integrants
                     allIntegrants.push(classModel.owner);
-                    return notificationService.notifyClassUserAdded(allIntegrants, classModel.name, userModel.name, requesterName);
+                    return notificationService.notifyClassUserAdded(allIntegrants, classModel.name, userModel.name, requesterName, userModel._id, requesterId);
                 })
                 .then(()=>{
                     return notificationService.notifyUserWasAdded2Class(userModel._id, classModel.name, requesterName);
@@ -477,9 +476,9 @@ function removeUser(classname, leaverId, requesterId, callback){
                 var allIntegrants = integrantsButOwner;
                 allIntegrants.push(updatedClass.owner);
                 if(leaverId == requesterId)
-                        return notificationService.notifyClassUserLeft(allIntegrants, classname, userLeaver.name);
+                        return notificationService.notifyClassUserLeft(allIntegrants, classname, userLeaver.name, leaverId);
                     else
-                        return notificationService.notifyClassUserWasRemoved(integrantsButOwner, classname, userLeaver.name, requesterName);
+                        return notificationService.notifyClassUserWasRemoved(integrantsButOwner, classname, userLeaver.name, requesterName, leaverId, requesterId);
             })
             .then(()=>{
                        if(leaverId != requesterId){
@@ -518,8 +517,8 @@ function mark4delete(classname, userId, callback){
     })
     .then(r=>{
             allIntegrants = classModel.integrants;
-            allIntegrants.push(classModel.owner._id);
-        return notificationService.notifyClassDeleted(classname, allIntegrants, classModel.owner.name);
+            // since the owner is the one who deletes the class, it will not be notified
+             return notificationService.notifyClassDeleted(classname, allIntegrants, classModel.owner.name);
     })
     .then(()=>{
         logger.debug("all integrants: " + JSON.stringify(allIntegrants));
@@ -611,7 +610,6 @@ function duplicateCard2User(classname, cardId, userId, callback){
                     return Promise.reject(r.msg);
                 }
                 const username = r.msg.name;
-                logger.error("viene piola");
                 cardService.duplicateCardUserClass(cardId, userId, r=>{
                     if(r.success == false)
                         return Promise.reject(r.msg);
@@ -636,7 +634,6 @@ function increaseRank(classId, n){
 }
 
 function decreaseCardsLeft(classId){
-    logger.error("updating class id: " + classId);
     return classModel.update({_id:classId}, {$inc:{"cardsLeft":-1, "rank":1}},
         {multi: true}).exec();
 }
@@ -783,10 +780,16 @@ function getClassIntegrants(classname, userId, callback){
                         ]},
                         "integrants owner")
         .lean()
-        .populate('integrants owner', 'name')
+        .populate('integrants owner', 'name thumbnail')
         .exec()
         .then(r=>{
-                return callback({succes:true, msg:r});
+                if(r.owner.thumbnail)
+                    r.owner.thumbnail = AWSService.getImgUrl(r.owner.thumbnail);
+                r.integrants.forEach((v, i)=>{
+                    if(r.integrants[i].thumbnail)
+                        r.integrants[i].thumbnail = AWSService.getImgUrl(v.thumbnail);
+                });
+                return callback({success:true, msg:r});
         })
         .catch(err=>{
                     logger.error("err: " + err);
@@ -808,7 +811,6 @@ function setImage(Class, userId, buffer, callback){
                             var allIntegrants = Class.integrants;
                             allIntegrants.push(Class.owner);
                             imgService.generateThumbnailAndSaveToS3(newThumbnail.hash, buffer, r=>{
-                                logger.error("img saved to s3: " + JSON.stringify(r));
                                 notificationService.newThumbnail(Class.name, allIntegrants, userId);
                                 return callback({success:true});
                             });
@@ -821,13 +823,12 @@ function setImage(Class, userId, buffer, callback){
 }
 
 function changeProfilePicture(classname, userId, buffer, callback){
-        findClassLeanPopulateThumbnail(classname, userId, "thumbnail owner integrants name")
+        findClassLean(classname, userId, "thumbnail owner integrants name")
         .then(Class=>{
             if(!Class.thumbnail){
-                logger.error("NO THUMBNAIL");
                 return setImage(Class, userId, buffer, callback);
             }
-            var imgHash = Class.thumbnail.hash;
+            var imgHash = Class.thumbnail;
             imgService.deleteImgOnce(imgHash, r=>{
                 if(r.success == false)
                     return callback(r);
@@ -843,20 +844,21 @@ function changeProfilePicture(classname, userId, buffer, callback){
 
 
 function deleteProfilePicture(classname, userId, callback){
-        findClassLeanPopulateThumbnail(classname, userId, "thumbnail owner integrants name")
+        findClassLean(classname, userId, "thumbnail owner integrants name")
         .then(Class=>{
             if(!Class.thumbnail){
                 return callback({success:true});
             }
-            var imgHash = Class.thumbnail.hash;
+            var imgHash = Class.thumbnail;
             imgService.deleteImgOnce(imgHash, r=>{
                 if(r.success == false)
                     return callback(r);
                 classModel.update({_id:Class._id}, {$set:{thumbnail: undefined}})
                         .exec()
                         .then(r=>{
-                            logger.error("Image removed! needs to notify ");
-                            //notify users
+                            var allIntegrants = Class.integrants;
+                            allIntegrants.push(Class.owner);
+                            notificationService.removedThumbnail(classname, allIntegrants, userId);
                             return callback({success:true});
                         })
                         .catch(err=>{
@@ -894,5 +896,6 @@ module.exports = {
     getClassIntegrants: getClassIntegrants,
     duplicateCard2User: duplicateCard2User,
     changeProfilePicture: changeProfilePicture,
-    deleteProfilePicture: deleteProfilePicture
+    deleteProfilePicture: deleteProfilePicture,
+    findClassLean: findClassLean
 }

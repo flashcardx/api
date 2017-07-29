@@ -107,6 +107,7 @@ module.exports = function(app){
         var user = {
             email: req.body.email,
             name: req.body.name,
+            picture: req.body.picture,
             facebookId: req.body.facebookId,
             facebookToken: req.body.facebookToken
         };

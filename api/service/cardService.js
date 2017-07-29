@@ -197,36 +197,46 @@ function cardRecommendations(userId, last, callback){
 }
 
 function deleteCard(cardId, userId, callback){
+    logger.error("delete card");
     var category;
     Card.findById(cardId).exec()
                         .then(card=>{
+                                logger.error(0);
                              if(!card)
                                 return Promise.reject("Card id does not exist");
                              category = card.category;
+                             logger.error(0.4);
                              return imgService.deleteImgsOnce(card.imgs);
                          })
                          .then(()=>{
+                             logger.error(1);
                             return Card.find({ _id: cardId }).remove().exec();
                          })
                          .then(()=>{
+                             logger.error(2);
                                 return userService.increaseCardCounter(userId);
                          })
                          .then(()=>{
+                             logger.error(3);
                              return userService.getUserLang(userId, r=>{
-                                if(r.success === false){
+                                logger.error(4);
+                                if(r.success == false){
+                                    logger.error(5);
                                     logger.error(r.msg);
                                     return callback(r);
                                 }
+                                logger.error(6);
                                 const lang = r.msg;
                              return deleteCategoryIfEmpty(userId, lang, category);
                              });
                          })
                          .then(()=>{
+                             logger.error(7);
                              return callback({success:true, msg:"Card deleted ok"});
                          })
                          .catch((err)=>{
-                            logger.error(err);
-                            return callback({success:false, msg:String(err)});
+                            logger.error("err: " +JSON.stringify(err));
+                            return callback({success:false, msg:err});
                         });
 };
 

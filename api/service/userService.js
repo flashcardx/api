@@ -4,6 +4,8 @@ const bcrypt = require("bcryptjs");
 const mongoose = require('mongoose');
 const config = require(appRoot + "/config");
 const User = require(appRoot + "/models/userModel");
+const Img = require(appRoot + "/models/imgModel");
+const imgService = require(appRoot + "/service/imgService");
 const feedService = require(appRoot + "/service/feedService");
 const AWSService = require(appRoot + "/service/AWSService");
 const LoginRegistryModel = require(appRoot + "/models/loginRegistryModel");
@@ -215,6 +217,84 @@ function increaseNotificationCounter(userId){
     return User.update({_id: userId}, {$inc:{"notificationCounter":1}}).exec();
 }
 
+function setImage(user, buffer, callback){
+                newThumbnail = new Img;
+                newThumbnail.hash = newThumbnail._id;
+                newThumbnail.save(err=>{
+                        if (err){
+                                logger.error("error when saving thumbnail: "+err);
+                                return callback({success:false, msg:err});
+                        }
+                        User.update({_id:user._id}, {$set:{thumbnail: newThumbnail.hash}})
+                        .exec()
+                        .then(r=>{
+                            imgService.generateThumbnailAndSaveToS3(newThumbnail.hash, buffer, r=>{
+                                return callback({success:true});
+                            });
+                        })
+                        .catch(err=>{
+                            logger.error(err);
+                            return callback({success:false, msg: err});
+                        });
+                });
+}
+
+function changeProfilePicture(userId, buffer, callback){
+        User.findById(userId, "thumbnail")
+        .lean()
+        .exec()
+        .then(user=>{
+            if(!user)
+                return callback({success:false, msg:"User does not exist"});
+            if(!user.thumbnail){
+                logger.error("NO THUMBNAIL");
+                return setImage(user, buffer, callback);
+            }
+            var imgHash = user.thumbnail;
+            imgService.deleteImgOnce(imgHash, r=>{
+                if(r.success == false)
+                    return callback(r);
+                return setImage(user, buffer, callback);
+            });
+        })
+        .catch(err=>{
+                    logger.error("err: " + err);
+                    return callback({success:false, msg:"could not find user"});
+        });
+}
+
+function deleteProfilePicture(userId, callback){
+         User.findById(userId, "thumbnail")
+        .lean()
+        .exec()
+        .then(user=>{
+            if(!user)
+                return callback({success:false, msg:"User does not exist"});
+            if(!user.thumbnail){
+                return callback({success:true});
+            }
+            var imgHash = user.thumbnail;
+            imgService.deleteImgOnce(imgHash, r=>{
+                if(r.success == false)
+                    return callback(r);
+                User.update({_id:userId}, {$set:{thumbnail: undefined}})
+                        .exec()
+                        .then(r=>{
+                            return callback({success:true});
+                        })
+                        .catch(err=>{
+                            logger.error("err: " + err);
+                            return callback({success:false, msg:"could not update user"});
+                        });
+            });
+        })
+        .catch(err=>{
+                    logger.error("err: " + err);
+                    return callback({success:false, msg:"could not find user"});
+        });
+}
+
+
 module.exports = {
     loginUser : loginUser,
     findById: findById,
@@ -230,7 +310,9 @@ module.exports = {
     findByEmail: findByEmail,
     increaseNotificationCounter: increaseNotificationCounter,
     findByIdLean: findByIdLean,
-    getFeed: getFeed
+    getFeed: getFeed,
+    changeProfilePicture: changeProfilePicture,
+    deleteProfilePicture: deleteProfilePicture
 };
 
 const emailVerification = require("./emailVerificationService");
@@ -249,22 +331,32 @@ module.exports.registerNewUser= registerNewUser;
 const cardService = require("./cardService");
 
 function registerNewFbUser(user, callback){
-     	var newUser = new User();
-	    newUser.email = user.email;
-	    newUser.name = user.name;
-	    newUser.facebook.id = user.facebookId;
-	    newUser.facebook.token = user.facebookToken;
-	    newUser.save(err=>{
-	    			if(err){
-                        logger.error(err);
-	    				return callback({success: false, msg:"could not register facebook user, " + String(err)});;
-                        }
-                          cardService.setInitialCards(newUser._id, r=>{
-                            if(r.success === false)
-                                return callback(r);
-                            return loginFbUser(user.facebookId, callback);
-                        });
-            })
+        imgService.saveImgFromUrl(user.picture)
+        .then(hash=>{
+                logger.error("image saved result: " + JSON.stringify(hash));
+     	        var newUser = new User();
+                newUser.email = user.email;
+                newUser.thumbnail = hash;
+                newUser.name = user.name;
+                newUser.facebook.id = user.facebookId;
+                newUser.facebook.token = user.facebookToken;
+                newUser.save(err=>{
+                            logger.error("viene piola");
+                            if(err){
+                                logger.error(err);
+                                return callback({success: false, msg:"could not register facebook user, " + String(err)});;
+                            }
+                            cardService.setInitialCards(newUser._id, r=>{
+                                    if(r.success == false)
+                                        return callback(r);
+                                    return loginFbUser(user.facebookId, callback);
+                            });
+                    })
+        })
+    .catch(err=>{
+        logger.error("error when registering user with facebook,  " + err);
+        return callback({success:false, msg:err.toString()});
+    })
 };
 
 

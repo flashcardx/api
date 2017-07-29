@@ -66,8 +66,29 @@ function getImgName(url, text){
      return text + Math.random() + new Date();
 };
 
+var requestNoEncoding = request.defaults({ encoding: null });
+function saveImgFromUrl(url){
+    return new Promise((resolve, reject)=>{
+        var img = new Img;
+        img.hash = img._id;
+       
+        requestNoEncoding.get(url, function (err, res, body) {
+            AWSService.saveToS3Buffer(img.hash, body, err=>{
+                if(err)
+                    return reject(err);
+                img.save(err=>{
+                    if(err)
+                        return reject(err);
+                    return resolve(img.hash);
+                });    
+            }); 
+        });
+    });
+}
+
 
 const downloader = require('image-downloader');
+
 function download(uri, filename){
     return new Promise((resolve, reject)=>{
         request.head(uri, function(err, res, body){
@@ -258,20 +279,24 @@ function deleteImgOnce(hash, callback){
                         if(img.timesUsed <= 0){
                             img.remove((err, count)=>{
                                 if(err){
-                                    logger.error(err);
+                                    logger.error("err: " + err);
                                     return callback({success:false, msg:String(err)});
                                 }
                                 if(count === 0){
                                         logger.error("could not delete image(hash:"+hash +") from card");
                                         return callback({success:false, msg:"could not delete image from card"}); 
                                 }
+                                logger.error("viene re cheto wacho");
                                 AWSService.removeFromS3(hash, callback);
                             });
                         }
                         else{
+                            logger.error("plus");
                             img.save(err=>{
-                            if(err)
-                                callback({success:false, msg:err});
+                            if(err){
+                                logger.error("error: " + JSON.stringify(err));
+                                return callback({success:false, msg:err});
+                            }
                             return callback({success:true});
                             });
                         }
@@ -286,14 +311,17 @@ function deleteImgOnce(hash, callback){
 
 
 function deleteImgsOnce(imgs){
+    logger.error("imgs: " + JSON.stringify(imgs));
     return new Promise((resolve, reject)=>{
-        if(!imgs || imgs.length === 0)
+        if(!imgs || imgs.length == 0){
+            logger.error("what?");
             return resolve(true);
+        }
         imgs.forEach((img, index)=>{
-            deleteImgOnce(img.hash, (err)=>{
-                if(err)
-                    return reject(err);
-                if(index === imgs.length - 1)
+            deleteImgOnce(img.hash, r=>{
+                if(r.success == false)
+                    return reject(r.msg);
+                if(index == imgs.length - 1)
                     return resolve(true);
             });
         });
@@ -306,5 +334,6 @@ module.exports = {
     deleteImgsOnce: deleteImgsOnce,
     increaseImgsCounter: increaseImgsCounter,
     deleteImgOnce: deleteImgOnce,
-    generateThumbnailAndSaveToS3: generateThumbnailAndSaveToS3
+    generateThumbnailAndSaveToS3: generateThumbnailAndSaveToS3,
+    saveImgFromUrl: saveImgFromUrl
 }

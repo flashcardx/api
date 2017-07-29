@@ -4,7 +4,8 @@ const config = require(appRoot + "/config");
 const controllerUtils = require("./utils");
 const logger = config.getLogger(__filename);
 const Img = require(appRoot + "/models/imgModel");
-const classService = require(appRoot + "/service/classService");
+const classService = require(appRoot + "/service/class/classService");
+const postService = require(appRoot + "/service/class/postService");
 const userService = require(appRoot + "/service/userService");
 const feedService = require(appRoot + "/service/feedService");
 const notificationService = require(appRoot + "/service/notificationService");
@@ -93,24 +94,10 @@ module.exports = function(app){
     app.get("/classIntegrants/:classname",  controllerUtils.requireLogin, function(req, res){
         const classname = req.params.classname;
         const userId = req.userId;
-        logger.error("before");
         classService.getClassIntegrants(classname, userId, r=>{
-            logger.error("about to respond: " + JSON.stringify(r));
             return res.json(r);
         });
     });
-
-    /*
-    IF NOT USED DELETE IT
-    // returns integrants(just ids), if the user is the owner too and if class is private
-    app.get("/classInfo/:classname",  controllerUtils.requireLogin, function(req, res){
-        const classname = req.params.classname;
-        const userId = req.userId;
-        classService.getClassInfo(classname, userId, r=>{
-            return res.json(r);
-        });
-    });
-    */
 
     app.get("/activity",  controllerUtils.requireLogin, function(req, res){
         const userId = req.userId;
@@ -153,7 +140,6 @@ module.exports = function(app){
         const cardId = req.params.cardId;
         const classname = req.params.classname;
         const userId = req.userId;
-        logger.error("duplicate 2 user, cardid: " + cardId + ", classname: " + classname);
         classService.duplicateCard2User(classname, cardId, userId, r=>{
             return res.json(r);
         });
@@ -181,9 +167,7 @@ module.exports = function(app){
             description : req.body.description,
             category: req.body.category
         };
-        logger.error("update card name: " + card.name);
         classService.updateCard(classname, userId, cardId, card, r=>{
-            logger.error("result: " + JSON.stringify(r));
             return res.json(r);
         });
     });
@@ -226,7 +210,6 @@ module.exports = function(app){
         var classname = req.params.classname;
         var file = new Buffer(req.body);
         classService.changeProfilePicture(classname, userId, file, r=>{
-            logger.error("result: " + JSON.stringify(r));
             return res.json(r);
         });
     });
@@ -235,10 +218,19 @@ module.exports = function(app){
         var userId = req.userId;
         var classname = req.params.classname;
         classService.deleteProfilePicture(classname, userId, r=>{
-            logger.error("result: " + JSON.stringify(r));
             return res.json(r);
         });
     });
+
+    app.post("/class/:classname/post", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;
+        var classname = req.params.classname;
+        var text = req.body.text;
+        postService.post(classname, userId, text, r=>{
+            return res.json(r);
+            })
+        });
+    
     
 
-}
+};
