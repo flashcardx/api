@@ -80,7 +80,6 @@ const cardSchema = new Schema({
 cardSchema.plugin(AutoIncrement, {inc_field: 'counter'});
 cardSchema.index({"updated_at": 1});
 
-
 cardSchema.pre('update', function(next) {
   this.options.runValidators = true;
   next();

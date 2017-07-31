@@ -60,10 +60,10 @@ function notifyClassUserLeft(integrants, classname, leaverName, leaverId){
     });
 }
 
-function notifyClassUserWasRemoved(integrants, classname, leaverName, removerName, notSend, notSend2){
+function notifyClassUserWasRemoved(integrants, classname, leaverName, removerName, notSend){
     return new Promise((resolve, reject)=>{
         var msg = removerName + " removed "+ leaverName +" from the class: " + classname;
-        deliverMesaggeLP2(msg, integrants, notSend, notSend2);
+        deliverMesaggeLP(msg, integrants, notSend);
         return resolve();
     });
 }

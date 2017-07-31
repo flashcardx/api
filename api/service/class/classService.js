@@ -461,7 +461,8 @@ function removeUser(classname, leaverId, requesterId, callback){
                     $pull: {"integrants":new ObjectId(leaverId)}
                 },
                  {
-                         "fields": { "integrants":1, "owner":1}
+                         "fields": { "integrants":1, "owner":1},
+                          "new" : true
                  }
                 )
                 .lean()
@@ -478,7 +479,7 @@ function removeUser(classname, leaverId, requesterId, callback){
                 if(leaverId == requesterId)
                         return notificationService.notifyClassUserLeft(allIntegrants, classname, userLeaver.name, leaverId);
                     else
-                        return notificationService.notifyClassUserWasRemoved(integrantsButOwner, classname, userLeaver.name, requesterName, leaverId, requesterId);
+                        return notificationService.notifyClassUserWasRemoved(integrantsButOwner, classname, userLeaver.name, requesterName, requesterId);
             })
             .then(()=>{
                        if(leaverId != requesterId){

@@ -230,7 +230,46 @@ module.exports = function(app){
             return res.json(r);
             })
         });
+
+    app.post("/class/:classname/commentPost", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;
+        var classname = req.params.classname;
+        var text = req.body.text;
+        var postId = req.body.postId;
+        postService.comment(classname, postId, userId, text, r=>{
+            return res.json(r);
+            })
+        });
+
+    app.post("/class/:classname/postReaction", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;
+        var classname = req.params.classname;
+        var reaction = req.body.reaction;
+        var postId = req.body.postId;
+        postService.postReaction(classname, postId, userId, reaction, r=>{
+            return res.json(r);
+            })
+        });
     
+    app.post("/class/:classname/commentReaction", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;
+        var classname = req.params.classname;
+        var reaction = req.body.reaction;
+        var postId = req.body.postId;
+        var commentId = req.body.commentId;
+        postService.commentReaction(classname, postId, commentId, userId, reaction, r=>{
+            return res.json(r);
+            })
+        });
+    
+    app.get("/class/:classname/posts", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;
+        var classname = req.params.classname;
+        var lastId = req.query.lastId;
+        postService.getPosts(classname, userId, lastId, r=>{
+            return res.json(r);
+            })
+        });
     
 
 };

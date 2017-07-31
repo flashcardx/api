@@ -50,7 +50,6 @@ const cardSchema = new Schema({
 
 cardSchema.index({"updated_at": 1});
 
-
 cardSchema.pre('update', function(next) {
   this.options.runValidators = true;
   next();

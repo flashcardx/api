@@ -8,27 +8,27 @@ const validators = require("./validators/postValidators");
 const postSchema = new Schema({
 
     classId: {
-        type:Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         required: [true, 'classId is required'],
-        index: true
+        index: true,
+        ref: "classes"
     },
     userId: {
-        type:Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         required: [true, 'userId is required'],
-        index: true
+        index: true,
+        ref: "users"
     },
     text:{
         type: String,
         required: [true, 'text is required'],
         validate: validators.textValidator
     },
-    name:{
-        type: String
-    },
     comments:[{
                 userId: {
                         type:Schema.Types.ObjectId,
-                        required: [true, 'userId is required']
+                        required: [true, 'userId is required'],
+                        ref: "users"
                         },
                 date:{
                     type: Date,
@@ -40,53 +40,53 @@ const postSchema = new Schema({
                       validate: validators.commentValidator
                     },
                 likes:[{
-                            userId:Schema.Types.ObjectId,
-                            name: String
+                            userId:{type:Schema.Types.ObjectId, ref: "users"},
+                            _id: false
                     }],
                 dislikes:[{
-                            userId:Schema.Types.ObjectId,
-                            name: String
+                            userId:{type:Schema.Types.ObjectId, ref: "users"},
+                            _id: false
                         }],
                 laughs:[{
-                            userId:Schema.Types.ObjectId,
-                            name: String
+                            userId:{type:Schema.Types.ObjectId, ref: "users"},
+                            _id: false
                         }],
                 hoorays:[{
-                            userId:Schema.Types.ObjectId,
-                            name: String
+                            userId:{type:Schema.Types.ObjectId, ref: "users"},
+                            _id: false
                         }],
                 confused:[{
-                            userId:Schema.Types.ObjectId,
-                            name: String
+                            userId:{type:Schema.Types.ObjectId, ref: "users"},
+                            _id: false
                         }],
                 hearts:[{
-                            userId:Schema.Types.ObjectId,
-                            name: String
+                            userId:{type:Schema.Types.ObjectId, ref: "users"},
+                            _id: false
                         }]    
     }],
     likes:[{
-        userId:Schema.Types.ObjectId,
-        name: String
+        userId:{type:Schema.Types.ObjectId, ref: "users"},
+        _id: false
     }],
     dislikes:[{
-        userId:Schema.Types.ObjectId,
-        name: String
+        userId:{type:Schema.Types.ObjectId, ref: "users"},
+        _id: false
     }],
     laughs:[{
-        userId:Schema.Types.ObjectId,
-        name: String
+        userId:{type:Schema.Types.ObjectId, ref: "users"},
+        _id: false
     }],
     hoorays:[{
-        userId:Schema.Types.ObjectId,
-        name: String
+        userId:{type:Schema.Types.ObjectId, ref: "users"},
+        _id: false
     }],
     confused:[{
-        userId:Schema.Types.ObjectId,
-        name: String
+        userId:{type:Schema.Types.ObjectId, ref: "users"},
+        _id: false
     }],
     hearts:[{
-        userId:Schema.Types.ObjectId,
-        name: String
+        userId:{type:Schema.Types.ObjectId, ref: "users"},
+        _id: false
     }]
 },
 {
