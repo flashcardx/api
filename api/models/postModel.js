@@ -24,6 +24,10 @@ const postSchema = new Schema({
         required: [true, 'text is required'],
         validate: validators.textValidator
     },
+    commentsSize:{
+        type: Number,
+        default: 0
+    },
     comments:[{
                 userId: {
                         type:Schema.Types.ObjectId,
@@ -39,103 +43,103 @@ const postSchema = new Schema({
                       required: [true, 'text is required'],
                       validate: validators.commentValidator
                     },
-                likes:[{
-                            userId:{type:Schema.Types.ObjectId, ref: "users"},
+                likes:{
+                            usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
                             _id: false,
                             count: {
                                 type: Number,
                                 default: 0
                             }
-                    }],
-                dislikes:[{
-                            userId:{type:Schema.Types.ObjectId, ref: "users"},
+                        },
+                dislikes:{
+                            usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
                             _id: false,
                             count: {
                                 type: Number,
                                 default: 0
                             }
-                        }],
-                laughs:[{
-                            userId:{type:Schema.Types.ObjectId, ref: "users"},
+                        },
+                laughs:{
+                            usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
                             _id: false,
                             count: {
                                 type: Number,
                                 default: 0
                             }
-                        }],
-                hoorays:[{
-                            userId:{type:Schema.Types.ObjectId, ref: "users"},
+                        },
+                hoorays:{
+                            usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
                             _id: false,
                             count: {
                                 type: Number,
                                 default: 0
                             }
-                        }],
-                confused:[{
-                            userId:{type:Schema.Types.ObjectId, ref: "users"},
+                        },
+                confused:{
+                            usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
                             _id: false,
                             count: {
                                 type: Number,
                                 default: 0
                             }
-                        }],
-                hearts:[{
-                            userId:{type:Schema.Types.ObjectId, ref: "users"},
+                        },
+                hearts:{
+                            usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
                             _id: false,
                             count: {
                                 type: Number,
                                 default: 0
                             }
-                        }]    
+                        }    
     }],
-    likes:[{
-        userId:{type:Schema.Types.ObjectId, ref: "users"},
+    likes:{
+        usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
         _id: false,
         count: {
-                type: Number,
-                default: 0
+            type: Number,
+            default: 0
             }
-    }],
-    dislikes:[{
-        userId:{type:Schema.Types.ObjectId, ref: "users"},
+        },
+    dislikes:{
+        usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
         _id: false,
         count: {
-                type: Number,
-                default: 0
+            type: Number,
+            default: 0
             }
-    }],
-    laughs:[{
-        userId:{type:Schema.Types.ObjectId, ref: "users"},
+        },
+    laughs:{
+        usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
         _id: false,
         count: {
-                type: Number,
-                default: 0
+            type: Number,
+            default: 0
             }
-    }],
-    hoorays:[{
-        userId:{type:Schema.Types.ObjectId, ref: "users"},
+        },
+    hoorays:{
+        usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
         _id: false,
         count: {
-                type: Number,
-                default: 0
+            type: Number,
+            default: 0
             }
-    }],
-    confused:[{
-        userId:{type:Schema.Types.ObjectId, ref: "users"},
+        },
+    confused:{
+        usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
         _id: false,
         count: {
-                type: Number,
-                default: 0
+            type: Number,
+            default: 0
             }
-    }],
-    hearts:[{
-        userId:{type:Schema.Types.ObjectId, ref: "users"},
+        },
+    hearts:{
+        usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
         _id: false,
         count: {
-                type: Number,
-                default: 0
+            type: Number,
+            default: 0
             }
-    }]
+        },
 },
 {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }

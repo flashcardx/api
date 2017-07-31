@@ -49,9 +49,9 @@ function comment(classname, postId, userId, text, callback){
         }
         var comment = {
             text: text,
-            userId: userId
+            userId: userId      
         };
-        Post.update({_id:postId, classId: Class._id}, {'$push': { 'comments': comment}})
+        Post.update({_id:postId, classId: Class._id}, {'$push': { 'comments': comment}, "$inc":{commentsSize: 1}})
         .exec()
         .then(r=>{
             return callback({success:true});
@@ -77,17 +77,17 @@ function validReaction(reaction){
 function getReactionRestriction(reaction, key){
     switch (reaction) {
         case "likes":
-            return {"likes.userId": key};
+            return {"likes.usersId": key};
         case "dislikes":
-            return {"dislikes.userId": key};
+            return {"dislikes.usersId": key};
         case "laughs":
-            return {"laughs.userId": key};
+            return {"laughs.usersId": key};
         case "hoorays":
-            return {"hoorays.userId": key};
+            return {"hoorays.usersId": key};
         case "confused":
-            return {"confused.userId": key};
+            return {"confused.usersId": key};
         case "hearts":
-            return {"hearts.userId": key};    
+            return {"hearts.usersId": key};    
         default:
             throw "invalid reaction";
     }
@@ -96,17 +96,17 @@ function getReactionRestriction(reaction, key){
 function getReactionCommentRestriction(reaction, key){
     switch (reaction) {
         case "likes":
-            return {"comments.likes.userId": key};
+            return {"comments.likes.usersId": key};
         case "dislikes":
-            return {"comments.dislikes.userId": key};
+            return {"comments.dislikes.usersId": key};
         case "laughs":
-            return {"comments.laughs.userId": key};
+            return {"comments.laughs.usersId": key};
         case "hoorays":
-            return {"comments.hoorays.userId": key};
+            return {"comments.hoorays.usersId": key};
         case "confused":
-            return {"comments.confused.userId": key};
+            return {"comments.confused.usersId": key};
         case "hearts":
-            return {"comments.hearts.userId": key};    
+            return {"comments.hearts.usersId": key};    
         default:
             throw "invalid reaction";
     }
@@ -134,14 +134,12 @@ function postReaction(classname, postId, userId, reaction, callback){
         .then(post=>{
             logger.error("post: " +JSON.stringify(post));
             var count = {};
+            var user = {};
+            user[reaction+".usersId"] =  userId;
             if(!post){
-            count[reaction + ".count"] = 1;
-                    var push = {};
-                        push[reaction] = {
-                                        userId: userId
-                                    }
-                    logger.error("about to push: " + JSON.stringify(push));
-                    Post.update({_id:postId, classId: Class._id}, {'$push': push, "$inc": count })
+                    count[reaction + ".count"] = 1;
+                    mongoose.set('debug', true);
+                    Post.update({_id:postId, classId: Class._id}, {'$push': user, "$inc": count })
                     .exec()
                     .then(r=>{
                         logger.error("r:"  + JSON.stringify(r));
@@ -154,11 +152,7 @@ function postReaction(classname, postId, userId, reaction, callback){
             }
             else{
                 count[reaction + ".count"] = -1;
-                var pull = {};
-                        pull[reaction] = {
-                                        userId: userId
-                    }
-                 Post.update({_id:postId, classId: Class._id}, {'$pull': pull, "$inc": count})
+                Post.update({_id:postId, classId: Class._id}, {'$pull': user, "$inc": count})
                     .exec()
                     .then(r=>{
                         logger.error("r:"  + JSON.stringify(r));
@@ -206,13 +200,12 @@ function commentReaction(classname, postId, commentId, userId, reaction, callbac
         .then(post=>{
             logger.error("post: " +JSON.stringify(post));
             var field = "comments.$."+reaction;
+            var count = {};
+            var user = {};
+            user[field+".usersId"] =  userId;
             if(!post){
-                    var push = {};
-                        push[field] = {
-                                        userId: userId
-                                    }
-                    logger.error("about to push: " + JSON.stringify(push));
-                    Post.update({_id:postId, classId: Class._id, "comments._id":commentId}, {'$push': push})
+                count[field + ".count"] = 1;
+                    Post.update({_id:postId, classId: Class._id, "comments._id":commentId}, {'$push': user, "$inc": count })
                     .exec()
                     .then(r=>{
                         logger.error("r:"  + JSON.stringify(r));
@@ -224,11 +217,8 @@ function commentReaction(classname, postId, commentId, userId, reaction, callbac
                     }); 
             }
             else{
-                var pull = {};
-                pull[field] = {
-                                        userId: userId
-                    }
-                 Post.update({_id:postId, classId: Class._id, "comments._id":commentId}, {'$pull': pull})
+                count[field + ".count"] = -1;
+                 Post.update({_id:postId, classId: Class._id, "comments._id":commentId}, {'$pull': user, "$inc": count })
                     .exec()
                     .then(r=>{
                         logger.error("r:"  + JSON.stringify(r));
@@ -244,7 +234,6 @@ function commentReaction(classname, postId, commentId, userId, reaction, callbac
                 logger.error("error when trying to update post document, trying to add reaction: " + err);
                 return callback({success:false, msg:err});
         });    
-     
     })
     .catch(err=>{
         logger.error("error when trying to post: " + err);
@@ -264,26 +253,16 @@ function getPosts(classname, userId, lastId, callback){
                 };
                 if(lastId)
                     match._id = {$lt: lastId}
-                mongoose.set('debug', true);
-                Post.aggregate([{$match: match},
-                                {$limit: 8},
-                                {$sort: {created_at: -1}},
-                    {$project:{ user: "$userId",
-                                likes: {$size: '$likes'},
-                                dislikes: {$size: '$dislikes'},
-                                laughs: {$size: '$laughs'},
-                                hoorays: {$size: '$hoorays'},
-                                confused: {$size: '$confused'},
-                                hearts: {$size: '$hearts'},
-                                comments: {$size: '$comments'},
-                                text: "$text",
-                                lastComments: {$slice: ["$comments", -2]}            
-                            }}]
-                        )
-                    .then(r=>{
-                        logger.error("r1: " + JSON.stringify(r));
-                        return Post.populate(r, {path:"user", select:"name"})
-                    })
+                logger.error("lastid:" + lastId);
+                         Post.find(match,
+                                 "userId text updated_at likes.count dislikes.count laughs.count laughs.count "+
+                                 "hoorays.count confused.count hearts.count comments.text comments.date "+
+                                 "comments.likes.count comments.dislikes.count comments.laughs.count comments.likes.count "+
+                                 "comments.hoorays.count comments.confused.count comments.hearts.count commentsSize")
+                        .sort({_id: "desc"})
+                        .limit(8)
+                        .slice("comments", -2)
+                        .exec()
                     .then(r=>{
                             return callback({success:true, msg:r});
                     })
@@ -300,7 +279,37 @@ function getPosts(classname, userId, lastId, callback){
 }
 
 
-
+function getComments(classname, userId, postId, skip, limit, callback){
+           classService.findClassLean(classname, userId, "")
+        .then(Class=>{
+                if(!Class){
+                    logger.error("class not found");
+                    return callback({success:false, msg:"Class not found(user must be in the class)"});
+                }
+                var match = {
+                    _id: {$eq: postId},
+                    classId: {$eq: Class._id}
+                }
+                    Post.find(match,
+                                "comments.text comments.date"+
+                                "comments.likes.count comments.dislikes.count comments.laughs.count comments.likes.count "+
+                                "comments.hoorays.count comments.confused.count comments.hearts.count")
+                    .where("comments")
+                    .slice([parseInt(skip), parseInt(limit)])
+                    .exec()
+                    .then(r=>{
+                            return callback({success:true, msg:r});
+                    })
+                    .catch(err=>{
+                    logger.error("error when trying to get posts: " + err);
+                    return callback({success:false, msg:err});
+                    });
+        })
+        .catch(err=>{
+            logger.error("error when trying to get posts, error when finding class: " + err);
+            return callback({success:false, msg:err});
+        });
+}
 
 
 
@@ -309,5 +318,6 @@ module.exports = {
     comment: comment,
     postReaction: postReaction,
     commentReaction: commentReaction,
-    getPosts: getPosts
+    getPosts: getPosts,
+    getComments: getComments
 }

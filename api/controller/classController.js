@@ -265,8 +265,19 @@ module.exports = function(app){
     app.get("/class/:classname/posts", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
         var classname = req.params.classname;
-        var lastId = req.query.lastId;
+        var lastId = req.query.last;
         postService.getPosts(classname, userId, lastId, r=>{
+            return res.json(r);
+            })
+        });
+
+    app.get("/class/:classname/:postId/comments", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;
+        var classname = req.params.classname;
+        var postId = req.params.postId; 
+        var skip = req.query.skip;
+        var limit = req.query.limit;
+        postService.getComments(classname, userId, postId, skip, limit, r=>{
             return res.json(r);
             })
         });
