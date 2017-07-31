@@ -41,52 +41,100 @@ const postSchema = new Schema({
                     },
                 likes:[{
                             userId:{type:Schema.Types.ObjectId, ref: "users"},
-                            _id: false
+                            _id: false,
+                            count: {
+                                type: Number,
+                                default: 0
+                            }
                     }],
                 dislikes:[{
                             userId:{type:Schema.Types.ObjectId, ref: "users"},
-                            _id: false
+                            _id: false,
+                            count: {
+                                type: Number,
+                                default: 0
+                            }
                         }],
                 laughs:[{
                             userId:{type:Schema.Types.ObjectId, ref: "users"},
-                            _id: false
+                            _id: false,
+                            count: {
+                                type: Number,
+                                default: 0
+                            }
                         }],
                 hoorays:[{
                             userId:{type:Schema.Types.ObjectId, ref: "users"},
-                            _id: false
+                            _id: false,
+                            count: {
+                                type: Number,
+                                default: 0
+                            }
                         }],
                 confused:[{
                             userId:{type:Schema.Types.ObjectId, ref: "users"},
-                            _id: false
+                            _id: false,
+                            count: {
+                                type: Number,
+                                default: 0
+                            }
                         }],
                 hearts:[{
                             userId:{type:Schema.Types.ObjectId, ref: "users"},
-                            _id: false
+                            _id: false,
+                            count: {
+                                type: Number,
+                                default: 0
+                            }
                         }]    
     }],
     likes:[{
         userId:{type:Schema.Types.ObjectId, ref: "users"},
-        _id: false
+        _id: false,
+        count: {
+                type: Number,
+                default: 0
+            }
     }],
     dislikes:[{
         userId:{type:Schema.Types.ObjectId, ref: "users"},
-        _id: false
+        _id: false,
+        count: {
+                type: Number,
+                default: 0
+            }
     }],
     laughs:[{
         userId:{type:Schema.Types.ObjectId, ref: "users"},
-        _id: false
+        _id: false,
+        count: {
+                type: Number,
+                default: 0
+            }
     }],
     hoorays:[{
         userId:{type:Schema.Types.ObjectId, ref: "users"},
-        _id: false
+        _id: false,
+        count: {
+                type: Number,
+                default: 0
+            }
     }],
     confused:[{
         userId:{type:Schema.Types.ObjectId, ref: "users"},
-        _id: false
+        _id: false,
+        count: {
+                type: Number,
+                default: 0
+            }
     }],
     hearts:[{
         userId:{type:Schema.Types.ObjectId, ref: "users"},
-        _id: false
+        _id: false,
+        count: {
+                type: Number,
+                default: 0
+            }
     }]
 },
 {

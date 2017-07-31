@@ -133,13 +133,15 @@ function postReaction(classname, postId, userId, reaction, callback){
         .exec()
         .then(post=>{
             logger.error("post: " +JSON.stringify(post));
+            var count = {};
             if(!post){
+            count[reaction + ".count"] = 1;
                     var push = {};
                         push[reaction] = {
                                         userId: userId
                                     }
                     logger.error("about to push: " + JSON.stringify(push));
-                    Post.update({_id:postId, classId: Class._id}, {'$push': push})
+                    Post.update({_id:postId, classId: Class._id}, {'$push': push, "$inc": count })
                     .exec()
                     .then(r=>{
                         logger.error("r:"  + JSON.stringify(r));
@@ -151,11 +153,12 @@ function postReaction(classname, postId, userId, reaction, callback){
                     });
             }
             else{
+                count[reaction + ".count"] = -1;
                 var pull = {};
                         pull[reaction] = {
                                         userId: userId
                     }
-                 Post.update({_id:postId, classId: Class._id}, {'$pull': pull})
+                 Post.update({_id:postId, classId: Class._id}, {'$pull': pull, "$inc": count})
                     .exec()
                     .then(r=>{
                         logger.error("r:"  + JSON.stringify(r));
