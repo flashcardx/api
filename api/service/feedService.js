@@ -10,34 +10,30 @@ client = stream.connect(credentials.getStream.publicKey,
                         credentials.getStream.appId,
                         { location: credentials.getStream.location });
 
-function publishCardClassFeed(classname, cardId){
-    classFeed = client.feed('class', classname);
+function publishCardClassFeed(classId, cardId){
+    classFeed = client.feed('class', classId);
     var activity = {
-        actor: "Class:"+classname,
+        actor: "Class:"+classId,
         verb: "publish",
         object: cardId,
         type: "card",
         foreign_id: "card" + cardId
     };
-    logger.error("publishing activity: " + JSON.stringify(activity));
     classFeed.addActivity(activity);
 }
 
 
-function followClass(classname, userId, lang){
-    logger.error("following class: " + classname + ", userid: " + userId, "lang: " + lang);
+function followClass(classId, userId, lang){
     userFeed = client.feed('timeline', lang+userId);
-    userFeed.follow("class", classname);
+    userFeed.follow("class", classId);
 }
 
-function unfollowClass(classname, userId, lang){
+function unfollowClass(classId, userId, lang){
     userFeed = client.feed('timeline', lang+userId);
-    userFeed.unfollow("class", lang+classname);
+    userFeed.unfollow("class", lang+classId);
 }
 
 function getFeed(userId, lang, lastId){
-    logger.error("get user feed for: " + userId + ", lang: " + lang);
-    logger.error("lastid:" + lastId);
     userFeed = client.feed('timeline', lang+userId);
     var restrictions = {limit:10};
     if(lastId)
@@ -45,8 +41,8 @@ function getFeed(userId, lang, lastId){
     return userFeed.get(restrictions); //returns promise
 }
 
-function removeCardFromClass(classname, cardId){
-    classFeed = client.feed('class', classname);
+function removeCardFromClass(classId, cardId){
+    classFeed = client.feed('class', classId);
     classFeed.removeActivity({foreignId:"card"+cardId});
 }
 

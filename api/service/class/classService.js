@@ -20,16 +20,18 @@ const ObjectId = require('mongoose').Types.ObjectId;
 
 function create(Class, callback){
     var userModel;
+    var cId;
     verifyOwnerLimits(Class.isPrivate, Class.owner, "plan.isPremium name classLimit classesLeft lang classes")
     .then((user)=>{
         userModel = user;
         return saveClassDb(Class, user.lang)
     })
     .then((classId)=>{
+        cId = classId;
         return linkOwnerClass(userModel, classId);
     })
     .then(()=>{
-        feedService.followClass(Class.name, userModel._id, userModel.lang);
+        feedService.followClass(cId, userModel._id, userModel.lang);
         return callback({success:true});
     })
     .catch(err=>{
@@ -270,7 +272,7 @@ function joinClass(classname, userId, callback){
         return joinPrivateClass(classModel, userId);
     })
     .then(lang=>{
-        feedService.followClass(classname, userId, lang);
+        feedService.followClass(classId, userId, lang);
         return callback({success:true});
     })
      .catch(err=>{
@@ -381,7 +383,7 @@ function addUser(classname, userJoinerEmail, userRequesterId, callback){
                         });
                 })
             .then(()=>{
-                feedService.followClass(classname, user2Join._id, user2Join.lang);
+                feedService.followClass(classId, user2Join._id, user2Join.lang);
                 callback({success:true});
             })
             .catch(err=>{
@@ -489,7 +491,7 @@ function removeUser(classname, leaverId, requesterId, callback){
                             return Promise.resolve();
             })
             .then(()=>{
-                    feedService.unfollowClass(classname, leaverId, userLeaver.lang);
+                    feedService.unfollowClass(classBackup._id, leaverId, userLeaver.lang);
                     return callback({success:true});
             })
             .catch(err=>{
@@ -560,6 +562,7 @@ function findByNamePopulateOwner(classname, fields, fields2){
 
 function duplicateCard2Class(classname, cardId, userId, callback){
     var cardId;
+    var classId;
     findClassLean(classname, userId, "cardsLeft name")
         .then(Class=>{
             if(!Class)
@@ -567,6 +570,7 @@ function duplicateCard2Class(classname, cardId, userId, callback){
             if(Class.cardsLeft <= 0){
                 return Promise.reject("Class is full, no space for more cards");
             }
+            classId = Class._id;
             userService.findById(userId, "name", r=>{
                 if(r.success === false){
                     logger.error(r.msg);
@@ -579,7 +583,7 @@ function duplicateCard2Class(classname, cardId, userId, callback){
                     cardId = r.msg._id;
                     decreaseCardsLeft(Class._id)
                     .then(r=>{
-                        feedService.publishCardClassFeed(classname, cardId);
+                        feedService.publishCardClassFeed(classId, cardId);
                         return callback({success:true});
                     })
                     .catch(err=>{
@@ -656,7 +660,7 @@ function deleteCard(classname, userId, cardId, callback){
             return increaseCardsLeft(classModel._id);
     })
     .then(()=>{
-        feedService.removeCardFromClass(classname, cardId);
+        feedService.removeCardFromClass(classModel._id, cardId);
         return callback({success:true});
     })
     .catch(err=>{
@@ -689,6 +693,16 @@ function findClassLean(classname, userId, fields){
         .exec();
 }
 
+function findClassLeanNoVerify(classname, fields){
+    return classModel.findOne({$and: [
+                        {name:classname},
+                        {isActive:true}
+                        ]},
+                        fields)
+        .lean()
+        .exec();
+}
+
 function findClass(classname, userId, fields){
     return classModel.findOne({$and: [
                         {name:classname},
@@ -699,17 +713,6 @@ function findClass(classname, userId, fields){
         .exec();
 }
 
-function findClassLeanPopulateThumbnail(classname, userId, fields){
-    return classModel.findOne({$and: [
-                        {name:classname},
-                        {isActive:true},
-                        {$or:[{"owner":{$eq:userId}}, {"integrants":{$eq:userId}}]}
-                        ]},
-                        fields)
-        .populate("thumbnail", "hash")
-        .lean()
-        .exec();
-}
 
 
 function findClassLeanPopulateOwner(classname, userId, fields){
@@ -898,5 +901,6 @@ module.exports = {
     duplicateCard2User: duplicateCard2User,
     changeProfilePicture: changeProfilePicture,
     deleteProfilePicture: deleteProfilePicture,
-    findClassLean: findClassLean
+    findClassLean: findClassLean,
+    findClassLeanNoVerify: findClassLeanNoVerify
 }

@@ -5,6 +5,7 @@ const controllerUtils = require("./utils");
 const logger = config.getLogger(__filename);
 const Img = require(appRoot + "/models/imgModel");
 const classService = require(appRoot + "/service/class/classService");
+const AWSService = require(appRoot + "/service/AWSService");
 const postService = require(appRoot + "/service/class/postService");
 const userService = require(appRoot + "/service/userService");
 const feedService = require(appRoot + "/service/feedService");
@@ -21,6 +22,7 @@ module.exports = function(app){
             isPrivate: req.body.isPrivate
         }
         classService.create(Class, r=>{
+            logger.error("new class got: " + JSON.stringify(r));
             return res.json(r);
         });
     });
@@ -71,8 +73,6 @@ module.exports = function(app){
         });
     });
 
-    
-
      app.delete("/userFromClass",  controllerUtils.requireLogin, function(req, res){
         const leaverId = req.body.leaverId;
         const classname = req.body.classname;
@@ -115,7 +115,6 @@ module.exports = function(app){
             return res.json(r);
         });
     });
-
 
     app.delete("/class/:classname",  controllerUtils.requireLogin, function(req, res){
         const classname = req.params.classname;
@@ -222,7 +221,25 @@ module.exports = function(app){
         });
     });
 
-    app.post("/class/:classname/post", controllerUtils.requireLogin, (req, res)=>{
+    app.get("/classProfileImage/:classname", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;
+        var classname = req.params.classname;
+        classService.findClassLeanNoVerify(classname, "thumbnail -_id")
+        .then(r=>{
+                if(!r)
+                    return res.json({success:false, msg:"could not find class"});
+                if(r.thumbnail)
+                    r.thumbnail = AWSService.getImgUrl(r.thumbnail);
+                logger.error("r: " + JSON.stringify(r));
+                return res.json({success:true, msg:r});
+        })
+        .catch(err=>{
+            logger.error("err: " + err);
+            return res.json({success: false, msg:err});
+        });
+    });
+
+    app.post("/classConnect/post/:classname", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
         var classname = req.params.classname;
         var text = req.body.text;
