@@ -262,6 +262,7 @@ function getPosts(classname, userId, lastId, callback){
                         .sort({_id: "desc"})
                         .limit(8)
                         .slice("comments", -2)
+                        .populate("userId comments.userId", "name thumbnail")
                         .exec()
                     .then(r=>{
                             return callback({success:true, msg:r});
@@ -291,11 +292,12 @@ function getComments(classname, userId, postId, skip, limit, callback){
                     classId: {$eq: Class._id}
                 }
                     Post.find(match,
-                                "comments.text comments.date"+
+                                "comments.text comments.userId comments.date"+
                                 "comments.likes.count comments.dislikes.count comments.laughs.count comments.likes.count "+
                                 "comments.hoorays.count comments.confused.count comments.hearts.count")
                     .where("comments")
                     .slice([parseInt(skip), parseInt(limit)])
+                    .populate("comments.userId", "name thumbnail")
                     .exec()
                     .then(r=>{
                             return callback({success:true, msg:r});
