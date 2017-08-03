@@ -69,7 +69,7 @@ function comment(classname, postId, userId, text, callback){
 }
 
 function validReaction(reaction){
-    if(reaction != "likes" && reaction != "dislikes" && reaction != "laughs" && reaction != "hoorays" && reaction != "confused" && reaction != "hearts")
+    if(reaction != "likes" && reaction != "loves" && reaction != "hahas" && reaction != "wows" && reaction != "sads" && reaction != "angrys")
         return false;
     return true;
 }
@@ -78,16 +78,16 @@ function getReactionRestriction(reaction, key){
     switch (reaction) {
         case "likes":
             return {"likes.usersId": key};
-        case "dislikes":
-            return {"dislikes.usersId": key};
-        case "laughs":
-            return {"laughs.usersId": key};
-        case "hoorays":
-            return {"hoorays.usersId": key};
-        case "confused":
-            return {"confused.usersId": key};
-        case "hearts":
-            return {"hearts.usersId": key};    
+        case "loves":
+            return {"loves.usersId": key};
+        case "hahas":
+            return {"hahas.usersId": key};
+        case "wows":
+            return {"wows.usersId": key};
+        case "sads":
+            return {"sads.usersId": key};
+        case "angrys":
+            return {"angrys.usersId": key};    
         default:
             throw "invalid reaction";
     }
@@ -97,22 +97,22 @@ function getReactionCommentRestriction(reaction, key){
     switch (reaction) {
         case "likes":
             return {"comments.likes.usersId": key};
-        case "dislikes":
-            return {"comments.dislikes.usersId": key};
-        case "laughs":
-            return {"comments.laughs.usersId": key};
-        case "hoorays":
-            return {"comments.hoorays.usersId": key};
-        case "confused":
-            return {"comments.confused.usersId": key};
-        case "hearts":
-            return {"comments.hearts.usersId": key};    
+        case "loves":
+            return {"comments.loves.usersId": key};
+        case "hahas":
+            return {"comments.hahas.usersId": key};
+        case "wows":
+            return {"comments.wows.usersId": key};
+        case "sads":
+            return {"comments.sads.usersId": key};
+        case "angrys":
+            return {"comments.angrys.usersId": key};    
         default:
             throw "invalid reaction";
     }
 }
 
-// reaction should be : likes, dislikes,laughs, hoorays, confused or hearts
+// reaction should be : likes, loves,hahas, wows, sads or angrys
 function postReaction(classname, postId, userId, reaction, callback){
     if(validReaction(reaction) == false)
         return callback({success:false, msg:"Invalid reaction"});
@@ -177,7 +177,7 @@ function postReaction(classname, postId, userId, reaction, callback){
 }
 
 
-// reaction should be: likes, dislikes,laughs, hoorays, confused or hearts
+// reaction should be: likes, loves,hahas, wows, sads or angrys
 function commentReaction(classname, postId, commentId, userId, reaction, callback){
     if(validReaction(reaction) == false)
         return callback({success:false, msg:"Invalid reaction"});
@@ -255,10 +255,10 @@ function getPosts(classname, userId, lastId, callback){
                     match._id = {$lt: lastId}
                 logger.error("lastid:" + lastId);
                          Post.find(match,
-                                 "userId text updated_at likes.count dislikes.count laughs.count laughs.count "+
-                                 "hoorays.count confused.count hearts.count comments.text comments.date "+
-                                 "comments.likes.count comments.dislikes.count comments.laughs.count comments.likes.count "+
-                                 "comments.hoorays.count comments.confused.count comments.hearts.count commentsSize")
+                                 "userId text updated_at likes.count loves.count hahas.count hahas.count "+
+                                 "wows.count sads.count angrys.count comments.text comments.date "+
+                                 "comments.likes.count comments.loves.count comments.hahas.count comments.likes.count "+
+                                 "comments.wows.count comments.sads.count comments.angrys.count commentsSize")
                         .sort({_id: "desc"})
                         .limit(8)
                         .slice("comments", -2)
@@ -293,8 +293,8 @@ function getComments(classname, userId, postId, skip, limit, callback){
                 }
                     Post.find(match,
                                 "comments.text comments.userId comments.date"+
-                                "comments.likes.count comments.dislikes.count comments.laughs.count comments.likes.count "+
-                                "comments.hoorays.count comments.confused.count comments.hearts.count")
+                                "comments.likes.count comments.loves.count comments.hahas.count comments.likes.count "+
+                                "comments.wows.count comments.sads.count comments.angrys.count")
                     .where("comments")
                     .slice([parseInt(skip), parseInt(limit)])
                     .populate("comments.userId", "name thumbnail")

@@ -279,14 +279,28 @@ module.exports = function(app){
             })
         });
     
-    app.get("/class/:classname/posts", controllerUtils.requireLogin, (req, res)=>{
+    app.get("/class/posts/:classname", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
         var classname = req.params.classname;
         var lastId = req.query.last;
         postService.getPosts(classname, userId, lastId, r=>{
-            return res.json(r);
+            logger.error("r: " + JSON.stringify(r));
+            r.msg.forEach((p, index)=>{
+                logger.error("post: " + JSON.stringify(p));
+                if(p.userId.thumbnail && p.userId.thumbnail.length < 28){
+                    logger.error("thumbnail: " + p.userId.thumbnail);
+                    r.msg[index].userId.thumbnail = AWSService.getImgUrl(p.userId.thumbnail);
+                    console.log("new thumbnail: " + r.msg[index].userId.thumbnail);
+                }
+                p.comments.forEach((c, commentIndex)=>{
+                        if(c.userId.thumbnail)
+                            r.msg[index].comments[commentIndex].userId.thumbnail = AWSService.getImgUrl(c.userId.thumbnail);    
+                    })
             })
-        });
+            logger.error("posts: " + JSON.stringify(r));
+            return res.json(r);
+        })
+    });
 
     app.get("/class/:classname/:postId/comments", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;

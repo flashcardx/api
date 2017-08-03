@@ -51,7 +51,7 @@ const postSchema = new Schema({
                                 default: 0
                             }
                         },
-                dislikes:{
+                loves:{
                             usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
                             _id: false,
                             count: {
@@ -59,7 +59,7 @@ const postSchema = new Schema({
                                 default: 0
                             }
                         },
-                laughs:{
+                hahas:{
                             usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
                             _id: false,
                             count: {
@@ -67,7 +67,7 @@ const postSchema = new Schema({
                                 default: 0
                             }
                         },
-                hoorays:{
+                wows:{
                             usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
                             _id: false,
                             count: {
@@ -75,7 +75,7 @@ const postSchema = new Schema({
                                 default: 0
                             }
                         },
-                confused:{
+                sads:{
                             usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
                             _id: false,
                             count: {
@@ -83,7 +83,7 @@ const postSchema = new Schema({
                                 default: 0
                             }
                         },
-                hearts:{
+                angrys:{
                             usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
                             _id: false,
                             count: {
@@ -100,7 +100,7 @@ const postSchema = new Schema({
             default: 0
             }
         },
-    dislikes:{
+    loves:{
         usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
         _id: false,
         count: {
@@ -108,7 +108,7 @@ const postSchema = new Schema({
             default: 0
             }
         },
-    laughs:{
+    hahas:{
         usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
         _id: false,
         count: {
@@ -116,7 +116,7 @@ const postSchema = new Schema({
             default: 0
             }
         },
-    hoorays:{
+    wows:{
         usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
         _id: false,
         count: {
@@ -124,7 +124,7 @@ const postSchema = new Schema({
             default: 0
             }
         },
-    confused:{
+    sads:{
         usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
         _id: false,
         count: {
@@ -132,7 +132,7 @@ const postSchema = new Schema({
             default: 0
             }
         },
-    hearts:{
+    angrys:{
         usersId:[{type:Schema.Types.ObjectId, ref: "users"}],
         _id: false,
         count: {
