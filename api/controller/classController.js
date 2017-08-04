@@ -256,9 +256,9 @@ module.exports = function(app){
         postService.comment(classname, postId, userId, text, r=>{
             return res.json(r);
             })
-        });
+    });
 
-    app.post("/class/:classname/postReaction", controllerUtils.requireLogin, (req, res)=>{
+    app.post("/class/postReaction/:classname", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
         var classname = req.params.classname;
         var reaction = req.body.reaction;
@@ -266,9 +266,9 @@ module.exports = function(app){
         postService.postReaction(classname, postId, userId, reaction, r=>{
             return res.json(r);
             })
-        });
+    });
     
-    app.post("/class/:classname/commentReaction", controllerUtils.requireLogin, (req, res)=>{
+    app.post("/class/commentReaction/:classname", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
         var classname = req.params.classname;
         var reaction = req.body.reaction;
@@ -277,7 +277,7 @@ module.exports = function(app){
         postService.commentReaction(classname, postId, commentId, userId, reaction, r=>{
             return res.json(r);
             })
-        });
+    });
     
     app.get("/class/posts/:classname", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
