@@ -248,7 +248,7 @@ module.exports = function(app){
             })
         });
 
-    app.post("/class/:classname/commentPost", controllerUtils.requireLogin, (req, res)=>{
+    app.post("/class/commentPost/:classname", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
         var classname = req.params.classname;
         var text = req.body.text;
@@ -284,20 +284,17 @@ module.exports = function(app){
         var classname = req.params.classname;
         var lastId = req.query.last;
         postService.getPosts(classname, userId, lastId, r=>{
-            logger.error("r: " + JSON.stringify(r));
+            logger.error("posts: " + JSON.stringify(r));
             r.msg.forEach((p, index)=>{
-                logger.error("post: " + JSON.stringify(p));
                 if(p.userId.thumbnail && p.userId.thumbnail.length < 28){
                     logger.error("thumbnail: " + p.userId.thumbnail);
                     r.msg[index].userId.thumbnail = AWSService.getImgUrl(p.userId.thumbnail);
-                    console.log("new thumbnail: " + r.msg[index].userId.thumbnail);
                 }
                 p.comments.forEach((c, commentIndex)=>{
-                        if(c.userId.thumbnail)
+                        if(c.userId.thumbnail && c.userId.thumbnail.length < 28)
                             r.msg[index].comments[commentIndex].userId.thumbnail = AWSService.getImgUrl(c.userId.thumbnail);    
                     })
             })
-            logger.error("posts: " + JSON.stringify(r));
             return res.json(r);
         })
     });

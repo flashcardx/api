@@ -256,9 +256,9 @@ function getPosts(classname, userId, lastId, callback){
                 logger.error("lastid:" + lastId);
                          Post.find(match,
                                  "userId text updated_at likes.count loves.count hahas.count hahas.count "+
-                                 "wows.count sads.count angrys.count comments.text comments.date "+
+                                 "wows.count sads.count angrys.count comments.text comments.userId comments.date "+
                                  "comments.likes.count comments.loves.count comments.hahas.count comments.likes.count "+
-                                 "comments.wows.count comments.sads.count comments.angrys.count commentsSize")
+                                 "comments.wows.count comments.sads.count comments.angrys.count commentsSize comments._id")
                         .sort({_id: "desc"})
                         .limit(8)
                         .slice("comments", -2)
