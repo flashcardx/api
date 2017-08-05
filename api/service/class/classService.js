@@ -105,6 +105,7 @@ function listAll(userId, callback){
 }
 
 
+
 function listAllShort(userId, callback){
     listAllByFields(userId, "name", callback);
 }
@@ -713,6 +714,17 @@ function findClass(classname, userId, fields){
         .exec();
 }
 
+function findClassLeanById(classId, userId, fields){
+    return classModel.findOne({$and: [
+                        {_id:classId},
+                        {isActive:true},
+                        {$or:[{"owner":{$eq:userId}}, {"integrants":{$eq:userId}}]}
+                        ]},
+                        fields)
+        .lean()
+        .exec();
+}
+
 
 
 function findClassLeanPopulateOwner(classname, userId, fields){
@@ -902,5 +914,6 @@ module.exports = {
     changeProfilePicture: changeProfilePicture,
     deleteProfilePicture: deleteProfilePicture,
     findClassLean: findClassLean,
-    findClassLeanNoVerify: findClassLeanNoVerify
+    findClassLeanNoVerify: findClassLeanNoVerify,
+    findClassLeanById: findClassLeanById
 }

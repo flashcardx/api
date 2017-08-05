@@ -138,7 +138,6 @@ function postReaction(classname, postId, userId, reaction, callback){
             user[reaction+".usersId"] =  userId;
             if(!post){
                     count[reaction + ".count"] = 1;
-                    mongoose.set('debug', true);
                     Post.update({_id:postId, classId: Class._id}, {'$push': user, "$inc": count })
                     .exec()
                     .then(r=>{
@@ -263,6 +262,7 @@ function getPosts(classname, userId, lastId, callback){
                         .limit(8)
                         .slice("comments", -2)
                         .populate("userId comments.userId", "name thumbnail")
+                        .lean()
                         .exec()
                     .then(r=>{
                             return callback({success:true, msg:r});
@@ -298,6 +298,7 @@ function getComments(classname, userId, postId, skip, limit, callback){
                     .where("comments")
                     .slice([parseInt(skip), parseInt(limit)])
                     .populate("comments.userId", "name thumbnail")
+                    .lean()
                     .exec()
                     .then(r=>{
                             return callback({success:true, msg:r});
@@ -313,6 +314,87 @@ function getComments(classname, userId, postId, skip, limit, callback){
         });
 }
 
+function getPostReactions(userId, postId, callback){
+     Post.findOne({_id: postId},
+                     "-_id classId likes.count loves.count hahas.count hahas.count "+
+                                 "wows.count sads.count angrys.count")
+                    .lean()
+                    .exec()
+                    .then(post=>{
+                            if(!post)
+                                return callback({success:false, msg:"post not found"});
+                            classService.findClassLeanById(post.classId, userId, "_id")
+                            .then(Class=>{
+                                if(!Class)
+                                        return callback({success:false, msg:"Class does not exist or user is not in class"});
+                                return callback({success:true, msg:post});                           
+                            })
+                            .catch(err=>{
+                                logger.error(err);
+                                return callback({success:false, msg: err.toString()});
+                            });
+                    })
+                    .catch(err=>{
+                    logger.error("error when trying to get posts: " + err);
+                    return callback({success:false, msg:err});
+                    });
+}
+
+function getCommentReactions(userId, postId, commentId, callback){
+    logger.error("postId:"  + postId + ", commentId: " + commentId);
+    Post.findOne({_id: postId},
+                    {comments:{$elemMatch: { "_id": commentId}},
+                    classId:1,
+                    _id: 0})
+                    .lean()
+                    .exec()
+                    .then(post=>{
+                            if(!post)
+                                return callback({success:false, msg:"post not found"});
+                            classService.findClassLeanById(post.classId, userId, "_id")
+                            .then(Class=>{
+                                if(!Class)
+                                        return callback({success:false, msg:"Class does not exist or user is not in class"});
+                                return callback({success:true, msg:post});                           
+                            })
+                            .catch(err=>{
+                                logger.error(err);
+                                return callback({success:false, msg: err.toString()});
+                            });
+                    })
+                    .catch(err=>{
+                    logger.error("error when trying to get posts: " + err);
+                    return callback({success:false, msg:err});
+                    });
+}
+
+function getPostReactionDetail(userId, postId, reaction, callback){
+        if(validReaction(reaction) == false)
+            return callback({success:false, msg:"invalid reaction"});
+         Post.findOne({_id: postId},
+                     "-_id classId "+reaction+".usersId")
+                    .populate(reaction+".usersId", "name thumbnail")
+                    .exec()
+                    .then(post=>{
+                            if(!post)
+                                return callback({success:false, msg:"post not found"});
+                            classService.findClassLeanById(post.classId, userId, "_id")
+                            .then(Class=>{
+                                if(!Class)
+                                        return callback({success:false, msg:"Class does not exist or user is not in class"});
+                                return callback({success:true, msg:post});                           
+                            })
+                            .catch(err=>{
+                                logger.error(err);
+                                return callback({success:false, msg: err.toString()});
+                            });
+                    })
+                    .catch(err=>{
+                        logger.error("error when trying to get reactions detail: " + err);
+                        return callback({success:false, msg:err});
+                    });
+}
+
 
 
 module.exports = {
@@ -321,5 +403,8 @@ module.exports = {
     postReaction: postReaction,
     commentReaction: commentReaction,
     getPosts: getPosts,
-    getComments: getComments
+    getComments: getComments,
+    getPostReactions: getPostReactions,
+    getCommentReactions: getCommentReactions,
+    getPostReactionDetail: getPostReactionDetail
 }

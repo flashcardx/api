@@ -230,7 +230,6 @@ module.exports = function(app){
                     return res.json({success:false, msg:"could not find class"});
                 if(r.thumbnail)
                     r.thumbnail = AWSService.getImgUrl(r.thumbnail);
-                logger.error("r: " + JSON.stringify(r));
                 return res.json({success:true, msg:r});
         })
         .catch(err=>{
@@ -284,10 +283,8 @@ module.exports = function(app){
         var classname = req.params.classname;
         var lastId = req.query.last;
         postService.getPosts(classname, userId, lastId, r=>{
-            logger.error("posts: " + JSON.stringify(r));
             r.msg.forEach((p, index)=>{
                 if(p.userId.thumbnail && p.userId.thumbnail.length < 28){
-                    logger.error("thumbnail: " + p.userId.thumbnail);
                     r.msg[index].userId.thumbnail = AWSService.getImgUrl(p.userId.thumbnail);
                 }
                 p.comments.forEach((c, commentIndex)=>{
@@ -310,5 +307,38 @@ module.exports = function(app){
             })
         });
     
+    app.get("/class/postReactions/:postId", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;;
+        var postId = req.params.postId;
+        postService.getPostReactions(userId, postId, r=>{
+            return res.json(r);
+        })
+    });
+    
+    app.get("/class/commentReactions/:postId/:commentId", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;;
+        var postId = req.params.postId;
+        var commentId = req.params.commentId;
+        logger.error("comment reactions for: " + commentId);
+        postService.getCommentReactions(userId, postId, commentId, r=>{
+            logger.error("result: " + JSON.stringify(r));
+            return res.json(r);
+        })
+    });
+
+     app.get("/class/postReactionDetail/:postId/:reaction", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;;
+        var postId = req.params.postId;
+        var reaction = req.params.reaction;
+        postService.getPostReactionDetail(userId, postId, reaction, r=>{
+            if(r.success == true)
+                r.msg[reaction].usersId.forEach((user, index)=>{
+                    if(user.thumbnail)
+                        r.msg[reaction].usersId[index].thumbnail = AWSService.getImgUrl(user.thumbnail); 
+                })
+            return res.json(r);
+        })
+    });
+
 
 };
