@@ -244,8 +244,8 @@ module.exports = function(app){
         var text = req.body.text;
         postService.post(classname, userId, text, r=>{
             return res.json(r);
-            })
-        });
+        })
+    });
 
     app.post("/class/commentPost/:classname", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
@@ -296,15 +296,14 @@ module.exports = function(app){
         })
     });
 
-    app.get("/class/:classname/:postId/comments", controllerUtils.requireLogin, (req, res)=>{
+    app.get("/class/comments/:postId", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
-        var classname = req.params.classname;
         var postId = req.params.postId; 
         var skip = req.query.skip;
         var limit = req.query.limit;
-        postService.getComments(classname, userId, postId, skip, limit, r=>{
+        postService.getComments(userId, postId, skip, limit, r=>{
             return res.json(r);
-            })
+            });
         });
     
     app.get("/class/postReactions/:postId", controllerUtils.requireLogin, (req, res)=>{
@@ -319,9 +318,7 @@ module.exports = function(app){
         var userId = req.userId;;
         var postId = req.params.postId;
         var commentId = req.params.commentId;
-        logger.error("comment reactions for: " + commentId);
         postService.getCommentReactions(userId, postId, commentId, r=>{
-            logger.error("result: " + JSON.stringify(r));
             return res.json(r);
         })
     });
@@ -335,6 +332,21 @@ module.exports = function(app){
                 r.msg[reaction].usersId.forEach((user, index)=>{
                     if(user.thumbnail)
                         r.msg[reaction].usersId[index].thumbnail = AWSService.getImgUrl(user.thumbnail); 
+                })
+            return res.json(r);
+        })
+    });
+
+    app.get("/class/commentReactionDetail/:postId/:commentId/:reaction", controllerUtils.requireLogin, (req, res)=>{
+        var userId = req.userId;;
+        var postId = req.params.postId;
+        var commentId = req.params.commentId;
+        var reaction = req.params.reaction;
+        postService.getCommentReactionDetail(userId, postId, commentId, reaction, r=>{
+            if(r.success == true)
+                r.msg.comments[0][reaction].usersId.forEach((user, index)=>{
+                    if(user.thumbnail)
+                        r.msg.comments[0][reaction].usersId[index].thumbnail = AWSService.getImgUrl(user.thumbnail); 
                 })
             return res.json(r);
         })

@@ -141,7 +141,6 @@ function postReaction(classname, postId, userId, reaction, callback){
                     Post.update({_id:postId, classId: Class._id}, {'$push': user, "$inc": count })
                     .exec()
                     .then(r=>{
-                        logger.error("r:"  + JSON.stringify(r));
                         return callback({success:true});
                     })
                     .catch(err=>{
@@ -154,7 +153,6 @@ function postReaction(classname, postId, userId, reaction, callback){
                 Post.update({_id:postId, classId: Class._id}, {'$pull': user, "$inc": count})
                     .exec()
                     .then(r=>{
-                        logger.error("r:"  + JSON.stringify(r));
                         return callback({success:true});
                     })
                     .catch(err=>{
@@ -180,34 +178,48 @@ function postReaction(classname, postId, userId, reaction, callback){
 function commentReaction(classname, postId, commentId, userId, reaction, callback){
     if(validReaction(reaction) == false)
         return callback({success:false, msg:"Invalid reaction"});
-    classService.findClassLean(classname, userId, "")
+    classService.findClassLean(classname, userId, "_id")
     .then(Class=>{
         if(!Class){
             logger.error("class not found");
             return callback({success:false, msg:"Class not found(user must be in the class)"});
         }
-        var update = {};
-        update[reaction] = update;
+        
+        logger.error("postId: " + postId +", commentId: " + commentId + ", userId: " + userId + ", reaction: " + reaction);
         var restrictions =  [ {"_id": {$eq:postId}},
-                              {"comments._id": {$eq:commentId}},
-                              {"classId": {$eq:Class._id} }
+                              {"comments._id": commentId}//,
+                            //  {"classId": {$eq:Class._id} }
                             ];        
         var obj = getReactionCommentRestriction(reaction, userId);
         restrictions.push(obj);
-        Post.findOne({$and: restrictions}, reaction)
+        /*
+        Post.findOne({$and:restrictions},
+                    "-_id comments.$")
+        */
+        var r = {"_id": mongoose.Types.ObjectId(postId),
+                "comments._id": mongoose.Types.ObjectId(commentId)
+                }
+        r["comments." + reaction + ".usersId"] = mongoose.Types.ObjectId(userId);
+        mongoose.set('debug', true);
+        Post.aggregate({$match: r
+                    },
+                    {
+                        $project: { _id:1} 
+                    })
+   //     .lean()
         .exec()
         .then(post=>{
-            logger.error("post: " +JSON.stringify(post));
+            mongoose.set('debug', false);
+            logger.error("post: " + JSON.stringify(post));
             var field = "comments.$."+reaction;
             var count = {};
             var user = {};
-            user[field+".usersId"] =  userId;
-            if(!post){
-                count[field + ".count"] = 1;
+            user[field+".usersId"] = userId;
+            if(post.length == 0){
+                    count[field + ".count"] = 1;
                     Post.update({_id:postId, classId: Class._id, "comments._id":commentId}, {'$push': user, "$inc": count })
                     .exec()
                     .then(r=>{
-                        logger.error("r:"  + JSON.stringify(r));
                         return callback({success:true});
                     })
                     .catch(err=>{
@@ -220,7 +232,6 @@ function commentReaction(classname, postId, commentId, userId, reaction, callbac
                  Post.update({_id:postId, classId: Class._id, "comments._id":commentId}, {'$pull': user, "$inc": count })
                     .exec()
                     .then(r=>{
-                        logger.error("r:"  + JSON.stringify(r));
                         return callback({success:true});
                     })
                     .catch(err=>{
@@ -252,9 +263,8 @@ function getPosts(classname, userId, lastId, callback){
                 };
                 if(lastId)
                     match._id = {$lt: lastId}
-                logger.error("lastid:" + lastId);
                          Post.find(match,
-                                 "userId text updated_at likes.count loves.count hahas.count hahas.count "+
+                                 "userId text created_at likes.count loves.count hahas.count hahas.count "+
                                  "wows.count sads.count angrys.count comments.text comments.userId comments.date "+
                                  "comments.likes.count comments.loves.count comments.hahas.count comments.likes.count "+
                                  "comments.wows.count comments.sads.count comments.angrys.count commentsSize comments._id")
@@ -279,39 +289,36 @@ function getPosts(classname, userId, lastId, callback){
 
 }
 
-
-function getComments(classname, userId, postId, skip, limit, callback){
-           classService.findClassLean(classname, userId, "")
-        .then(Class=>{
-                if(!Class){
-                    logger.error("class not found");
-                    return callback({success:false, msg:"Class not found(user must be in the class)"});
-                }
-                var match = {
-                    _id: {$eq: postId},
-                    classId: {$eq: Class._id}
-                }
-                    Post.find(match,
-                                "comments.text comments.userId comments.date"+
-                                "comments.likes.count comments.loves.count comments.hahas.count comments.likes.count "+
-                                "comments.wows.count comments.sads.count comments.angrys.count")
-                    .where("comments")
-                    .slice([parseInt(skip), parseInt(limit)])
-                    .populate("comments.userId", "name thumbnail")
-                    .lean()
-                    .exec()
-                    .then(r=>{
-                            return callback({success:true, msg:r});
+function getComments(userId, postId, skip, limit, callback){
+            Post.findOne({_id: {$eq: postId}},
+                        "classId comments._id commentsSize comments.date comments.text comments.userId comments.date"+
+                        "comments.likes.count comments.loves.count comments.hahas.count comments.likes.count "+
+                        "comments.wows.count comments.sads.count comments.angrys.count")
+            .where("comments")
+            .slice([parseInt(skip), parseInt(limit)])
+            .populate("comments.userId", "name thumbnail")
+            .lean()
+            .exec()
+            .then(post=>{
+                    if(!post)
+                        return callback({success:false, msg:"post not found"});
+                     classService.findClassLeanById(post.classId, userId, "_id")
+                    .then(Class=>{
+                        if(!Class){
+                            logger.error("class not found");
+                            return callback({success:false, msg:"Class not found(user must be in the class)"});
+                        }
+                        return callback({success:true, msg:post});
                     })
                     .catch(err=>{
-                    logger.error("error when trying to get posts: " + err);
-                    return callback({success:false, msg:err});
+                                logger.error(err);
+                                return callback({success:false, msg: err.toString()});
                     });
-        })
-        .catch(err=>{
-            logger.error("error when trying to get posts, error when finding class: " + err);
-            return callback({success:false, msg:err});
-        });
+            })
+            .catch(err=>{
+                logger.error("error when trying to get posts: " + err);
+                return callback({success:false, msg:err});
+            });
 }
 
 function getPostReactions(userId, postId, callback){
@@ -335,19 +342,23 @@ function getPostReactions(userId, postId, callback){
                             });
                     })
                     .catch(err=>{
-                    logger.error("error when trying to get posts: " + err);
-                    return callback({success:false, msg:err});
+                        logger.error("error when trying to get posts: " + err);
+                        return callback({success:false, msg:err});
                     });
 }
 
-function getCommentReactions(userId, postId, commentId, callback){
-    logger.error("postId:"  + postId + ", commentId: " + commentId);
-    Post.findOne({_id: postId},
-                    {comments:{$elemMatch: { "_id": commentId}},
-                    classId:1,
-                    _id: 0})
+/*Should return only required fields, since I dod not know how to do it,
+returns everything in the comment
+*/
+function findCommentLean(postId, commentId, fields){
+    return Post.findOne({_id: postId, "comments._id": commentId},
+                    fields+" comments.$")
                     .lean()
-                    .exec()
+                    .exec();
+}
+
+function getCommentReactions(userId, postId, commentId, callback){
+    findCommentLean(postId, commentId, "-_id classId")
                     .then(post=>{
                             if(!post)
                                 return callback({success:false, msg:"post not found"});
@@ -363,8 +374,8 @@ function getCommentReactions(userId, postId, commentId, callback){
                             });
                     })
                     .catch(err=>{
-                    logger.error("error when trying to get posts: " + err);
-                    return callback({success:false, msg:err});
+                        logger.error("error when trying to get posts: " + err);
+                        return callback({success:false, msg:err});
                     });
 }
 
@@ -395,6 +406,32 @@ function getPostReactionDetail(userId, postId, reaction, callback){
                     });
 }
 
+function getCommentReactionDetail(userId, postId, commentId, reaction, callback){
+     if(validReaction(reaction) == false)
+            return callback({success:false, msg:"invalid reaction"});
+         Post.findOne({_id: postId, "comments._id": commentId},
+                     "-_id classId comments.$")
+                    .populate("comments."+reaction+".usersId", "name thumbnail")
+                    .exec()
+                    .then(post=>{
+                            if(!post)
+                                return callback({success:false, msg:"post not found"});
+                            classService.findClassLeanById(post.classId, userId, "_id")
+                            .then(Class=>{
+                                if(!Class)
+                                        return callback({success:false, msg:"Class does not exist or user is not in class"});
+                                return callback({success:true, msg:post});                           
+                            })
+                            .catch(err=>{
+                                logger.error(err);
+                                return callback({success:false, msg: err.toString()});
+                            });
+                    })
+                    .catch(err=>{
+                        logger.error("error when trying to get reactions detail: " + err);
+                        return callback({success:false, msg:err});
+                    });
+}
 
 
 module.exports = {
@@ -406,5 +443,6 @@ module.exports = {
     getComments: getComments,
     getPostReactions: getPostReactions,
     getCommentReactions: getCommentReactions,
-    getPostReactionDetail: getPostReactionDetail
+    getPostReactionDetail: getPostReactionDetail,
+    getCommentReactionDetail: getCommentReactionDetail
 }

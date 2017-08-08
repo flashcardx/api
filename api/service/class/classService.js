@@ -99,7 +99,6 @@ function listAll(userId, callback){
         Classes.forEach(c=>{
             c.thumbnail = AWSService.getImgUrl(c.thumbnail);
         })
-        logger.error("Class: " + JSON.stringify(Classes));
         return callback({success:true, msg:Classes});
     });
 }
@@ -573,7 +572,7 @@ function duplicateCard2Class(classname, cardId, userId, callback){
             }
             classId = Class._id;
             userService.findById(userId, "name", r=>{
-                if(r.success === false){
+                if(r.success == false){
                     logger.error(r.msg);
                     return Promise.reject(r.msg);
                 }

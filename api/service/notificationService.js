@@ -111,7 +111,6 @@ function deliverMesaggeLP(msg, users, notSend){
                 n.ownerId = i;
                 var notification = new notificationModel(n);
                 notification.save().then(()=>{
-                    logger.debug("notification saved ok");
                 }, err=>{
                     logger.error("Could not save notification: " + err);
                 });
@@ -136,7 +135,6 @@ function deliverMesaggeLP2(msg, users, notSend, notSend2){
                 n.ownerId = i;
                 var notification = new notificationModel(n);
                 notification.save().then(()=>{
-                    logger.debug("notification saved ok");
                 }, err=>{
                     logger.error("Could not save notification: " + err);
                 });
@@ -145,7 +143,6 @@ function deliverMesaggeLP2(msg, users, notSend, notSend2){
 }
 
 function deliverMesaggeHP(msg, users){
-        logger.error("users: " + JSON.stringify(users));
        var n = {
             text: msg
         };
@@ -160,7 +157,6 @@ function deliverMesaggeHP(msg, users){
                 n.ownerId = i;
                 var notification = new notificationModel(n);
                 notification.save().then(()=>{
-                    logger.debug("notification saved ok");
                 }, err=>{
                     logger.error("Could not save notification: " + err);
                 });
@@ -169,7 +165,6 @@ function deliverMesaggeHP(msg, users){
 }
 
 function getNotifications(userId, page, callback){
-    logger.error("userId: " + userId +", callback: " + JSON.stringify(callback));
     var allNotifications = [];
     const elementsPerPage = 10;
     var restrictions = [{
@@ -179,7 +174,6 @@ function getNotifications(userId, page, callback){
     if(page){
         skip = elementsPerPage * page;
     }
-    logger.error("skip: " + skip + ", page: " + page);
     notificationModel.find({$and: restrictions })
     .sort({priority:"desc", date:"desc"})
     .skip(skip)
@@ -195,7 +189,6 @@ function getNotifications(userId, page, callback){
                             {   multi: true })
         .exec()
         .then(r=>{
-            logger.debug("update notifs: " + JSON.stringify(r));
             return userService.increaseNotificationCounter(userId);
         })
     },
@@ -213,15 +206,13 @@ function getNotifications(userId, page, callback){
 
 function getNotificationsCount(userId, callback){
     var allNotifications = [];
-    logger.error("userId: " + userId);
     notificationModel.count({"ownerId": new ObjectId(userId), seen:false})
     .exec()
     .then(c=>{
-        logger.error("got: " + c);
         callback({success:true, msg: c});
     },
     err=>{
-        logger.error("got error: " + err);
+        logger.error(err);
         return callback({success:false, msg: "Could not get count of notifications"});
     })
     .then(r=>{
