@@ -183,39 +183,29 @@ function commentReaction(classname, postId, commentId, userId, reaction, callbac
         if(!Class){
             logger.error("class not found");
             return callback({success:false, msg:"Class not found(user must be in the class)"});
-        }
-        
-        logger.error("postId: " + postId +", commentId: " + commentId + ", userId: " + userId + ", reaction: " + reaction);
+        } 
         var restrictions =  [ {"_id": {$eq:postId}},
-                              {"comments._id": commentId}//,
-                            //  {"classId": {$eq:Class._id} }
-                            ];        
-        var obj = getReactionCommentRestriction(reaction, userId);
-        restrictions.push(obj);
-        /*
-        Post.findOne({$and:restrictions},
-                    "-_id comments.$")
-        */
-        var r = {"_id": mongoose.Types.ObjectId(postId),
-                "comments._id": mongoose.Types.ObjectId(commentId)
+                              {"classId": {$eq:Class._id} }
+                            ];       
+        var obj = {
+            comments: { $elemMatch:{
+                _id: commentId
                 }
-        r["comments." + reaction + ".usersId"] = mongoose.Types.ObjectId(userId);
-        mongoose.set('debug', true);
-        Post.aggregate({$match: r
-                    },
-                    {
-                        $project: { _id:1} 
-                    })
-   //     .lean()
+            }
+        };
+        obj.comments.$elemMatch[reaction +".usersId"] = userId;
+        restrictions.push(obj);
+        Post.findOne({$and:restrictions},
+                    "_id")
+        .lean()
         .exec()
         .then(post=>{
-            mongoose.set('debug', false);
             logger.error("post: " + JSON.stringify(post));
             var field = "comments.$."+reaction;
             var count = {};
             var user = {};
             user[field+".usersId"] = userId;
-            if(post.length == 0){
+            if(!post){
                     count[field + ".count"] = 1;
                     Post.update({_id:postId, classId: Class._id, "comments._id":commentId}, {'$push': user, "$inc": count })
                     .exec()
