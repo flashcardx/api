@@ -283,7 +283,7 @@ module.exports = function(app){
         var classname = req.params.classname;
         var lastId = req.query.last;
         postService.getPosts(classname, userId, lastId, r=>{
-            r.msg.forEach((p, index)=>{
+            r.msg.forEach((p, index)=>{ 
                 if(p.userId.thumbnail && p.userId.thumbnail.length < 28){
                     r.msg[index].userId.thumbnail = AWSService.getImgUrl(p.userId.thumbnail);
                 }

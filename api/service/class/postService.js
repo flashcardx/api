@@ -69,7 +69,6 @@ function comment(classname, postId, userId, text, callback){
                     logger.error("error when trying to get new comment: " + err);
                     return callback({success:false, msg:err});
                     });
-            return callback({success:true});
         })
         .catch(err=>{
                 logger.error("error when trying to update post document, trying to push comment: " + err);
@@ -215,7 +214,6 @@ function commentReaction(classname, postId, commentId, userId, reaction, callbac
         .lean()
         .exec()
         .then(post=>{
-            logger.error("post: " + JSON.stringify(post));
             var field = "comments.$."+reaction;
             var count = {};
             var user = {};
