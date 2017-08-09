@@ -54,6 +54,21 @@ function comment(classname, postId, userId, text, callback){
         Post.update({_id:postId, classId: Class._id}, {'$push': { 'comments': comment}, "$inc":{commentsSize: 1}})
         .exec()
         .then(r=>{
+              Post.findOne({_id:postId},
+                        "comments.text comments.userId comments.date "+
+                        "comments.likes.count comments.loves.count comments.hahas.count comments.likes.count "+
+                        "comments.wows.count comments.sads.count comments.angrys.count comments._id")
+                        .slice("comments", -1)
+                        .populate("comments.userId", "name thumbnail")
+                        .lean()
+                        .exec()
+                    .then(r=>{
+                            return callback({success:true, msg:r});
+                    })
+                    .catch(err=>{
+                    logger.error("error when trying to get new comment: " + err);
+                    return callback({success:false, msg:err});
+                    });
             return callback({success:true});
         })
         .catch(err=>{
@@ -63,7 +78,7 @@ function comment(classname, postId, userId, text, callback){
      
     })
     .catch(err=>{
-        logger.error("error when trying to post: " + err);
+        logger.error("error when trying to comment: " + err);
         return callback({success:false, msg:err});
     });
 }
