@@ -27,7 +27,19 @@ function post(classname, userId, text, callback){
         post.userId = userId;
         post.save()
         .then(()=>{
-            return callback({success:true});
+            Post.findOne({_id:post._id},
+                        "userId comments commentsSize text created_at likes.count loves.count hahas.count "+
+                        "wows.count sads.count angrys.count")
+                        .populate("userId", "name thumbnail")
+                        .lean()
+                        .exec()
+                    .then(r=>{
+                            return callback({success:true, msg:r});
+                    })
+                    .catch(err=>{
+                    logger.error("error when trying to get new post: " + err);
+                            return callback({success:false, msg:err});
+                    });
         })
         .catch(err=>{
                 logger.error("error when trying to post: " + err);
@@ -267,7 +279,7 @@ function getPosts(classname, userId, lastId, callback){
                 if(lastId)
                     match._id = {$lt: lastId}
                          Post.find(match,
-                                 "userId text created_at likes.count loves.count hahas.count hahas.count "+
+                                 "userId text created_at likes.count loves.count hahas.count "+
                                  "wows.count sads.count angrys.count comments.text comments.userId comments.date "+
                                  "comments.likes.count comments.loves.count comments.hahas.count comments.likes.count "+
                                  "comments.wows.count comments.sads.count comments.angrys.count commentsSize comments._id")
