@@ -23,10 +23,10 @@ const users=[
 ];
 const cards=[
           {
-                    name: "Welcome!",
-                    description:"We are pleased you are here, hope you enjoy our tool, here are some tips worth to remember: <br/>"+
-                                "Your profile is linked with the languaje you choose when you signed up, you can change it in settings.<br/>"+
-                                "If you will create cards in other languaje than the one you have selected, please change this setting, otherwise other people could receive non relevant card recommendations.<br/>"+
+                    name: "Readme!",
+                    description:"Welcome! we are pleased you are here, hope you enjoy our tool!Remember: <br/>"+
+                                "Everything in your profile is linked with the language set in your profile(English is set by default), you can change it in settings.<br/>"+
+                                "If you will create cards in other language than the one you have selected, please change this setting,it will affect your recommendations and some services that need to know wich language you are using(the language setting does not change the language of the webpage).<br/>"+
                                 "Feel free to ask us anything, write us to: contact@flashcard-x.com",
                     imgs: [
                     {

@@ -28,6 +28,7 @@ const postSchema = new Schema({
         type: Number,
         default: 0
     },
+    notify:[{type:Schema.Types.ObjectId, ref: "users"}],
     comments:[{
                 userId: {
                         type:Schema.Types.ObjectId,

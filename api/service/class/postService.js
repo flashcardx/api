@@ -37,7 +37,7 @@ function post(classname, userId, text, callback){
                             return callback({success:true, msg:r});
                     })
                     .catch(err=>{
-                    logger.error("error when trying to get new post: " + err);
+                            logger.error("error when trying to get new post: " + err);
                             return callback({success:false, msg:err});
                     });
         })
@@ -67,7 +67,7 @@ function comment(classname, postId, userId, text, callback){
         .exec()
         .then(r=>{
               Post.findOne({_id:postId},
-                        "comments.text comments.userId comments.date "+
+                        "userId notify comments.text comments.userId comments.date "+
                         "comments.likes.count comments.loves.count comments.hahas.count comments.likes.count "+
                         "comments.wows.count comments.sads.count comments.angrys.count comments._id")
                         .slice("comments", -1)
@@ -75,6 +75,9 @@ function comment(classname, postId, userId, text, callback){
                         .lean()
                         .exec()
                     .then(r=>{
+                            addUserNotify(postId, r.notify, userId, r.userId);
+                            var username = r.comments[0].userId.name;
+                            notificationService.notifyPostComment(classname, username, userId, r.userId, r.notify);
                             return callback({success:true, msg:r});
                     })
                     .catch(err=>{
@@ -92,6 +95,28 @@ function comment(classname, postId, userId, text, callback){
         logger.error("error when trying to comment: " + err);
         return callback({success:false, msg:err});
     });
+}
+
+function addUserNotify(postId, usersAlready, testUserId, ownerId){
+    if(ownerId == testUserId)
+        return;
+    var newUser = testUserId;
+    for(var i=0; i < usersAlready.length; i++){
+        if(testUserId == usersAlready[i]){
+            newUser = undefined;
+            break;
+        }
+    }
+    if(newUser){
+        Post.update({_id:postId, '$push': {notify:newUser}})
+                    .exec()
+                    .then(r=>{
+                        logger.debug("post updated, result: " + r);
+                    })
+                    .catch(err=>{
+                        logger.error("error when trying to update post document, trying to add user to notify array: " + err);
+                     }); 
+    }
 }
 
 function validReaction(reaction){

@@ -243,7 +243,7 @@ function recommendClasses(userId, callback){
         const lang = r.msg;
         classModel.find({"owner":{$ne:userId}, "integrants":{$ne:userId}, lang:lang, isPrivate:false, usersLeft:{$gt:0}, isActive:true}, "name thumbnail description owner integrants updated_at maxLimit cardsLeft maxUsers usersLeft")
         .sort('-rank')
-        .limit(5)
+        .limit(8)
         .populate("owner", "name")
         .lean()
         .exec()
@@ -251,7 +251,7 @@ function recommendClasses(userId, callback){
             if(r){
                 r.forEach(c=>{
                     c.thumbnail = AWSService.getImgUrl(c.thumbnail);
-                })
+                });
                 return callback({success:true, msg: r, userId: userId});
             }
         })
