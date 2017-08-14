@@ -9,10 +9,6 @@ const userService = require(appRoot + "/service/userService");
 const dictionaryService = require(appRoot + "/service/dictionaryService");
 const imgSearchService = require(appRoot + "/service/imgSearchService");
 const shutterstock = require('shutterstock');
-const shutterstockAPI = shutterstock.v2({
-  clientId: '2a32fb3e058e7de16156',
-  clientSecret: '0d096f428d635dd82c83ed3b87116370c2825255',
-});
 
 module.exports = function(app){
     const controllerUtils = require("./utils")(app);

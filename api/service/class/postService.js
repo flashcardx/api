@@ -34,6 +34,8 @@ function post(classname, userId, text, callback){
                         .lean()
                         .exec()
                     .then(r=>{
+                            if(r.userId.thumbnail)
+                                r.userId.thumbnail = AWSService.getImgUrl(r.userId.thumbnail);
                             return callback({success:true, msg:r});
                     })
                     .catch(err=>{
@@ -183,7 +185,6 @@ function postReaction(classname, postId, userId, reaction, callback){
         Post.findOne({$and: restrictions}, reaction)
         .exec()
         .then(post=>{
-            logger.error("post: " +JSON.stringify(post));
             var count = {};
             var user = {};
             user[reaction+".usersId"] =  userId;

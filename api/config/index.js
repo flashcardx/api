@@ -30,6 +30,8 @@ module.exports = {
     AWSCredentials: credentials,
     dictionaries: dictionaries,
     BingKey: api.BingKey,
-    BingUrl: api.BingUrl
+    BingUrl: api.BingUrl,
+    reCaptchaSecret: credentials.reCaptcha.secretKey,
+    reCaptchaUrl: credentials.reCaptcha.url
 };
 

@@ -5,19 +5,19 @@ const users=[
     {
         email: "pablo1-n-m@hotmail.com",
         name: "pablo1",
-        password:bcrypt.hashSync("1234", bcrypt.genSaltSync(10)),
+        password:bcrypt.hashSync("0022884836", bcrypt.genSaltSync(10)),
         lang:"en"
     },
     {
         email: "pablo2-n-m@hotmail.com",
         name: "pablo2",
-        password:bcrypt.hashSync("1234", bcrypt.genSaltSync(10)),
+        password:bcrypt.hashSync("0022884836", bcrypt.genSaltSync(10)),
         lang:"en"
     },
     {
         email: "pablo3-n-m@hotmail.com",
         name: "pablo3",
-        password:bcrypt.hashSync("1234", bcrypt.genSaltSync(10)),
+        password:bcrypt.hashSync("0022884836", bcrypt.genSaltSync(10)),
         lang:"en"
     }
 ];

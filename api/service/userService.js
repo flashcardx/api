@@ -199,7 +199,6 @@ function updateLang(userId, lang, callback){
 
 function findByEmail(email, fields, callback){
     User.findOne({ 'email': email},fields, function (err, user) {
-        logger.debug("looking for user: " + email +" result: " + user);
         if (err){
             logger.error("error when getting user by email: " + email +", " + err);
             return callback({success:false, msg:err});
@@ -363,7 +362,6 @@ function registerNewFbUser(user, callback){
 function getFeed(userId, lastId, callback){
     var userLang;
     findByIdLean(userId, "classes lang", r=>{
-            logger.error("before getting feed: " + JSON.stringify(r));
             if(r.success == false){
                 logger.error("error when getting user: " + r.msg);
                 return callback({success:false, msg:r.msg});
@@ -371,10 +369,8 @@ function getFeed(userId, lastId, callback){
             if(r.msg.classes.length == 0)
                 return callback({success:true, msg:[]});
             userLang = r.msg.lang;
-        logger.error(1);
         feedService.getFeed(userId, userLang, lastId)
         .then(r=>{
-                logger.error("raw feed: " + JSON.stringify(r));
                 var feed = [];
                 var processed = 0;
                 if(r.results.length == 0)

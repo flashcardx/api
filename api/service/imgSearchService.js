@@ -15,11 +15,9 @@ const shutterstockAPI = shutterstock.v2({
 
 
 function searchBing(q, clientIp, callback){
-    logger.info("client ip: "+ clientIp);
-    logger.info("searching: " + q);
     if(!clientIp){
         logger.error("client ip undefined, will be replaced with empty string, if this continues Bing may think it is ddos attack");
-        clientIp = "";
+        clientIp = clientIp;
     }
     cacheService.getBingResults(q)
     .then(r=>{
