@@ -12,7 +12,7 @@
     },
     "pi":{
         "myUrl": "http://custom-env.3u8k5dru3p.us-east-1.elasticbeanstalk.com",
-        "urlWeb":"http://198.199.85.116",
+        "urlWeb":"http://192.241.134.52",
         "pixabayUrl":"https://pixabay.com/api",
         "pixabayKey":"3968365-5443b188192b2d22a49cf77be",
         "maxSizeUploadFiles": "2097152",
