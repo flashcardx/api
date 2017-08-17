@@ -7,7 +7,6 @@ const Img = require(appRoot + "/models/imgModel");
 const Post = require(appRoot + "/models/postModel");
 const classModel = require(appRoot + "/models/classModel");
 const logger = config.getLogger(__filename);
-const userService = require(appRoot + "/service/userService");
 const imgService = require(appRoot + "/service/imgService");
 const AWSService = require(appRoot + "/service/AWSService");
 const feedService = require(appRoot + "/service/feedService");
@@ -15,7 +14,7 @@ const notificationService = require(appRoot + "/service/notificationService");
 const classService = require(appRoot + "/service/class/classService");
 
 function post(classname, userId, text, callback){
-    classService.findClassLean(classname, userId, "")
+    classService.findClassLean(classname, userId, "_id")
     .then(Class=>{
         if(!Class){
             logger.error("class not found");
@@ -34,6 +33,7 @@ function post(classname, userId, text, callback){
                         .lean()
                         .exec()
                     .then(r=>{
+                            feedService.publishPost(Class._id, r._id, r.userId.name);
                             if(r.userId.thumbnail)
                                 r.userId.thumbnail = AWSService.getImgUrl(r.userId.thumbnail);
                             return callback({success:true, msg:r});
@@ -474,6 +474,12 @@ function getCommentReactionDetail(userId, postId, commentId, reaction, callback)
                     });
 }
 
+function findByIdLean(id, fields){
+    return Post.findById(id, fields)
+               .lean()
+               .exec();
+}
+
 
 module.exports = {
     post: post,
@@ -485,5 +491,6 @@ module.exports = {
     getPostReactions: getPostReactions,
     getCommentReactions: getCommentReactions,
     getPostReactionDetail: getPostReactionDetail,
-    getCommentReactionDetail: getCommentReactionDetail
+    getCommentReactionDetail: getCommentReactionDetail,
+    findByIdLean: findByIdLean
 }

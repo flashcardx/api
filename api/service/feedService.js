@@ -22,6 +22,18 @@ function publishCardClassFeed(classId, cardId){
     classFeed.addActivity(activity);
 }
 
+function publishPost(classId, postId, username){
+    classFeed = client.feed('class', classId);
+    var activity = {
+        actor: "Class:"+classId,
+        verb: "publish",
+        username: username, 
+        object: postId,
+        type: "post",
+        foreign_id: "post" + postId
+    };
+    classFeed.addActivity(activity);
+}
 
 function followClass(classId, userId, lang){
     userFeed = client.feed('timeline', lang+userId);
@@ -30,7 +42,7 @@ function followClass(classId, userId, lang){
 
 function unfollowClass(classId, userId, lang){
     userFeed = client.feed('timeline', lang+userId);
-    userFeed.unfollow("class", lang+classId);
+    userFeed.unfollow("class", classId);
 }
 
 function getFeed(userId, lang, lastId){
@@ -51,5 +63,6 @@ module.exports = {
     followClass: followClass,
     unfollowClass: unfollowClass,
     getFeed: getFeed,
-    removeCardFromClass: removeCardFromClass
+    removeCardFromClass: removeCardFromClass,
+    publishPost: publishPost
 };

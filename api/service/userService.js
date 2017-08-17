@@ -10,7 +10,6 @@ const feedService = require(appRoot + "/service/feedService");
 const AWSService = require(appRoot + "/service/AWSService");
 const LoginRegistryModel = require(appRoot + "/models/loginRegistryModel");
 const logger = config.getLogger(__filename);
-const cache = require("memory-cache");
 
 
 function loginUser(email, password, callback){
@@ -356,6 +355,7 @@ function registerNewFbUser(user, callback){
     })
 };
 
+const postService = require(appRoot + "/service/class/postService");
 
 function getFeed(userId, lastId, callback){
     var userLang;
@@ -377,8 +377,11 @@ function getFeed(userId, lastId, callback){
                     if(obj.type == "card"){
                         cardService.findCardClassByIdLean(obj.object, "name description imgs ownerName category updated_at classname")
                         .then(card=>{
-                            if(!card)
+                            if(!card){
                                 logger.error("no card found for activity(trying to fetch user feed): " + JSON.stringify(obj));
+                                return Promise.reject("no card found for activity(trying to fetch user feed): " + JSON.stringify(obj));
+                            }
+                            card.type="c";
                             card.id = obj.id;
                             feed.push(AWSService.replaceImgsUrl(card));
                             processed++;
@@ -386,16 +389,32 @@ function getFeed(userId, lastId, callback){
                                 return callback({success:true, msg:feed});
                         })
                         .catch(err=>{
-                                logger.error("no card found for activity(trying to fetch user feed): " + JSON.stringify(obj));                        
+                                logger.error("error when getting card (trying to fetch user feed): " + JSON.stringify(obj));                        
                                 Promise.reject(err);
                                 throw new Exception(err);    
                         })
                     }
-                    else{
-                        feed.push(obj);    
-                        processed++;
-                        if(processed == r.results.length)
-                            return callback({success:true, msg:feed});
+                    else if(obj.type == "post"){
+                        // enrich post and push it
+                        postService.findByIdLean(obj.object, "text text created_at likes.count loves.count hahas.count "+
+                                 "wows.count sads.count angrys.count comentsSize")
+                        .then(post=>{
+                            if(!post){
+                                logger.error("post id: " +obj.object+" not found when getting user feed");
+                                return Promise.reject("post id: " +obj.object+" not found when getting user feed");
+                            }
+                            post.type="p";
+                            post.username = obj.username;
+                            feed.push(post);    
+                            processed++;
+                            if(processed == r.results.length)
+                                return callback({success:true, msg:feed});
+                        })
+                        .catch(err=>{
+                                logger.error("error when getting post(trying to fetch user feed): " + JSON.stringify(obj));                        
+                                Promise.reject(err);
+                                throw new Exception(err);    
+                        })
                     }
                 });
             })
