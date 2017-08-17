@@ -22,8 +22,7 @@ module.exports = function(app){
             isPrivate: req.body.isPrivate
         }
         classService.create(Class, r=>{
-            logger.error("new class got: " + JSON.stringify(r));
-            return res.json(r);
+             return res.json(r);
         });
     });
 

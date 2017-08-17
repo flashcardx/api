@@ -332,15 +332,13 @@ const cardService = require("./cardService");
 function registerNewFbUser(user, callback){
         imgService.saveImgFromUrl(user.picture)
         .then(hash=>{
-                logger.error("image saved result: " + JSON.stringify(hash));
-     	        var newUser = new User();
+                var newUser = new User();
                 newUser.email = user.email;
                 newUser.thumbnail = hash;
                 newUser.name = user.name;
                 newUser.facebook.id = user.facebookId;
                 newUser.facebook.token = user.facebookToken;
                 newUser.save(err=>{
-                            logger.error("viene piola");
                             if(err){
                                 logger.error(err);
                                 return callback({success: false, msg:"could not register facebook user, " + String(err)});;
