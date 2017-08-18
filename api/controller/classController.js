@@ -18,7 +18,7 @@ module.exports = function(app){
         var Class = {
             owner: req.userId,
             name: req.body.name,
-            description: req.body.description,
+            description: purifier.purify(req.body.description),
             isPrivate: req.body.isPrivate
         }
         classService.create(Class, r=>{
@@ -76,7 +76,6 @@ module.exports = function(app){
         const leaverId = req.body.leaverId;
         const classname = req.body.classname;
         const requesterId = req.userId;
-        logger.error("leaverId: " + leaverId + ", classname: " + classname);
         classService.removeUser(classname, leaverId, requesterId, r=>{
             return res.json(r);
         });
@@ -101,8 +100,6 @@ module.exports = function(app){
     app.get("/activity",  controllerUtils.requireLogin, function(req, res){
         const userId = req.userId;
         const page = req.query.page;
-        logger.error("dfcwredf");
-        logger.error("page: " + page);
         notificationService.getNotifications(userId, page, r=>{
             return res.json(r);
         });
@@ -117,8 +114,6 @@ module.exports = function(app){
 
     app.delete("/class/:classname",  controllerUtils.requireLogin, function(req, res){
         const classname = req.params.classname;
-        logger.error("classname natural: " + classname);
-        logger.error("classname url decoded: " + decodeURIComponent(classname));
         const userId = req.userId;
         classService.mark4delete(classname, userId, r=>{
             return res.json(r);
@@ -161,9 +156,9 @@ module.exports = function(app){
         const classname = req.params.classname;
         const userId = req.userId;
         const card = {
-            name : req.body.name,
-            description : req.body.description,
-            category: req.body.category
+            name : purifier.purify(req.body.name),
+            description : purifier.purify(req.body.description),
+            category: purifier.purify(req.body.category)
         };
         classService.updateCard(classname, userId, cardId, card, r=>{
             return res.json(r);
@@ -240,7 +235,7 @@ module.exports = function(app){
     app.post("/classConnect/post/:classname", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
         var classname = req.params.classname;
-        var text = req.body.text;
+        var text = purifier.purify(req.body.text);
         postService.post(classname, userId, text, r=>{
             return res.json(r);
         })
@@ -249,7 +244,7 @@ module.exports = function(app){
     app.post("/class/commentPost/:classname", controllerUtils.requireLogin, (req, res)=>{
         var userId = req.userId;
         var classname = req.params.classname;
-        var text = req.body.text;
+        var text = purifier.purify(req.body.text);
         var postId = req.body.postId;
         postService.comment(classname, postId, userId, text, r=>{
             return res.json(r);

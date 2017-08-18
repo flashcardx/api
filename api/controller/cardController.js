@@ -1,6 +1,7 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
+const purifier = require(appRoot + "/utils/purifier");
 const logger = config.getLogger(__filename);
 const Cards = require(appRoot + "/models/cardModel");
 const cardService = require(appRoot + "/service/cardService");
@@ -12,9 +13,9 @@ module.exports = function(app){
 
     app.post("/card", controllerUtils.requireLogin, function(req, res){
             var card = {
-                name: req.body.name,
-                description: req.body.description,
-                category: req.body.category
+                name: purifier.purify(req.body.name),
+                description: purifier.purify(req.body.description),
+                category:  purifier.purify(req.body.category)
             };
             cardService.createCard(card, req.body.imgs, req.userId,function(result){
                 res.json(result);
@@ -67,9 +68,9 @@ module.exports = function(app){
         const cardId = req.params.cardId;
         const userId = req.userId;
         const card ={
-            name : req.body.name,
-            description : req.body.description,
-            category: req.body.category
+            name : purifier.purify(req.body.name),
+            description : purifier.purify(req.body.description),
+            category: purifier.purify(req.body.category)
         }
         cardService.updateCard(cardId, userId, card, r=>{
             return res.json(r);

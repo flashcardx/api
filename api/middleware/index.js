@@ -10,5 +10,4 @@ module.exports = function(app){
     compressor(app);
     app.use(bodyParser.json({limit: '12mb'}));
     errorHandling(app); // always let it at the end
-
 };

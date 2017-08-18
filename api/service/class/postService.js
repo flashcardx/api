@@ -33,7 +33,7 @@ function post(classname, userId, text, callback){
                         .lean()
                         .exec()
                     .then(r=>{
-                            feedService.publishPost(Class._id, r._id, r.userId.name);
+                            feedService.publishPost(Class._id, classname, r._id, r.userId.name);
                             if(r.userId.thumbnail)
                                 r.userId.thumbnail = AWSService.getImgUrl(r.userId.thumbnail);
                             return callback({success:true, msg:r});

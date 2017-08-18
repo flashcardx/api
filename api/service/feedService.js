@@ -22,12 +22,13 @@ function publishCardClassFeed(classId, cardId){
     classFeed.addActivity(activity);
 }
 
-function publishPost(classId, postId, username){
+function publishPost(classId, classname, postId, username){
     classFeed = client.feed('class', classId);
     var activity = {
         actor: "Class:"+classId,
         verb: "publish",
         username: username, 
+        classname: classname,
         object: postId,
         type: "post",
         foreign_id: "post" + postId

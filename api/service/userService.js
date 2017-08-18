@@ -405,6 +405,7 @@ function getFeed(userId, lastId, callback){
                             }
                             post.type="p";
                             post.username = obj.username;
+                            post.classname = obj.classname;
                             feed.push(post);    
                             processed++;
                             if(processed == r.results.length)

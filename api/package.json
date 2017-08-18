@@ -57,7 +57,8 @@
     "request": "^2.81.0",
     "requestify": "^0.2.5",
     "shutterstock": "^0.13.0",
-    "string": "^3.3.3"
+    "string": "^3.3.3",
+    "xss-filters": "^1.2.7"
   },
   "devDependencies": {
     "chai": "^3.5.0",

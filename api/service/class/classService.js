@@ -224,7 +224,6 @@ function search(name, userId, callback){
             if(!doc)
                 return callback({success:true});
             doc.thumbnail = AWSService.getImgUrl(doc.thumbnail);
-            logger.error("search results: " + JSON.stringify(doc));
             return callback({success:true, msg:doc, userId:userId});
         })
         .catch(err=>{
