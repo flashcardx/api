@@ -1,0 +1,8 @@
+ {
+    "name": "FlashCardX API documentation",
+    "version": "1.0.0",
+    "description": "API high performance learning plattorm",
+    "template": {
+        "forceLanguage": "en"
+    }
+}

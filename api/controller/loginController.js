@@ -52,6 +52,38 @@ function verifyRecaptcha(ip, key, callback) {
 module.exports = function(app){
     const controllerUtils = require("./utils")(app);
 
+    /**
+ * @api {post} /signup signup
+ * @apiGroup login
+ * @apiName signup
+ * @apiDescription receives new user info and recaptcha code.
+ * generates temporal user(lasts 24hs) until user is validated by email
+ * @apiParam (user) {string} email can not exist other user with same email.
+ * @apiParam (user) {string} name user name.
+ * @apiParam (user) {string} password user password.
+ * @apiParam (user) {string} [lang="en"]  language shortcode
+ * @apiParam (client) {number} [ip] recaptcha needs it.
+ * @apiParam (recaptcha) {string} g-recaptcha-response recaptcha token
+ *@apiParamExample {json} Request-Example:
+ *      {
+ *         "email":"pablo1234@gmail.com",
+ *         "name": "pablo marino",
+ *         "password": "1234",
+ *         "lang": "en",
+ *         "g-recaptcha-response": "abc124xsed4fr"
+ *    }
+ *@apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true,
+ *      "msg":"confirmation email was sent to the user pablo marino, check your spam folder!"
+ *     }
+ *   @apiErrorExample {json} Error-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":false,
+ *       "msg":"User already exists"
+ *      }
+ *  @apiVersion 1.0.0
+ *  */
     app.post("/signup",function(req, res){
         var ip = req.body.ip
         verifyRecaptcha(ip, req.body["g-recaptcha-response"], r=>{
@@ -73,6 +105,36 @@ module.exports = function(app){
         })
     });
 
+        /**
+ * @api {post} /login login
+ * @apiGroup login
+ * @apiName login
+ * @apiDescription receives user email and paswword and returns token with userid encrypted in it.
+ * note: the client can see the userid easily since getting the real data in the token is really easy, but setting
+ * data in a token is impossible(thanks to secret) ;).
+ * @apiParam (user) {string} email user email.
+ * @apiParam (user) {string} password user password.
+ * @apiParam (client) {number} [ip] recaptcha needs it.
+ * @apiParam (recaptcha) {string} g-recaptcha-response recaptcha token
+ * @apiParamExample {json} Request-Example:
+ *      {
+ *         "email":"pablo1234@gmail.com",
+ *         "password": "1234",
+ *         "ip": "192.231.00.21",
+ *         "g-recaptcha-response": "abc124xsed4fr"
+ *    }
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true,
+ *     "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjU5OTczMDFkMTA5ZmNlMzVjOTM0YjBhZCIsImlhdCI6MTUwMzA4MTYzOSwiZXhwIjoxNTAzMDg1MjM5fQ.bqmogt0-pDLsUbVtSTvziTVcrA7_993WnFtaRQRAN-Q"
+ * }
+ * @apiErrorExample {json} Error-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":false,
+ *       "msg":"invalid email or password"
+ *     }
+ * @apiVersion 1.0.0
+ *  */
     app.post("/login",function(req, res){
         if(!req.body.email || !req.body.password){
             res.json({success:false, msg:"you must send user email and password in the request"});
@@ -124,11 +186,10 @@ module.exports = function(app){
                     });
     });
 
-    app.post("/fbLogin", (req, res)=>{
+    app.post("/fbLogin", controllerUtils.requireSecret, (req, res)=>{
         if(!req.body.facebookId){
             return res.json({success:false, msg:"you must send user's facebookId in the request"});
         }
-
         userService.loginFbUser(req.body.facebookId, function(result){
             if(result){
                 if(result.success == true){
