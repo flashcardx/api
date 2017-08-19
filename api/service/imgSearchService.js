@@ -33,8 +33,8 @@ function searchBing(q, clientIp, callback){
         var url = config.BingUrl + "?q=" + q  + "&count=35" + "&size=Medium";
         return requestify.get(url, { 
                     headers:{
-                    "Ocp-Apim-Subscription-Key": config.BingKey
-                    //,"X-Search-ClientIP": clientIp
+                    "Ocp-Apim-Subscription-Key": config.BingKey,
+                    "X-Search-ClientIP": clientIp
                 }})
     })
     .then(response=>{
@@ -45,7 +45,7 @@ function searchBing(q, clientIp, callback){
         return callback({success:true, msg:r});
     })
     .catch(err=>{
-        logger.error('Encountered error making request:' + JSON.stringify(err));
+        logger.error('Encountered error making request:' + err);
         return callback({success:false, msg:err});
     });
 }

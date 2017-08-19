@@ -37,4 +37,8 @@ controllers(app);
 
 logger.info(packageJson.name + " starting ,  Version: " + packageJson.version);
 
+process.on('uncaughtException', err=>{
+                        logger.error(err);
+                    }); 
+
 app.listen(port);

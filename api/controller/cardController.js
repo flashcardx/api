@@ -52,7 +52,6 @@ module.exports = function(app){
     app.delete("/card/:id", controllerUtils.requireLogin, (req, res)=>{
         const id = req.params.id;
         cardService.deleteCard(id, req.userId, function(result){
-            logger.error("DELETE CARD RESULT: " + JSON.stringify(result.msg));
             res.json(result);
         });
     });

@@ -13,11 +13,6 @@ const mongoose = require("mongoose");
 const AWSService = require("./AWSService");
 const categoryService = require("./categoryService");
 
-function downloadSaveImgs(userId, cardModel, urls){
-    return new Promise((resolve, reject)=>{
-        imgService.downloadArray(urls, userId);
-    });
-}
 
 function saveCard(cardModel){
     return new Promise((resolve, reject)=>{
@@ -45,6 +40,7 @@ function saveCardClass(cardModel){
 function createCard(card, imgs, userId, callback){
     var cardModel = new Card(card);
     var user;
+    var warnig;
     validateCard(cardModel)
                             .then(()=>{
                                 return userService.userCardLimitsOk(userId);
@@ -53,11 +49,18 @@ function createCard(card, imgs, userId, callback){
                                 user = result;
                                 return imgService.downloadArray(imgs, userId, callback);
                             })
-                           .then(imgHashes=>{
+                           .then(r=>{
+                                warning = r.warning;
                                 cardModel.ownerId = user._id;
                                 cardModel.ownerName = user.name;
                                 cardModel.lang = user.lang;
-                                cardModel.imgs = imgHashes;
+                                logger.error("before: " + JSON.stringify(r.imgHashes));
+                                cardModel.imgs = r.imgHashes.filter(v=>{
+                                    if(v)
+                                        return true;
+                                    return false;
+                                });
+                                logger.error("after: " + JSON.stringify(cardModel.imgs));
                                 return saveCard(cardModel);
                            })
                            .then(()=>{
@@ -68,7 +71,11 @@ function createCard(card, imgs, userId, callback){
                             })
                            .then(results=>{
                                     logger.debug(results);
-                                    return callback({success:true, msg:"card was created ok!"});
+                                    if(!warning)
+                                        return callback({success:true, msg:"card was created ok!"});
+                                    else
+                                        return callback({success:"warning", msg:"card was created but: " + warning});
+                                        
                                 })
                             .catch(msg=>{
                                  logger.info(msg);
@@ -217,7 +224,6 @@ function deleteCard(cardId, userId, callback){
                                     logger.error(r.msg);
                                     return callback(r);
                                 }
-                                logger.error(6);
                                 const lang = r.msg;
                              return deleteCategoryIfEmpty(userId, lang, category);
                              });

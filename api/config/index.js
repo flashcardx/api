@@ -1,7 +1,7 @@
 const env = process.env.NODE_ENV || "development";
 const db = require("./json/db")[env];
 const dbEvents= require("./dbEvents");
-const api = require("./json/api.json")[env];
+const parameters = require("./json/parameters.json")[env];
 const logger = require("./logger");
 const logPath = require("./json/logs.json");
 const email = require("./json/email.json")[env];
@@ -17,12 +17,10 @@ module.exports = {
     getLogger: logger.getLogger,
     getLoggerAccess: logger.getLoggerAccess,
     dbEvents: dbEvents,
-    APIPixabayUrl: api.pixabayUrl,
-    APIPixabayKey: api.pixabayKey,
-    APIMaxSizeUpFiles: parseInt(api.maxSizeUploadFiles),
-    APIMyUrl: api.myUrl,
-    APIJwtExpireTime: api.jwtExpireTime,
-    urlWeb: api.urlWeb,
+    APIMaxSizeUpFiles: parseInt(parameters.maxSizeUploadFiles),
+    APIMyUrl: parameters.myUrl,
+    APIJwtExpireTime: parameters.jwtExpireTime,
+    urlWeb: parameters.urlWeb,
     emailService: email.service,
     emailUser: email.user,
     emailPassword: email.password,
@@ -30,9 +28,11 @@ module.exports = {
     AWSCredentials: credentials.AWS,
     apiCredentials: credentials.thisApi,
     dictionaries: dictionaries,
-    BingKey: api.BingKey,
-    BingUrl: api.BingUrl,
+    BingKey: credentials.bing.key,
+    BingUrl: credentials.bing.url,
     reCaptchaSecret: credentials.reCaptcha.secretKey,
-    reCaptchaUrl: credentials.reCaptcha.url
+    reCaptchaUrl: credentials.reCaptcha.url,
+    gifApiUrl: credentials.tenorGifApi.url,
+    gifApiKey: credentials.tenorGifApi.secretKey
 };
 

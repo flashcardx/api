@@ -89,33 +89,36 @@ const downloader = require('image-downloader');
 
 function download(uri, filename){
     return new Promise((resolve, reject)=>{
-        request.head(uri, function(err, res, body){
-    
-        if(err)
-           return reject(err);
-        logger.debug("headers: " + JSON.stringify(res.headers));
-        logger.debug('content-length: ' + res.headers['content-length']);
-        logger.debug('content-type: ' + res.headers['content-type']);
+                    request.head(uri, function(err, res, body){
+                    if(err)
+                        return reject(err);
+                    logger.debug("headers: " + JSON.stringify(res.headers));
+                    logger.debug('content-length: ' + res.headers['content-length']);
+                    logger.debug('content-type: ' + res.headers['content-type']);
 
-        /*
-        if(res.headers['content-type'] !== "image/jpeg" && res.headers['content-type'] !== "image/png")
-            return reject(new Error("Content-type of uri is not supported, uri: " + uri +", content-type: " + res.headers['content-type']));
-        */
-      
-        if(res.headers['content-length'] > config.APIMaxSizeUpFiles)
-            return reject(new Error("size of file too big, size: " + res.headers['content-length']));
-        request(uri, {headers:{"User-Agent": "NING/1.0"}})
-        .pipe(fs.createWriteStream(filename)).on('close',()=>{
-            logger.debug(uri + " downloaded ok");
-            resolve(res.headers['content-type']);
-        })
-        .on("error", (err)=>{
-            logger.error("error when downloading file from: " + uri);
-            logger.error("err: " + err);
-            reject("error when downloading file");
-        });
-    })
-    });
+                    /*
+                    if(res.headers['content-type'] !== "image/jpeg" && res.headers['content-type'] !== "image/png")
+                        return reject(new Error("Content-type of uri is not supported, uri: " + uri +", content-type: " + res.headers['content-type']));
+                    */
+                
+                    if(res.headers['content-length'] > config.APIMaxSizeUpFiles)
+                        return reject(new Error("size of file too big, size: " + res.headers['content-length']));
+                    var rq = request(uri, {headers:{"User-Agent": "NING/1.0"}});
+                    rq.on("error", err=>{
+                            logger.error("error when making request for img download: " + err);
+                            return reject("error when making request for img download: " + err);
+                    })
+                    rq.pipe(fs.createWriteStream(filename)).on('close',()=>{
+                        logger.debug(uri + " downloaded ok");
+                        resolve(res.headers['content-type']);
+                    })
+                    .on("error", (err)=>{
+                        logger.error("error when downloading file from: " + uri);
+                        logger.error("err: " + err);
+                        reject("error when downloading file");
+                    });
+                })
+                });
 
 };
 
@@ -191,20 +194,36 @@ function downloadArray(imgs, userId, callback){
     return new Promise((resolve, reject)=>{
         var imgHashes = [];
         var contentType;
+        var warning;
         if(!imgs || imgs.length === 0)
             return resolve([]);
         imgs.forEach((img)=>{
             if(img.url){
                             const imgPath = imgDir + "/" + getImgName(img.url, userId);
+                            logger.error(1);
                             download(img.url, imgPath)
+                            .catch(err=>{
+                                    logger.error("error when downloading imgs");
+                                    warning = "Some images could not be downloaded";
+                                    return Promise.resolve(null);
+                                })
                             .then(ct=>{
+                                if(!ct)
+                                    return Promise.resolve(null);
                                 contentType = ct;
                                 return md5File(imgPath);
                             })
                             .then(hash=>{
+                                if(!hash)
+                                    return Promise.resolve(null);
                                 return saveImgDb(imgPath, hash, contentType);
                                     })
                             .then(hash=>{
+                                    if(!hash){
+                                        logger.error("no hash");
+                                        imgHashes.push({});
+                                        return Promise.resolve(null);
+                                    }
                                     imgHashes.push({
                                         hash: hash,
                                         width: img.width,
@@ -214,12 +233,12 @@ function downloadArray(imgs, userId, callback){
                                     })
                             .then(()=>{
                                     if(imgHashes.length === imgs.length)// if satisfies condition, this is the last cycle of the loop
-                                        return resolve(imgHashes);  
+                                        return resolve({imgHashes: imgHashes, warning:warning});  
                                     })
-                                    .catch(err=>{
-                                        logger.error(err);
-                                        return reject(String(err));
-                                    });
+                            .catch(err=>{
+                                    logger.error(err);
+                                    return reject(String(err));
+                                });
                 
                         }//end if url
         else if(img.data){
@@ -244,7 +263,7 @@ function downloadArray(imgs, userId, callback){
                                     height: img.height
                                 });
                             if(imgHashes.length === imgs.length)// if satisfies condition, this is the last cycle of the loop
-                                    return resolve(imgHashes);  
+                                    return resolve({imgHashes: imgHashes, warning:warning});  
                         });
                 })
                 .catch(err=>{
