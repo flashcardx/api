@@ -36,11 +36,10 @@ function saveCardClass(cardModel){
     });
 }
 
-
 function createCard(card, imgs, userId, callback){
     var cardModel = new Card(card);
     var user;
-    var warnig;
+    var warning;
     validateCard(cardModel)
                             .then(()=>{
                                 return userService.userCardLimitsOk(userId);
@@ -54,13 +53,11 @@ function createCard(card, imgs, userId, callback){
                                 cardModel.ownerId = user._id;
                                 cardModel.ownerName = user.name;
                                 cardModel.lang = user.lang;
-                                logger.error("before: " + JSON.stringify(r.imgHashes));
                                 cardModel.imgs = r.imgHashes.filter(v=>{
-                                    if(v)
+                                    if(objectIsNotEmpty(v))
                                         return true;
                                     return false;
                                 });
-                                logger.error("after: " + JSON.stringify(cardModel.imgs));
                                 return saveCard(cardModel);
                            })
                            .then(()=>{
@@ -82,6 +79,10 @@ function createCard(card, imgs, userId, callback){
                                  return callback({success:false, msg:msg});
                             });
 };
+
+function objectIsNotEmpty(o){
+    return Object.keys(o).length != 0;
+}
 
 function validateCard(cardModel){
     return new Promise((resolve,reject)=>{

@@ -192,7 +192,6 @@ module.exports = function(app){
         }
         userService.loginFbUser(req.body.facebookId, function(result){
             if(result){
-                logger.error("login facebook");
                 if(result.success == true){
                      var user = {
                         id: result.msg._id
@@ -208,7 +207,6 @@ module.exports = function(app){
             else
                 res.json({success:false, msg:"user does not exist"});
         });
-
     });
 
     app.post("/fbSignup",function(req, res){

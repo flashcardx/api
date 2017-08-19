@@ -35,12 +35,12 @@ module.exports = function(app){
          requireSecret: function(req, res, next) {
                       // check header or url parameters or post parameters for token
                       var token = req.headers['x-secret-token'];
-                      if (token) {
-                          if (token == apiCredentials.secretKey)
+                      if(token) {
+                          if(token == apiCredentials.secretKey)
                             next();
                           else{
                             logger.error("FLASHCARDX API SECRET INVALID (fblogin)"); 
-                            return res.json({ success: false, code: 1,msg: 'Failed to authenticate token' });    
+                            return res.json({ success: false, code: 1, msg: 'Failed to authenticate token' });    
                           }
                       } else {
                         // if there is no token

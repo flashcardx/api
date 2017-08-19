@@ -161,5 +161,49 @@ define({ "api": [
     "version": "1.0.0",
     "filename": "controller/loginController.js",
     "groupTitle": "login"
+  },
+  {
+    "type": "get",
+    "url": "/searchGif/:q",
+    "title": "searchGif",
+    "group": "search",
+    "name": "searchGif",
+    "description": "<p>receives search parameters and returns array with gif images.</p>",
+    "parameter": {
+      "fields": {
+        "search parameters": [
+          {
+            "group": "search parameters",
+            "type": "string",
+            "optional": false,
+            "field": "q",
+            "description": "<p>search parameter.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "curl localhost:3000/searchGif/holis",
+          "type": "param"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "accessToken": [
+          {
+            "group": "accessToken",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "version": "1.0.0",
+    "filename": "controller/searchController.js",
+    "groupTitle": "search"
   }
 ] });

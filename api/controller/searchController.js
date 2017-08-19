@@ -28,28 +28,45 @@ module.exports = function(app){
             });
         });
 
-        app.get("/searchBing/:criteria/:clientIp", controllerUtils.requireLogin, function(req,res){
-                const criteria = S(req.params.criteria).replaceAll(" ", "+").s;
-               imgSearchService.searchBing(criteria, req.params.clientIp, result=>{
+        app.get("/searchBing/:q/:clientIp", controllerUtils.requireLogin, function(req,res){
+               //const criteria = S(req.params.criteria).replaceAll(" ", "+").s;
+               imgSearchService.searchBing(req.params.q, req.params.clientIp, result=>{
                     return res.json(result);
                });
             });
+        
+/**
+ * @api {get} /searchGif/:q searchGif
+ * @apiGroup search
+ * @apiName searchGif
+ * @apiDescription receives search parameters and returns array with gif images.
+ * @apiParam (search parameters) {string} q search parameter.
+ * @apiHeader (accessToken) {string} x-access-token user session token
+ * @apiParamExample {param} Request-Example:
+ * curl localhost:3000/searchGif/holis
+ * @apiVersion 1.0.0
+ *  */
+    app.get("/searchGif/:q", controllerUtils.requireLogin, function(req,res){
+        imgSearchService.searchGif(req.params.q, result=>{
+            return res.json(result);
+        });
+});
 
-        app.get("/examples/:word", controllerUtils.requireLogin, (req, res)=>{
+    app.get("/examples/:word", controllerUtils.requireLogin, (req, res)=>{
             const word = req.params.word;
             dictionaryService.examples(req.userId, word, r=>{
                 res.json(r);
             });
         });
 
-        app.get("/define/:word", controllerUtils.requireLogin, (req, res)=>{
+    app.get("/define/:word", controllerUtils.requireLogin, (req, res)=>{
             const word = req.params.word;
             dictionaryService.define(req.userId, word, r=>{
                 res.json(r);
             });
         });
 
-         app.get("/suggest/:word", controllerUtils.requireLogin, (req, res)=>{
+    app.get("/suggest/:word", controllerUtils.requireLogin, (req, res)=>{
             const word = req.params.word;
             dictionaryService.suggest(req.userId, word, r=>{
                 res.json(r);

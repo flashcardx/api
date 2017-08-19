@@ -50,6 +50,20 @@ function searchBing(q, clientIp, callback){
     });
 }
 
+function searchGif(q, callback){
+    logger.error("key: " + config.gifApiKey);
+    var url = config.gifApiUrl + "?key=" + config.gifApiKey +"&q=" + q + "&safesearch=moderate&limit=35";
+    requestify.get(url)
+    .then(r=>{
+        var data = r.getBody();
+        return callback({success:true, msg:data});
+    })
+    .catch(err=>{
+        logger.error('Encountered error making request:' + err);
+        return callback({success:false, msg:err});
+    });
+}
+
 
 function search(criteria, lang, page, callback){
                 const cacheKey = criteria + lang + page;
@@ -166,5 +180,6 @@ function completeResults(results, criteria, callback){
 
 module.exports = {
         search: search,
-        searchBing: searchBing
+        searchBing: searchBing,
+        searchGif: searchGif
     }

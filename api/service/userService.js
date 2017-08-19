@@ -174,7 +174,7 @@ function getUserLang(userId, callback){
 }
 
 function updateLang(userId, lang, callback){
-        User.findOne({ '_id': userId}).exec().then(doc=>{
+    User.findOne({ '_id': userId}).exec().then(doc=>{
             if(!doc){
                 logger.error("No user found for userId: " + id + "(trying to update user language)");
                 return callback({success:false, msg:"This user does not exist"});
@@ -329,7 +329,7 @@ module.exports.registerNewUser= registerNewUser;
 const cardService = require("./cardService");
 
 function registerNewFbUser(user, callback){
-        imgService.saveImgFromUrl(user.picture)
+    imgService.saveImgFromUrl(user.picture)
         .then(hash=>{
                 var newUser = new User();
                 newUser.email = user.email;

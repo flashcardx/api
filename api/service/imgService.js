@@ -20,7 +20,6 @@ var gm = require('gm').subClass({imageMagick: true});
 ///returns filename from the thumbnail
 function generateThumbnailAndSaveToS3(name, buffer, callback){
     var src = imgDir +"/"+ name;
-    logger.error("src: " + src);
     fs.writeFile(src, buffer, function(err) {
         if(err) {
             return logger.error(err);
@@ -105,7 +104,7 @@ function download(uri, filename){
                         return reject(new Error("size of file too big, size: " + res.headers['content-length']));
                     var rq = request(uri, {headers:{"User-Agent": "NING/1.0"}});
                     rq.on("error", err=>{
-                            logger.error("error when making request for img download: " + err);
+                            logger.warning("error when making request for img download: " + err);
                             return reject("error when making request for img download: " + err);
                     })
                     rq.pipe(fs.createWriteStream(filename)).on('close',()=>{
@@ -113,8 +112,8 @@ function download(uri, filename){
                         resolve(res.headers['content-type']);
                     })
                     .on("error", (err)=>{
-                        logger.error("error when downloading file from: " + uri);
-                        logger.error("err: " + err);
+                        logger.warning("error when downloading file from: " + uri);
+                        logger.warning("err: " + err);
                         reject("error when downloading file");
                     });
                 })
@@ -200,10 +199,9 @@ function downloadArray(imgs, userId, callback){
         imgs.forEach((img)=>{
             if(img.url){
                             const imgPath = imgDir + "/" + getImgName(img.url, userId);
-                            logger.error(1);
                             download(img.url, imgPath)
                             .catch(err=>{
-                                    logger.error("error when downloading imgs");
+                                    logger.warning("error when downloading imgs");
                                     warning = "Some images could not be downloaded";
                                     return Promise.resolve(null);
                                 })
