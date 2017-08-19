@@ -105,7 +105,7 @@ module.exports = function(app){
         })
     });
 
-        /**
+/**
  * @api {post} /login login
  * @apiGroup login
  * @apiName login
