@@ -118,11 +118,7 @@ function confirmUser(url, callback){
                     return callback({success:false, msg:String(err)});
                 }
                 logger.debug("user confirmed ok, confirmation email was sent, info: " + info);
-                cardService.setInitialCards(user._id, r=>{
-                    if(r.success === false)
-                        return callback(r);
-                    return callback({success:true, msg:"User "+ user.name+ " registered ok, you can sign in now!"});
-                });
+                return callback({success:true, msg:"User "+ user.name+ " registered ok, you can sign in now!"});
             });
         }
         else{

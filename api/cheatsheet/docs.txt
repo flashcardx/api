@@ -1,0 +1,4 @@
+Compile apidocs in controller:
+apidoc -i controller - e "(node_modules|public)" -o public/apidoc
+
+read docs: http://localhost:3000/apidoc

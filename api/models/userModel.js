@@ -83,8 +83,7 @@ const userSchema = new Schema({
         default: 0
     },
     thumbnail:{
-        type: String,
-        ref: "img"
+        type: String
     },
     classes: [{
         lang: {

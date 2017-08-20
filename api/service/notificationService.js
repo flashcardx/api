@@ -16,8 +16,6 @@ function notifyClassUserJoined(integrants, classname, userName, notSend){
 }
 
 function notifyPostComment(classname, username, senderId, ownerId, users2Notify){
-    logger.error("username: " + username + ",senderId: " + senderId);
-    logger.error("ownerId: " + ownerId);
     var msg = username+" commented your publication on class: " + classname;
     deliverMesaggeHP(msg, new Array(ownerId), senderId);
     msg = username + " also comented the post you comented in the class " + classname;

@@ -4,7 +4,7 @@
   "description": "api module for FlashcardX application",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha $(find test -name '*.js') || true",
     "start": "node ./node_modules/better-npm-run start | ./node_modules/.bin/bunyan"
   },
   "betterScripts": {
@@ -31,6 +31,7 @@
     "body-parser": "^1.16.0",
     "bunyan": "^1.8.5",
     "bunyan-format": "^0.2.1",
+    "chai": "^3.5.0",
     "client-sessions": "^0.7.0",
     "compression": "^1.6.2",
     "email-verification": "^0.4.6",
@@ -47,6 +48,7 @@
     "md5": "^2.2.1",
     "md5-file": "^3.1.1",
     "memory-cache": "^0.1.6",
+    "mocha": "^3.5.0",
     "mongoose": "^4.8.0",
     "mongoose-sequence": "^3.2.0",
     "mongoose-unique-validator": "^1.0.4",
@@ -61,8 +63,6 @@
     "xss-filters": "^1.2.7"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
-    "longjohn": "^0.2.12",
-    "mocha": "^3.2.0"
+    "longjohn": "^0.2.12"
   }
 }
