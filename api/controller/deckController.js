@@ -12,7 +12,7 @@ module.exports = function(app){
  * @api {deck} /userdeck userdeck
  * @apiGroup deck
  * @apiName create user deck
- * @apiDescription creates user deck.
+ * @apiDescription creates user deck, returns id of new deck.
  * @apiParam (deckbody) {string} name name for the deck.
  * @apiParam (deckbody) {string} description description for deck.
  * @apiHeader (accessToken) {string} x-access-token user session token
@@ -20,11 +20,12 @@ module.exports = function(app){
  *      {
  *         "name":"people",
  *         "description": "beautiful people",
- *         "parentdeckid": "5998f5ea23cbd123cf8becce"
+ *         "parentid": "5998f5ea23cbd123cf8becce"
  *    }
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
- *     {"success":true
+ *     {"success":true,
+ *      "id": "59991371065a2544f7c90288"
  *      }
  * @apiErrorExample {json} Error-Response:
  *     HTTP/1.1 200 OK

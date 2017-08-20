@@ -205,9 +205,6 @@ function listAllByFieldsPopulateOwner(userId, fields, callback){
     });
 }
 
-
-
-
 // returns user id and integrants id so client can tell if is already joined to a class
 function search(name, userId, callback){
     userService.getUserLang(userId, r=>{
@@ -563,9 +560,9 @@ function duplicateCard2Class(classname, cardId, userId, callback){
     var cardId;
     var classId;
     findClassLean(classname, userId, "cardsLeft name")
-        .then(Class=>{
+    .then(Class=>{
             if(!Class)
-                    return Promise.reject("Either class does not exist or user is not in the class");
+                return Promise.reject("Either class does not exist or user is not in the class");
             if(Class.cardsLeft <= 0){
                 return Promise.reject("Class is full, no space for more cards");
             }

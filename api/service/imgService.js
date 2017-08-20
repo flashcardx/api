@@ -201,7 +201,7 @@ function downloadArray(imgs, userId, callback){
                             const imgPath = imgDir + "/" + getImgName(img.url, userId);
                             download(img.url, imgPath)
                             .catch(err=>{
-                                    logger.warning("error when downloading imgs");
+                                    logger.warn("error when downloading imgs");
                                     warning = "Some images could not be downloaded";
                                     return Promise.resolve(null);
                                 })
@@ -218,7 +218,6 @@ function downloadArray(imgs, userId, callback){
                                     })
                             .then(hash=>{
                                     if(!hash){
-                                        logger.error("no hash");
                                         imgHashes.push({});
                                         return Promise.resolve(null);
                                     }
@@ -301,12 +300,10 @@ function deleteImgOnce(hash, callback){
                                         logger.error("could not delete image(hash:"+hash +") from card");
                                         return callback({success:false, msg:"could not delete image from card"}); 
                                 }
-                                logger.error("viene re cheto wacho");
                                 AWSService.removeFromS3(hash, callback);
                             });
                         }
                         else{
-                            logger.error("plus");
                             img.save(err=>{
                             if(err){
                                 logger.error("error: " + JSON.stringify(err));
@@ -326,10 +323,8 @@ function deleteImgOnce(hash, callback){
 
 
 function deleteImgsOnce(imgs){
-    logger.error("imgs: " + JSON.stringify(imgs));
     return new Promise((resolve, reject)=>{
         if(!imgs || imgs.length == 0){
-            logger.error("what?");
             return resolve(true);
         }
         imgs.forEach((img, index)=>{
