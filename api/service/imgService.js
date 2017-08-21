@@ -201,7 +201,7 @@ function downloadArray(imgs, userId, callback){
                             const imgPath = imgDir + "/" + getImgName(img.url, userId);
                             download(img.url, imgPath)
                             .catch(err=>{
-                                    logger.warning("error when downloading imgs");
+                                    logger.warn("error when downloading imgs");
                                     warning = "Some images could not be downloaded";
                                     return Promise.resolve(null);
                                 })
