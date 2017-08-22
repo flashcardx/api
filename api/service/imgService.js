@@ -17,16 +17,23 @@ var gm = require('gm').subClass({imageMagick: true});
 
 
 
+function genSmallThumbnailAndSaveToS3(name, buffer, callback){
+   generateThumbnailAndSaveToS3(name, buffer, 150, 150, callback);
+}
+
+function genBigThumbnailAndSaveToS3(name, buffer, callback){
+   generateThumbnailAndSaveToS3(name, buffer, 250, 250, callback);
+}
+
 ///returns filename from the thumbnail
-function generateThumbnailAndSaveToS3(name, buffer, callback){
-    var src = imgDir +"/"+ name;
+function generateThumbnailAndSaveToS3(name, buffer, w, h, callback){
+     var src = imgDir +"/"+ name;
     fs.writeFile(src, buffer, function(err) {
         if(err) {
             return logger.error(err);
         }
-        logger.error("saved");
         gm(src)
-            .resize(150, 150, "!")
+            .resize(w, h, "!")
             .noProfile()
             .write(src, err=>{
                if(err){
@@ -35,9 +42,7 @@ function generateThumbnailAndSaveToS3(name, buffer, callback){
                }
                 fsp.readFile(src).
                 then(data=>{
-                    logger.error("name: " + name);
                     AWSService.saveToS3Buffer(name, data, r=>{
-                        logger.error("result: " + JSON.stringify(r));
                         deleteFile(src)
                         .then(()=>{
                             return callback(r);
@@ -54,7 +59,6 @@ function generateThumbnailAndSaveToS3(name, buffer, callback){
                     });
             });
         }); 
-
 }
 
 
@@ -82,7 +86,6 @@ function saveImgFromUrl(url){
         });
     });
 }
-
 
 const downloader = require('image-downloader');
 
@@ -155,7 +158,6 @@ function increaseImgsCounter(imgs){
                 })
         })     
 }
-
 
 
 function saveImgDb(filename, hash, contentType){
@@ -287,8 +289,10 @@ function registerNewImgDb(hash){
 
 
 function deleteImgOnce(hash, callback){
-    Img.findOne({ 'hash': hash}).exec()
+    Img.findOne({'hash': hash}).exec()
                      .then(img=>{
+                        if(!img)
+                            return callback({success:false, msg:"img not found"});
                         img.timesUsed--;
                         if(img.timesUsed <= 0){
                             img.remove((err, count)=>{
@@ -344,6 +348,7 @@ module.exports = {
     deleteImgsOnce: deleteImgsOnce,
     increaseImgsCounter: increaseImgsCounter,
     deleteImgOnce: deleteImgOnce,
-    generateThumbnailAndSaveToS3: generateThumbnailAndSaveToS3,
+    genSmallThumbnailAndSaveToS3: genSmallThumbnailAndSaveToS3,
+    genBigThumbnailAndSaveToS3: genBigThumbnailAndSaveToS3,
     saveImgFromUrl: saveImgFromUrl
 }

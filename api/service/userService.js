@@ -226,7 +226,7 @@ function setImage(user, buffer, callback){
                         User.update({_id:user._id}, {$set:{thumbnail: newThumbnail.hash}})
                         .exec()
                         .then(r=>{
-                            imgService.generateThumbnailAndSaveToS3(newThumbnail.hash, buffer, r=>{
+                            imgService.genSmallThumbnailAndSaveToS3(newThumbnail.hash, buffer, r=>{
                                 return callback({success:true});
                             });
                         })

@@ -1,6 +1,164 @@
 [
   {
     "type": "post",
+    "url": "/imageDeckFromUrl/:type",
+    "title": "imageDeckFromUrl",
+    "group": "deck",
+    "name": "imageDeckFromUrl",
+    "description": "<p>sets deck thumbnail from the url sent. if deck already as an image this one will be replaced with the new one.</p>",
+    "parameter": {
+      "fields": {
+        "type": [
+          {
+            "group": "type",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class</p>"
+          }
+        ],
+        "deckbody": [
+          {
+            "group": "deckbody",
+            "type": "string",
+            "optional": false,
+            "field": "deckId",
+            "description": "<p>id of the deck.</p>"
+          },
+          {
+            "group": "deckbody",
+            "type": "string",
+            "optional": false,
+            "field": "url",
+            "description": "<p>url for the image to download.</p>"
+          },
+          {
+            "group": "deckbody",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>in case the decks belongs to a class.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /imageDeckFromUrl/u \n     {\n        \"url\":\"https://myimage.com/beauty.jpeg\",\n        \"deckId\": \"5998f5ea23cbd123cf8becce\"\n   }",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "accessToken": [
+          {
+            "group": "accessToken",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "post",
+    "url": "/deck/:type",
+    "title": "new deck",
+    "group": "deck",
+    "name": "new_deck",
+    "description": "<p>creates user or class deck depending on type param, returns id of new deck.</p>",
+    "parameter": {
+      "fields": {
+        "deckbody": [
+          {
+            "group": "deckbody",
+            "type": "string",
+            "optional": false,
+            "field": "name",
+            "description": "<p>name for the deck.</p>"
+          },
+          {
+            "group": "deckbody",
+            "type": "string",
+            "optional": false,
+            "field": "description",
+            "description": "<p>description for deck.</p>"
+          },
+          {
+            "group": "deckbody",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>needed if deck will be for a class.</p>"
+          },
+          {
+            "group": "deckbody",
+            "type": "string",
+            "optional": true,
+            "field": "parentid",
+            "description": "<p>required if new deck(child) is inside another deck(parent).</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /deck/u\n     {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\",\n        \"parentid\": \"5998f5ea23cbd123cf8becce\"\n   }",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "accessToken": [
+          {
+            "group": "accessToken",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"id\": \"59991371065a2544f7c90288\"\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "examples": [
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\": false,\n  \"msg\": \"some mongodb error\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "post",
     "url": "/login",
     "title": "login",
     "group": "login",

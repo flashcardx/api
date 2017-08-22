@@ -821,7 +821,7 @@ function setImage(Class, userId, buffer, callback){
                         .then(r=>{
                             var allIntegrants = Class.integrants;
                             allIntegrants.push(Class.owner);
-                            imgService.generateThumbnailAndSaveToS3(newThumbnail.hash, buffer, r=>{
+                            imgService.genSmallThumbnailAndSaveToS3(newThumbnail.hash, buffer, r=>{
                                 notificationService.newThumbnail(Class.name, allIntegrants, userId);
                                 return callback({success:true});
                             });

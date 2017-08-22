@@ -53,11 +53,12 @@ function createCard(card, imgs, userId, callback){
                                 cardModel.ownerId = user._id;
                                 cardModel.ownerName = user.name;
                                 cardModel.lang = user.lang;
-                                cardModel.imgs = r.imgHashes.filter(v=>{
-                                    if(objectIsNotEmpty(v))
-                                        return true;
-                                    return false;
-                                });
+                                if(r.imgHashes)
+                                    cardModel.imgs = r.imgHashes.filter(v=>{
+                                        if(objectIsNotEmpty(v))
+                                            return true;
+                                        return false;
+                                    });
                                 return saveCard(cardModel);
                            })
                            .then(()=>{

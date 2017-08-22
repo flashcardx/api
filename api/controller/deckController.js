@@ -9,14 +9,18 @@ module.exports = function(app){
     const controllerUtils = require("./utils")(app);
 
 /**
- * @api {deck} /userdeck userdeck
+ * @api {post} /deck/:type new deck
  * @apiGroup deck
- * @apiName create user deck
- * @apiDescription creates user deck, returns id of new deck.
+ * @apiName new deck
+ * @apiDescription creates user or class deck depending on type param, returns id of new deck.
+ * @apiParam (type) type u or c depending on if deck belongs to user or class.
  * @apiParam (deckbody) {string} name name for the deck.
  * @apiParam (deckbody) {string} description description for deck.
+ * @apiParam (deckbody) {string} [classname] needed if deck will be for a class.
+ * @apiParam (deckbody) {string} [parentid] required if new deck(child) is inside another deck(parent).
  * @apiHeader (accessToken) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
+ * url: /deck/u
  *      {
  *         "name":"people",
  *         "description": "beautiful people",
@@ -34,9 +38,97 @@ module.exports = function(app){
  *     }
  * @apiVersion 1.1.0
  *  */
-    app.post("/userdeck", controllerUtils.requireLogin, (req, res)=>{
-        deckService.create4User(req.userId, req.body, r=>{
-            return res.json(r);
-        })
+    app.post("/deck/:type", controllerUtils.requireLogin, (req, res)=>{
+        switch (req.params.type) {
+            case "u":
+                    deckService.create4User(req.userId, req.body, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            case "c":
+                    deckService.create4Class(req.userId, req.body, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            default: return res.json({success:false, msg:"invalid type"}); 
+        }
     });
+
+
+/**
+ * @api {post} /imageDeckFromUrl/:type imageDeckFromUrl
+ * @apiGroup deck
+ * @apiName imageDeckFromUrl
+ * @apiDescription sets deck thumbnail from the url sent. if deck already as an image this one will be replaced with the new one.
+ * @apiParam (type) type u or c depending on if deck belongs to user or class
+ * @apiParam (deckbody) {string} deckId id of the deck.
+ * @apiParam (deckbody) {string} url url for the image to download.
+ * @apiParam (deckbody) {string} [classname] in case the decks belongs to a class.
+ * @apiHeader (accessToken) {string} x-access-token user session token
+ * @apiParamExample {json} Request-Example:
+ * url: /imageDeckFromUrl/u 
+ *      {
+ *         "url":"https://myimage.com/beauty.jpeg",
+ *         "deckId": "5998f5ea23cbd123cf8becce"
+ *    }
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true
+ *      }
+ * @apiVersion 1.1.0
+ *  */
+app.post("/imageDeckFromUrl/:type", (req, res)=>{
+    switch (req.params.type) {
+            case "u":
+                    deckService.setImageUserDeckFromUrl(req.userId, req.body, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            case "c":
+                    deckService.setImageClassDeckFromUrl(req.userId, req.body, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            default: return res.json({success:false, msg:"invalid type"}); 
+        }
+});
+
+
+/**
+ * @api {delete} /deckImg/:type/:deckId delete deck image
+ * @apiGroup deck
+ * @apiName delete deck image
+ * @apiDescription deletes deck thumbnail.
+ * @apiParam (type) type u or c depending on if deck belongs to user or class
+ * @apiParam (deckId) {string} deckId id of the deck.
+ * @apiHeader (accessToken) {string} x-access-token user session token.
+ * @apiParamExample {json} Request-Example:
+ * url: /deckImg/u/5998f5ea23cbd123cf8becce
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true
+ *      }
+ * @apiVersion 1.1.0
+ *  */
+app.delete("/deckImg/:type/:deckId", (req, res)=>{
+    switch (req.params.type) {
+            case "u":
+                    deckService.deleteImageUserDeck(req.userId, req.params.deckId, r=>{
+                        return res.json(r);
+                    });
+                    break;
+            case "c":
+                    deckService.deleteImageClassDeck(req.userId, req.params.deckId, r=>{
+                        return res.json(r);
+                    });
+                    break;
+            default: return res.json({success:false, msg:"invalid type"}); 
+        }
+});
+
+//set image from buffer
+//update name and description
+
+//delete deck
+
 }
