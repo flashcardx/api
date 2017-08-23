@@ -103,6 +103,28 @@ describe("deckService", ()=>{
                 done();
             });
         })
+
+        it("should delete user deck", done=>{
+            deckService.delete4User(userId, parentUserDeckId, r=>{
+                assert.equal(r.success, true);
+                done();
+            });
+        })
+
+        it("should delete class deck", done=>{
+            deckService.delete4Class(userId, parentClassDeckId, r=>{
+                assert.equal(r.success, true);
+                done();
+            });
+        })
+
+        it("should fail when delete class deck", done=>{
+            deckService.delete4Class(userId, parentUserDeckId, r=>{
+                assert.equal(r.success, false);
+                done();
+            });
+        })
+
     });
 
     describe("thumbnail", ()=>{
@@ -199,7 +221,7 @@ describe("deckService", ()=>{
                         });
                     });
             });
-            it("set image for user deck from buffer again so we test if replace works ok", done=>{
+            it("set image for class deck from buffer again so we test if replace works ok", done=>{
                 fs.readFile(appRoot+"/test/resources/test.jpg", function (err, buffer) {
                     if (err) throw err;
                     var data = {deckId: deckClassId, img: buffer};

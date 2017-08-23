@@ -39,6 +39,10 @@ const deckSchema = new Schema({
     duplicates:{
         type: Number,
         default: 0
+    },
+    recursiveOrder:{
+        type: Number,
+        default: 3
     }
 },
     {

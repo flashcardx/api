@@ -9,6 +9,7 @@ const logger = config.getLogger(__filename);
 const mongoose = require("mongoose");
 const AWSService = require("./AWSService");
 const classService = require("./class/classService");
+const childProcess = require(appRoot + "/child");
 
 function create4User(userId, deck, callback){
     deck.ownerType = "u";
@@ -206,6 +207,36 @@ function deleteImgClassDeck(userId, deckId, callback){
     });
 }
 
+function delete4User(userId, deckId, callback){
+    Deck.findOne({_id:deckId, ownerId:userId}, "_id")
+    .lean()
+    .exec()
+    .then(d=>{
+        if(!d)
+            return callback({success:false, msg:"deck not found or user is not the deck owner"});
+        childProcess.deleteDeckSubP(deckId);
+        return callback({success:true});
+    })
+    .catch(err=>{
+        logger.error("error when trying to delete user deck: " + err);
+        return callback({success:false, msg:err});
+    });
+}
+
+function delete4Class(userId, deckId, callback){
+    getClassDeckLean(userId, deckId)
+    .then(c=>{
+        if(!c)
+            return callback({success:false, msg:"deck not found or user is not in the class"});
+        childProcess.deleteDeckSubP(deckId);
+        return callback({success:true});
+    })
+    .catch(err=>{
+        logger.error("error when trying to delete class deck: " + err);
+        return callback({success:false, msg:err});
+    });
+}
+
 // HELPER FUNCTIONS:
 
 function getClassDeckLean(userId, deckId, fields){
@@ -345,13 +376,14 @@ function setImageFromBuffer(deckId, buffer){
 
 function createChildDeck(deckModel, parentId, callback){
     if(deckModel._id == parentId){
-        logger.error("can not create recursive deck");
-        return callback({success:false, msg:"can not create recursive deck"});
+        logger.error("Deck can not be its own parent ;)");
+        return callback({success:false, msg:"Deck can not be its own parent ;)"});
     }
-    Deck.update({_id: parentId, ownerId:deckModel.ownerId}, {"$push":{"decks":deckModel._id}})
-    .then(r=>{
-        if(r.nModified == 0)
-            return callback({success:false, msg:"could not find parent deck, parent and child deck must have same ownerid"});
+    Deck.findOneAndUpdate({_id: parentId, recursiveOrder:{$gt:0}, ownerId:deckModel.ownerId}, {"$push":{"decks":deckModel._id}}, "recursiveOrder")
+    .then(parent=>{
+        if(!parent)
+            return callback({success:false, msg:"could not find parent deck, or max deck recursive level reached"});
+        deckModel.recursiveOrder = parent.recursiveOrder-1;
         saveDeck(deckModel, callback);
     })
     .catch(err=>{
@@ -381,5 +413,7 @@ module.exports = {
     setImgUserDeckFromBuffer: setImgUserDeckFromBuffer,
     setImgClassDeckFromBuffer: setImgClassDeckFromBuffer,
     update4User: update4User,
-    update4Class: update4Class
+    update4Class: update4Class,
+    delete4User: delete4User,
+    delete4Class: delete4Class
 }
