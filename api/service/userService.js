@@ -125,7 +125,6 @@ function userCardLimitsOk(userId){
     })
 }
 
-
 function decreaseCardCounter(userModel){
     return new Promise((resolve, reject)=>{
         userModel.plan.cardsLeft--;

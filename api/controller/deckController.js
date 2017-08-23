@@ -59,11 +59,10 @@ module.exports = function(app){
  * @api {post} /imageDeckFromUrl/:type imageDeckFromUrl
  * @apiGroup deck
  * @apiName imageDeckFromUrl
- * @apiDescription sets deck thumbnail from the url sent. if deck already as an image this one will be replaced with the new one.
+ * @apiDescription sets deck thumbnail from the url sent. if deck already has an image this one will be replaced with the new one.
  * @apiParam (type) type u or c depending on if deck belongs to user or class
  * @apiParam (deckbody) {string} deckId id of the deck.
  * @apiParam (deckbody) {string} url url for the image to download.
- * @apiParam (deckbody) {string} [classname] in case the decks belongs to a class.
  * @apiHeader (accessToken) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /imageDeckFromUrl/u 
@@ -80,12 +79,12 @@ module.exports = function(app){
 app.post("/imageDeckFromUrl/:type", (req, res)=>{
     switch (req.params.type) {
             case "u":
-                    deckService.setImageUserDeckFromUrl(req.userId, req.body, r=>{
+                    deckService.setImgUserDeckFromUrl(req.userId, req.body, r=>{
                         return res.json(r);
                     })
                     break;
             case "c":
-                    deckService.setImageClassDeckFromUrl(req.userId, req.body, r=>{
+                    deckService.setImgClassDeckFromUrl(req.userId, req.body, r=>{
                         return res.json(r);
                     })
                     break;
@@ -93,6 +92,42 @@ app.post("/imageDeckFromUrl/:type", (req, res)=>{
         }
 });
 
+/**
+ * @api {post} /imageDeckFromBuffer/:type imageDeckFromBuffer
+ * @apiGroup deck
+ * @apiName imageDeckFromBuffer
+ * @apiDescription sets deck thumbnail from the data sent. if deck already has an image this one will be replaced with the new one.
+ * @apiParam (type) type u or c depending on if deck belongs to user or class
+ * @apiParam (deckbody) {string} deckId id of the deck.
+ * @apiParam (deckbody) {Buffer} img buffer containing the image.
+ * @apiHeader (accessToken) {string} x-access-token user session token
+ * @apiParamExample {json} Request-Example:
+ * url: /imageDeckFromUrl/u 
+ *      {
+ *         "img": "{Buffer object}",
+ *         "deckId": "5998f5ea23cbd123cf8becce"
+ *    }
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true
+ *      }
+ * @apiVersion 1.1.0
+ *  */
+app.post("/imageDeckFromBuffer/:type", (req, res)=>{
+    switch (req.params.type) {
+            case "u":
+                    deckService.setImgUserDeckFromBuffer(req.userId, req.body, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            case "c":
+                    deckService.setImgClassDeckFromBuffer(req.userId, req.body, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            default: return res.json({success:false, msg:"invalid type"}); 
+        }
+});
 
 /**
  * @api {delete} /deckImg/:type/:deckId delete deck image
@@ -113,12 +148,12 @@ app.post("/imageDeckFromUrl/:type", (req, res)=>{
 app.delete("/deckImg/:type/:deckId", (req, res)=>{
     switch (req.params.type) {
             case "u":
-                    deckService.deleteImageUserDeck(req.userId, req.params.deckId, r=>{
+                    deckService.deleteImgUserDeck(req.userId, req.params.deckId, r=>{
                         return res.json(r);
                     });
                     break;
             case "c":
-                    deckService.deleteImageClassDeck(req.userId, req.params.deckId, r=>{
+                    deckService.deleteImgClassDeck(req.userId, req.params.deckId, r=>{
                         return res.json(r);
                     });
                     break;
@@ -126,9 +161,9 @@ app.delete("/deckImg/:type/:deckId", (req, res)=>{
         }
 });
 
-//set image from buffer
-//update name and description
 
+
+//update name and description
 //delete deck
 
 }

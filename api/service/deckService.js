@@ -14,8 +14,8 @@ function create4User(userId, deck, callback){
     deck.ownerType = "u";
     deck.ownerId = userId;
     var deckModel = new Deck(deck);
-    if(deck.parentid)
-        createChildDeck(deckModel, deck.parentid, callback);
+    if(deck.parentId)
+        createChildDeck(deckModel, deck.parentId, callback);
     else
         saveDeck(deckModel, callback);
 }
@@ -30,8 +30,8 @@ function create4Class(userId, classname, deck, callback){
         deck.ownerType = "c";
         deck.ownerId = Class._id;
         var deckModel = new Deck(deck);
-        if(deck.parentid)
-            createChildDeck(deckModel, deck.parentid, callback);
+        if(deck.parentId)
+            createChildDeck(deckModel, deck.parentId, callback);
         else
             saveDeck(deckModel, callback);
     })
@@ -41,7 +41,7 @@ function create4Class(userId, classname, deck, callback){
     });
 }
 
-function setImageUserDeckFromUrl(userId, data, callback){
+function setImgUserDeckFromUrl(userId, data, callback){
     var imgHash;
     Deck.findOne({_id:data.deckId, ownerId:userId}, "_id thumbnail")
     .lean()
@@ -67,24 +67,62 @@ function setImageUserDeckFromUrl(userId, data, callback){
     });
 }
 
-function setImageClassDeckFromUrl(userId, data, callback){
+function setImgUserDeckFromBuffer(userId, data, callback){
     var imgHash;
-    classService.findClassLean(data.classname, userId, "_id")//verifies user is in class
-    .then(Class=>{
-        if(!Class){
-            logger.error("class not found");
-            return Promise.reject("Class not found(user must be in the class)");
-        }
-        return Promise.resolve(Class._id);
-    })
-    .then(classId=>{
-        return Deck.findOne({_id:data.deckId, ownerId:classId}, "_id thumbnail")
-        .lean()
-        .exec();
-    })
+    Deck.findOne({_id:data.deckId, ownerId:userId}, "_id thumbnail")
+    .lean()
+    .exec()
     .then(d=>{
         if(!d)
             return callback({success:false, msg:"deck not found or user is not the deck owner"});
+        imgHash = d.thumbnail;
+        return setImageFromBuffer(d._id, data.img);
+    })
+    .then(()=>{
+        if(!imgHash)
+            return callback({success: true});
+        imgService.deleteImgOnce(imgHash, r=>{
+                if(r.success == false)
+                    return callback(r);
+                return callback({success: true});
+            });
+        })
+    .catch(err=>{
+        logger.error("error when looking for deck: " + err);
+        return callback({success:false, msg:err});
+    });
+}
+
+function setImgClassDeckFromBuffer(userId, data, callback){
+    var imgHash;
+    getClassDeckLean(userId, data.deckId, "thumbnail _id")
+    .then(d=>{
+        if(!d)
+            return Promise.reject("deck not found or user is not the deck owner");
+        imgHash = d.thumbnail;
+        return setImageFromBuffer(d._id, data.img);
+    })
+    .then(()=>{
+        if(!imgHash)
+            return callback({success: true});
+        imgService.deleteImgOnce(imgHash, r=>{
+                if(r.success == false)
+                    return callback(r);
+                return callback({success: true});
+            });
+        })
+    .catch(err=>{
+        logger.error("error when looking for deck: " + err);
+        return callback({success:false, msg:err});
+    });
+}
+
+function setImgClassDeckFromUrl(userId, data, callback){
+    var imgHash;
+    getClassDeckLean(userId, data.deckId, "thumbnail _id")
+    .then(d=>{
+        if(!d)
+            return Promise.reject("deck not found or user is not the deck owner");
         imgHash = d.thumbnail;
         return setImageFromUrl(d._id, data.url);
     })
@@ -103,8 +141,8 @@ function setImageClassDeckFromUrl(userId, data, callback){
     });
 }
 
-function deleteImageUserDeck(userId, deckId, callback){
-    deleteImg(userId, deckId)
+function deleteImgUserDeck(userId, deckId, callback){
+    verifyDeleteImg(userId, deckId)
     .then(r=>{
         return callback({success:true});
     })
@@ -114,7 +152,71 @@ function deleteImageUserDeck(userId, deckId, callback){
     });
 }
 
-function deleteImg(ownerId, deckId){
+function deleteImgClassDeck(userId, deckId, callback){
+    var hash;
+    getClassDeckLean(userId, deckId, "thumbnail")
+    .then(deck=>{
+        hash = deck.thumbnail;
+        return deleteImg(hash, deckId);
+    })
+    .then(()=>{
+        return callback({success:true});
+    })
+    .catch(err=>{
+        logger.error("when trying to delete deck img: " + err);
+        return callback({success:false, msg:err});
+    });
+}
+
+// HELPER FUNCTIONS:
+
+function getClassDeckLean(userId, deckId, fields){
+    var deck;
+    return new Promise((resolve, reject)=>{
+        Deck.findOne({_id:deckId}, "ownerId " + fields)
+    .lean()
+    .exec()
+    .then(d=>{
+        if(!d)
+            return Promise.reject("deck not found");
+        deck = d;
+        return classService.findClassLeanById(d.ownerId, userId, "_id");
+        })
+    .then(c=>{
+        if(!c)
+            return reject("class not found");
+        return resolve(deck);
+    })
+    .catch(err=>{
+        return reject(err);
+        });
+    });
+}
+
+function deleteImg(hash, deckId){
+    return new Promise((resolve, reject)=>{
+        if(!hash)
+            return resolve();
+        imgService.deleteImgOnce(hash, r=>{
+                if(r.success == false){
+                    return reject(r.msg);
+                }
+                Deck.update({_id:deckId}, {$unset: {thumbnail: 1}})
+                .exec()
+                .then(r=>{
+                    if(r.nModified == 0)
+                        return reject("could not find parent deck, parent and child deck must have same ownerid");
+                    return resolve();
+                })
+                .catch(err=>{
+                    logger.error("error when looking for deck: " + err);
+                    return reject(err);
+                });
+            });
+    });
+}
+
+function verifyDeleteImg(ownerId, deckId){
     return new Promise((resolve, reject)=>{
     Deck.findOne({_id:deckId, ownerId:ownerId}, "_id thumbnail")
         .lean()
@@ -122,20 +224,9 @@ function deleteImg(ownerId, deckId){
         .then(d=>{
             if(!d)
                 return Promise.reject("deck not found, remember that user must have rights to see deck");
-            imgService.deleteImgOnce(d.thumbnail, r=>{
-                if(r.success == false){
-                    return reject(r.msg);
-                }
-                return Promise.resolve();
-            });
+            return deleteImg(d.thumbnail, deckId);
         })
         .then(()=>{
-            return Deck.update({_id:deckId}, {$unset: {thumbnail: 1}})
-            .exec();
-        })
-        .then(r=>{
-            if(r.nModified == 0)
-                return reject("could not find parent deck, parent and child deck must have same ownerid");
             return resolve();
         })
         .catch(err=>{
@@ -146,13 +237,12 @@ function deleteImg(ownerId, deckId){
 }
 
 
-// HELPER FUNCTIONS: 
 
-function setImageFromUrl(deckid, url){
+function setImageFromUrl(deckId, url){
     return new Promise((resolve, reject)=>{
         imgService.saveImgFromUrl(url)
         .then(hash=>{
-            return Deck.update({_id:deckid}, {$set: {thumbnail: hash}})
+            return Deck.update({_id:deckId}, {$set: {thumbnail: hash}})
             .exec();
         })
         .then(r=>{
@@ -167,12 +257,38 @@ function setImageFromUrl(deckid, url){
         })
     });
 }
-function createChildDeck(deckModel, parentid, callback){
-    if(deckModel._id == parentid){
+
+function setImageFromBuffer(deckId, buffer){
+    var hash;
+    return new Promise((resolve, reject)=>{
+        imgService.saveImgFromBuffer(buffer)
+        .then(h=>{
+            hash = h;
+            return Deck.update({_id:deckId}, {$set: {thumbnail: hash}})
+            .exec();
+        })
+        .then(r=>{
+            if(r.nModified == 0){
+                return reject("nModifier=0 when unpdating thumbnail hash in deck document(database)");
+            }
+            return imgService.deleteImgOnce
+        })
+        .then(()=>{
+            return resolve();
+        })
+        .catch(err=>{
+            logger.error("error when downloading img from url for deck: " + err);
+            return reject(err);
+        })
+    });
+}
+
+function createChildDeck(deckModel, parentId, callback){
+    if(deckModel._id == parentId){
         logger.error("can not create recursive deck");
         return callback({success:false, msg:"can not create recursive deck"});
     }
-    Deck.update({_id: parentid, ownerId:deckModel.ownerid}, {"$push":{"decks":deckModel._id}})
+    Deck.update({_id: parentId, ownerId:deckModel.ownerId}, {"$push":{"decks":deckModel._id}})
     .then(r=>{
         if(r.nModified == 0)
             return callback({success:false, msg:"could not find parent deck, parent and child deck must have same ownerid"});
@@ -198,7 +314,10 @@ function saveDeck(deckModel, callback){
 module.exports = {
     create4User: create4User,
     create4Class: create4Class,
-    setImageUserDeckFromUrl: setImageUserDeckFromUrl,
-    setImageClassDeckFromUrl: setImageClassDeckFromUrl,
-    deleteImageUserDeck: deleteImageUserDeck
+    setImgUserDeckFromUrl: setImgUserDeckFromUrl,
+    setImgClassDeckFromUrl: setImgClassDeckFromUrl,
+    deleteImgUserDeck: deleteImgUserDeck,
+    deleteImgClassDeck: deleteImgClassDeck,
+    setImgUserDeckFromBuffer: setImgUserDeckFromBuffer,
+    setImgClassDeckFromBuffer: setImgClassDeckFromBuffer
 }

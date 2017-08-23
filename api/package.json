@@ -4,7 +4,7 @@
   "description": "api module for FlashcardX application",
   "main": "app.js",
   "scripts": {
-    "test": "mocha $(find test -name '*.js') || true",
+    "test": "mocha $(find test -name '*.js') --timeout 500000|| true",
     "start": "node ./node_modules/better-npm-run start | ./node_modules/.bin/bunyan"
   },
   "betterScripts": {

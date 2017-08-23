@@ -15,14 +15,8 @@ const imageminPngquant = require('imagemin-pngquant');
 var thumb = require('node-thumbnail').thumb;
 var gm = require('gm').subClass({imageMagick: true});
 
-
-
 function genSmallThumbnailAndSaveToS3(name, buffer, callback){
    generateThumbnailAndSaveToS3(name, buffer, 150, 150, callback);
-}
-
-function genBigThumbnailAndSaveToS3(name, buffer, callback){
-   generateThumbnailAndSaveToS3(name, buffer, 250, 250, callback);
 }
 
 ///returns filename from the thumbnail
@@ -33,7 +27,8 @@ function generateThumbnailAndSaveToS3(name, buffer, w, h, callback){
             return logger.error(err);
         }
         gm(src)
-            .resize(w, h, "!")
+            .resize(w, h, '^')
+            .resize('200', '200', '^')
             .noProfile()
             .write(src, err=>{
                if(err){
@@ -61,18 +56,17 @@ function generateThumbnailAndSaveToS3(name, buffer, w, h, callback){
         }); 
 }
 
-
-
 function getImgName(url, text){
      return text + Math.random() + new Date();
 };
 
 var requestNoEncoding = request.defaults({ encoding: null });
+
+//should calculate md5 like card imgs
 function saveImgFromUrl(url){
     return new Promise((resolve, reject)=>{
         var img = new Img;
         img.hash = img._id;
-       
         requestNoEncoding.get(url, function (err, res, body) {
             AWSService.saveToS3Buffer(img.hash, body, err=>{
                 if(err)
@@ -85,6 +79,22 @@ function saveImgFromUrl(url){
             }); 
         });
     });
+}
+
+function saveImgFromBuffer(buffer){
+    return new Promise((resolve, reject)=>{
+        var img = new Img;
+        img.hash = img._id;
+       AWSService.saveToS3Buffer(img.hash, buffer, err=>{
+            if(err)
+                    return reject(err);
+                img.save(err=>{
+                    if(err)
+                        return reject(err);
+                    return resolve(img.hash);
+                });    
+            }); 
+        });
 }
 
 const downloader = require('image-downloader');
@@ -121,7 +131,6 @@ function download(uri, filename){
                     });
                 })
                 });
-
 };
 
 function deleteFile(filename){
@@ -159,7 +168,6 @@ function increaseImgsCounter(imgs){
         })     
 }
 
-
 function saveImgDb(filename, hash, contentType){
     return new Promise((resolve, reject)=>{
         Img.findOne({ 'hash': hash}).exec().then((img=>{
@@ -189,7 +197,6 @@ function saveImgDb(filename, hash, contentType){
         });
     });
 }
-
 
 function downloadArray(imgs, userId, callback){
     return new Promise((resolve, reject)=>{
@@ -349,6 +356,6 @@ module.exports = {
     increaseImgsCounter: increaseImgsCounter,
     deleteImgOnce: deleteImgOnce,
     genSmallThumbnailAndSaveToS3: genSmallThumbnailAndSaveToS3,
-    genBigThumbnailAndSaveToS3: genBigThumbnailAndSaveToS3,
-    saveImgFromUrl: saveImgFromUrl
+    saveImgFromUrl: saveImgFromUrl,
+    saveImgFromBuffer: saveImgFromBuffer
 }
