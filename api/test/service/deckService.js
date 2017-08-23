@@ -8,7 +8,7 @@ const User = require(appRoot + "/models/userModel");
 const Class = require(appRoot + "/models/classModel");
 var fs = require("fs");
 describe("deckService", ()=>{
-    describe("create", ()=>{
+    describe.only("create and update", ()=>{
        var userId;
        var parentUserDeckId;
        var parentClassDeckId;
@@ -48,7 +48,7 @@ describe("deckService", ()=>{
         });
 
         after(done=>{
-            mongoose.connection.db.dropDatabase();
+            //mongoose.connection.db.dropDatabase();
             done();
         });
 
@@ -66,6 +66,22 @@ describe("deckService", ()=>{
             deckService.create4User(userId, deck, r=>{
                 assert.equal(r.success, true);
                 assert.exists(r.id, 'id is neither `null` nor `undefined`');
+                done();
+            });
+        })
+
+        it("should update user deck", done=>{
+            var deck = {name:"deck2", description:"best deck ever"};
+            deckService.update4User(userId, parentUserDeckId, deck, r=>{
+                assert.equal(r.success, true);
+                done();
+            });
+        })
+
+        it("should update user deck", done=>{
+            var deck = {name:"deck3", description:"best deck of the class"};
+            deckService.update4Class(userId, parentClassDeckId, deck, r=>{
+                assert.equal(r.success, true);
                 done();
             });
         })

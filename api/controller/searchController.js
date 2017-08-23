@@ -40,9 +40,9 @@ module.exports = function(app){
  * @apiGroup search
  * @apiName searchGif
  * @apiDescription receives search parameters and returns array with gif images.
- * @apiParam (search parameters) {string} q search parameter.
- * @apiHeader (accessToken) {string} x-access-token user session token
- * @apiParamExample {param} Request-Example:
+ * @apiParam (Parameters) {string} q search parameter.
+ * @apiHeader (Headers) {string} x-access-token user session token
+ * @apiParamExample {Parameter} Request-Example:
  * curl localhost:3000/searchGif/holis
  * @apiVersion 1.0.0
  *  */

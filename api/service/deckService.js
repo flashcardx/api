@@ -20,6 +20,44 @@ function create4User(userId, deck, callback){
         saveDeck(deckModel, callback);
 }
 
+function update4User(userId, deckId, deck, callback){
+    Deck.findOne({_id:deckId, ownerId:userId}, "_id name description")
+    .then(d=>{
+        if(!d)
+            return callback({success: false, msg: "Deck not found"});
+        d.name = deck.name;
+        d.description = deck.description;
+        d.update(d, err=>{
+            if(err)
+                return Promise.reject(err);
+            return callback({success:true});
+        });
+    })
+    .catch(err=>{
+        logger.error("when updating deck: " + err);
+        return callback({success:false, msg:err});
+    });
+}
+
+function update4Class(userId, deckId, deck, callback){
+    getClassDeck(userId, deckId, "name description _id")
+    .then(d=>{
+        if(!d)
+            return callback({success: false, msg: "Deck not found"});
+        d.name = deck.name;
+        d.description = deck.description;
+        d.update(d, err=>{
+            if(err)
+                return Promise.reject(err);
+            return callback({success:true});
+        });
+    })
+    .catch(err=>{
+        logger.error("when updating deck: " + err);
+        return callback({success:false, msg:err});
+    });
+}
+
 function create4Class(userId, classname, deck, callback){
     classService.findClassLean(classname, userId, "_id")//verifies user is in class
     .then(Class=>{
@@ -193,6 +231,28 @@ function getClassDeckLean(userId, deckId, fields){
     });
 }
 
+function getClassDeck(userId, deckId, fields){
+    var deck;
+    return new Promise((resolve, reject)=>{
+        Deck.findOne({_id:deckId}, "ownerId " + fields)
+    .exec()
+    .then(d=>{
+        if(!d)
+            return Promise.reject("deck not found");
+        deck = d;
+        return classService.findClassLeanById(d.ownerId, userId, "_id");
+        })
+    .then(c=>{
+        if(!c)
+            return reject("class not found");
+        return resolve(deck);
+    })
+    .catch(err=>{
+        return reject(err);
+        });
+    });
+}
+
 function deleteImg(hash, deckId){
     return new Promise((resolve, reject)=>{
         if(!hash)
@@ -319,5 +379,7 @@ module.exports = {
     deleteImgUserDeck: deleteImgUserDeck,
     deleteImgClassDeck: deleteImgClassDeck,
     setImgUserDeckFromBuffer: setImgUserDeckFromBuffer,
-    setImgClassDeckFromBuffer: setImgClassDeckFromBuffer
+    setImgClassDeckFromBuffer: setImgClassDeckFromBuffer,
+    update4User: update4User,
+    update4Class: update4Class
 }

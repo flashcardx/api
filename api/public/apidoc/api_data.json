@@ -1,42 +1,165 @@
 [
   {
-    "type": "post",
-    "url": "/imageDeckFromUrl/:type",
-    "title": "imageDeckFromUrl",
+    "type": "delete",
+    "url": "/deckImg/:type/:deckId",
+    "title": "delete deck image",
     "group": "deck",
-    "name": "imageDeckFromUrl",
-    "description": "<p>sets deck thumbnail from the url sent. if deck already as an image this one will be replaced with the new one.</p>",
+    "name": "delete_deck_image",
+    "description": "<p>deletes deck thumbnail.</p>",
     "parameter": {
       "fields": {
-        "type": [
+        "Parameters": [
           {
-            "group": "type",
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "deckId",
+            "description": "<p>id of the deck.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /deckImg/u/5998f5ea23cbd123cf8becce",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "post",
+    "url": "/imageDeckFromBuffer/:type",
+    "title": "imageDeckFromBuffer",
+    "group": "deck",
+    "name": "imageDeckFromBuffer",
+    "description": "<p>sets deck thumbnail from the data sent. if deck already has an image this one will be replaced with the new one.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
             "optional": false,
             "field": "type",
             "description": "<p>u or c depending on if deck belongs to user or class</p>"
           }
         ],
-        "deckbody": [
+        "Request body": [
           {
-            "group": "deckbody",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "deckId",
             "description": "<p>id of the deck.</p>"
           },
           {
-            "group": "deckbody",
+            "group": "Request body",
+            "type": "Buffer",
+            "optional": false,
+            "field": "img",
+            "description": "<p>buffer containing the image.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /imageDeckFromUrl/u \n     {\n        \"img\": \"{Buffer object}\",\n        \"deckId\": \"5998f5ea23cbd123cf8becce\"\n   }",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "post",
+    "url": "/imageDeckFromUrl/:type",
+    "title": "imageDeckFromUrl",
+    "group": "deck",
+    "name": "imageDeckFromUrl",
+    "description": "<p>sets deck thumbnail from the url sent. if deck already has an image this one will be replaced with the new one.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class</p>"
+          }
+        ],
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": false,
+            "field": "deckId",
+            "description": "<p>id of the deck.</p>"
+          },
+          {
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "url",
             "description": "<p>url for the image to download.</p>"
-          },
-          {
-            "group": "deckbody",
-            "type": "string",
-            "optional": true,
-            "field": "classname",
-            "description": "<p>in case the decks belongs to a class.</p>"
           }
         ]
       },
@@ -50,9 +173,9 @@
     },
     "header": {
       "fields": {
-        "accessToken": [
+        "Headers": [
           {
-            "group": "accessToken",
+            "group": "Headers",
             "type": "string",
             "optional": false,
             "field": "x-access-token",
@@ -83,33 +206,42 @@
     "description": "<p>creates user or class deck depending on type param, returns id of new deck.</p>",
     "parameter": {
       "fields": {
-        "deckbody": [
+        "Parameters": [
           {
-            "group": "deckbody",
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          }
+        ],
+        "Request body": [
+          {
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "name",
             "description": "<p>name for the deck.</p>"
           },
           {
-            "group": "deckbody",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "description",
             "description": "<p>description for deck.</p>"
           },
           {
-            "group": "deckbody",
+            "group": "Request body",
             "type": "string",
             "optional": true,
             "field": "classname",
             "description": "<p>needed if deck will be for a class.</p>"
           },
           {
-            "group": "deckbody",
+            "group": "Request body",
             "type": "string",
             "optional": true,
-            "field": "parentid",
+            "field": "parentId",
             "description": "<p>required if new deck(child) is inside another deck(parent).</p>"
           }
         ]
@@ -117,16 +249,16 @@
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "url: /deck/u\n     {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\",\n        \"parentid\": \"5998f5ea23cbd123cf8becce\"\n   }",
+          "content": "url: /deck/u\n     {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\",\n        \"parentId\": \"5998f5ea23cbd123cf8becce\"\n   }",
           "type": "json"
         }
       ]
     },
     "header": {
       "fields": {
-        "accessToken": [
+        "Headers": [
           {
-            "group": "accessToken",
+            "group": "Headers",
             "type": "string",
             "optional": false,
             "field": "x-access-token",
@@ -159,6 +291,75 @@
   },
   {
     "type": "post",
+    "url": "/updateDeck/:type/:deckId",
+    "title": "update deck",
+    "group": "deck",
+    "name": "update_deck",
+    "description": "<p>update name and/or description of the deck.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          }
+        ],
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": false,
+            "field": "name",
+            "description": "<p>name for the deck.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": false,
+            "field": "description",
+            "description": "<p>description for deck.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /updateDeck/u/59991371065a2544f7c90288\n     {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\"\n   }",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "post",
     "url": "/login",
     "title": "login",
     "group": "login",
@@ -166,34 +367,30 @@
     "description": "<p>receives user email and paswword and returns token with userid encrypted in it. note: the client can see the userid easily since getting the real data in the token is really easy, but setting data in a token is impossible(thanks to secret) ;).</p>",
     "parameter": {
       "fields": {
-        "user": [
+        "Request body": [
           {
-            "group": "user",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "email",
             "description": "<p>user email.</p>"
           },
           {
-            "group": "user",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "password",
             "description": "<p>user password.</p>"
-          }
-        ],
-        "client": [
+          },
           {
-            "group": "client",
+            "group": "Request body",
             "type": "number",
             "optional": true,
             "field": "ip",
             "description": "<p>recaptcha needs it.</p>"
-          }
-        ],
-        "recaptcha": [
+          },
           {
-            "group": "recaptcha",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "g-recaptcha-response",
@@ -240,49 +437,45 @@
     "description": "<p>receives new user info and recaptcha code. generates temporal user(lasts 24hs) until user is validated by email</p>",
     "parameter": {
       "fields": {
-        "user": [
+        "Request body": [
           {
-            "group": "user",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "email",
             "description": "<p>can not exist other user with same email.</p>"
           },
           {
-            "group": "user",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "name",
             "description": "<p>user name.</p>"
           },
           {
-            "group": "user",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "password",
             "description": "<p>user password.</p>"
           },
           {
-            "group": "user",
+            "group": "Request body",
             "type": "string",
             "optional": true,
             "field": "lang",
             "defaultValue": "en",
             "description": "<p>language shortcode</p>"
-          }
-        ],
-        "client": [
+          },
           {
-            "group": "client",
+            "group": "Request body",
             "type": "number",
             "optional": true,
             "field": "ip",
             "description": "<p>recaptcha needs it.</p>"
-          }
-        ],
-        "recaptcha": [
+          },
           {
-            "group": "recaptcha",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "g-recaptcha-response",
@@ -293,7 +486,7 @@
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "  {\n     \"email\":\"pablo1234@gmail.com\",\n     \"name\": \"pablo marino\",\n     \"password\": \"1234\",\n     \"lang\": \"en\",\n     \"g-recaptcha-response\": \"abc124xsed4fr\"\n}",
+          "content": "  {\n     \"email\":\"pablo1234@gmail.com\",\n     \"name\": \"pablo marino\",\n     \"password\": \"1234\",\n     \"lang\": \"en\",\n     \"g-recaptcha-response\": \"abc124xsed4fr\",\n      \"ip\": \"0.xxx.xxx.xx\"\n}",
           "type": "json"
         }
       ]
@@ -329,9 +522,9 @@
     "description": "<p>receives search parameters and returns array with gif images.</p>",
     "parameter": {
       "fields": {
-        "search parameters": [
+        "Parameters": [
           {
-            "group": "search parameters",
+            "group": "Parameters",
             "type": "string",
             "optional": false,
             "field": "q",
@@ -343,15 +536,15 @@
         {
           "title": "Request-Example:",
           "content": "curl localhost:3000/searchGif/holis",
-          "type": "param"
+          "type": "Parameter"
         }
       ]
     },
     "header": {
       "fields": {
-        "accessToken": [
+        "Headers": [
           {
-            "group": "accessToken",
+            "group": "Headers",
             "type": "string",
             "optional": false,
             "field": "x-access-token",

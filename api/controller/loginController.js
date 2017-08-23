@@ -58,19 +58,20 @@ module.exports = function(app){
  * @apiName signup
  * @apiDescription receives new user info and recaptcha code.
  * generates temporal user(lasts 24hs) until user is validated by email
- * @apiParam (user) {string} email can not exist other user with same email.
- * @apiParam (user) {string} name user name.
- * @apiParam (user) {string} password user password.
- * @apiParam (user) {string} [lang="en"]  language shortcode
- * @apiParam (client) {number} [ip] recaptcha needs it.
- * @apiParam (recaptcha) {string} g-recaptcha-response recaptcha token
+ * @apiParam (Request body) {string} email can not exist other user with same email.
+ * @apiParam (Request body) {string} name user name.
+ * @apiParam (Request body) {string} password user password.
+ * @apiParam (Request body) {string} [lang="en"]  language shortcode
+ * @apiParam (Request body) {number} [ip] recaptcha needs it.
+ * @apiParam (Request body) {string} g-recaptcha-response recaptcha token
  *@apiParamExample {json} Request-Example:
  *      {
  *         "email":"pablo1234@gmail.com",
  *         "name": "pablo marino",
  *         "password": "1234",
  *         "lang": "en",
- *         "g-recaptcha-response": "abc124xsed4fr"
+ *         "g-recaptcha-response": "abc124xsed4fr",
+ *          "ip": "0.xxx.xxx.xx"
  *    }
  *@apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
@@ -112,10 +113,10 @@ module.exports = function(app){
  * @apiDescription receives user email and paswword and returns token with userid encrypted in it.
  * note: the client can see the userid easily since getting the real data in the token is really easy, but setting
  * data in a token is impossible(thanks to secret) ;).
- * @apiParam (user) {string} email user email.
- * @apiParam (user) {string} password user password.
- * @apiParam (client) {number} [ip] recaptcha needs it.
- * @apiParam (recaptcha) {string} g-recaptcha-response recaptcha token
+ * @apiParam (Request body) {string} email user email.
+ * @apiParam (Request body) {string} password user password.
+ * @apiParam (Request body) {number} [ip] recaptcha needs it.
+ * @apiParam (Request body) {string} g-recaptcha-response recaptcha token
  * @apiParamExample {json} Request-Example:
  *      {
  *         "email":"pablo1234@gmail.com",

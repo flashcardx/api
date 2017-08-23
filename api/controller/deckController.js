@@ -13,18 +13,18 @@ module.exports = function(app){
  * @apiGroup deck
  * @apiName new deck
  * @apiDescription creates user or class deck depending on type param, returns id of new deck.
- * @apiParam (type) type u or c depending on if deck belongs to user or class.
- * @apiParam (deckbody) {string} name name for the deck.
- * @apiParam (deckbody) {string} description description for deck.
- * @apiParam (deckbody) {string} [classname] needed if deck will be for a class.
- * @apiParam (deckbody) {string} [parentid] required if new deck(child) is inside another deck(parent).
- * @apiHeader (accessToken) {string} x-access-token user session token
+ * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
+ * @apiParam (Request body) {string} name name for the deck.
+ * @apiParam (Request body) {string} description description for deck.
+ * @apiParam (Request body) {string} [classname] needed if deck will be for a class.
+ * @apiParam (Request body) {string} [parentId] required if new deck(child) is inside another deck(parent).
+ * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /deck/u
  *      {
  *         "name":"people",
  *         "description": "beautiful people",
- *         "parentid": "5998f5ea23cbd123cf8becce"
+ *         "parentId": "5998f5ea23cbd123cf8becce"
  *    }
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
@@ -60,10 +60,10 @@ module.exports = function(app){
  * @apiGroup deck
  * @apiName imageDeckFromUrl
  * @apiDescription sets deck thumbnail from the url sent. if deck already has an image this one will be replaced with the new one.
- * @apiParam (type) type u or c depending on if deck belongs to user or class
- * @apiParam (deckbody) {string} deckId id of the deck.
- * @apiParam (deckbody) {string} url url for the image to download.
- * @apiHeader (accessToken) {string} x-access-token user session token
+ * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class
+ * @apiParam (Request body) {string} deckId id of the deck.
+ * @apiParam (Request body) {string} url url for the image to download.
+ * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /imageDeckFromUrl/u 
  *      {
@@ -97,10 +97,10 @@ app.post("/imageDeckFromUrl/:type", (req, res)=>{
  * @apiGroup deck
  * @apiName imageDeckFromBuffer
  * @apiDescription sets deck thumbnail from the data sent. if deck already has an image this one will be replaced with the new one.
- * @apiParam (type) type u or c depending on if deck belongs to user or class
- * @apiParam (deckbody) {string} deckId id of the deck.
- * @apiParam (deckbody) {Buffer} img buffer containing the image.
- * @apiHeader (accessToken) {string} x-access-token user session token
+ * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class
+ * @apiParam (Request body) {string} deckId id of the deck.
+ * @apiParam (Request body) {Buffer} img buffer containing the image.
+ * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /imageDeckFromUrl/u 
  *      {
@@ -134,9 +134,9 @@ app.post("/imageDeckFromBuffer/:type", (req, res)=>{
  * @apiGroup deck
  * @apiName delete deck image
  * @apiDescription deletes deck thumbnail.
- * @apiParam (type) type u or c depending on if deck belongs to user or class
- * @apiParam (deckId) {string} deckId id of the deck.
- * @apiHeader (accessToken) {string} x-access-token user session token.
+ * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class
+ * @apiParam (Parameters) {string} deckId id of the deck.
+ * @apiHeader (Headers) {string} x-access-token user session token.
  * @apiParamExample {json} Request-Example:
  * url: /deckImg/u/5998f5ea23cbd123cf8becce
  * @apiSuccessExample {json} Success-Response:
@@ -162,8 +162,44 @@ app.delete("/deckImg/:type/:deckId", (req, res)=>{
 });
 
 
+/**
+ * @api {post} /updateDeck/:type/:deckId update deck
+ * @apiGroup deck
+ * @apiName update deck
+ * @apiDescription update name and/or description of the deck.
+ * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
+ * @apiParam (Request body) {string} name name for the deck.
+ * @apiParam (Request body) {string} description description for deck.
+ * @apiHeader (Headers) {string} x-access-token user session token
+ * @apiParamExample {json} Request-Example:
+ * url: /updateDeck/u/59991371065a2544f7c90288
+ *      {
+ *         "name":"people",
+ *         "description": "beautiful people"
+ *    }
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true
+ *      }
+ * @apiVersion 1.1.0
+ *  */
+app.post("/updateDeck/:type/:deckId", (req, res)=>{
+    switch (req.params.type) {
+            case "u":
+                    deckService.update4User(req.userId, req.params.deckId, req.body, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            case "c":
+                    deckService.update4Class(req.userId, req.params.deckId, req.body, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            default: return res.json({success:false, msg:"invalid type"}); 
+        }
+});
 
-//update name and description
+
 //delete deck
 
 }
