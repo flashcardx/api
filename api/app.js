@@ -3,6 +3,8 @@
     http://www.flashcard-x.com
         Powered By: https://pixabay.com/
 */
+require("./child"); //start child processes
+/*
 const env = process.env.NODE_ENV || "development";
 const bunyan = require("bunyan");
 const mongoose = require("mongoose");
@@ -11,17 +13,16 @@ const express = require("express");
 const packageJson = require("./package.json");
 const config = require("./config");
 const middleware = require("./middleware");
+
 const controllers = require('./controller');
 const app = express();
 const logger = config.getLogger(__filename); 
 const randomstring = require('randomstring');
-require("./child"); //start child processes
 
 const port = process.env.PORT || 3000;
 if (env != 'production'){
   require('longjohn');
 }
-
 app.set('jwtSecret', randomstring.generate()); 
 
 mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
@@ -44,3 +45,4 @@ process.on('uncaughtException', err=>{
                     }); 
 
 app.listen(port);
+*/

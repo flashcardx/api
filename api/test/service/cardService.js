@@ -1,4 +1,3 @@
-require("../../app");
 const appRoot = require('app-root-path');
 const assert = require("chai").assert;
 const cardService = require("../../service/cardService");
@@ -10,10 +9,10 @@ var fs = require("fs");
 
 function dropDatabase(){
     return new Promise((resolve, reject)=>{
-            mongoose.connection.once('connected', () => {
-                mongoose.connection.db.dropDatabase();
-                resolve();
-            });
+        setTimeout(function() {
+             mongoose.connection.db.dropDatabase();
+             resolve();
+        }, 2000);
     });
 };
 
@@ -39,7 +38,7 @@ describe.only("cardService", ()=>{
                 done();
             })
               .catch(err=>{
-              logger.error("error in before method(cardService): " + err);
+                console.error("error in before method(cardService): " + err);
             });
         });
 
@@ -56,7 +55,7 @@ describe.only("cardService", ()=>{
             deckId: userDeckId
         };
         cardService.createUserCard(parameters, r=>{
-            logger.error("result: " + JSON.stringify(r));
+            console.error("result: " + JSON.stringify(r));
             assert.equal(r.success, true);
         });
     });

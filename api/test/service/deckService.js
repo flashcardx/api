@@ -1,3 +1,4 @@
+/*
 require("../../app");
 const appRoot = require('app-root-path');
 const assert = require("chai").assert;
@@ -235,3 +236,4 @@ describe("deckService", ()=>{
             });
     });
 });
+*/
