@@ -4,15 +4,13 @@ const config = require(appRoot + "/config");
 const seed = require(appRoot + "/config/seed");
 const User = require(appRoot + "/models/userModel");
 const Card = require(appRoot + "/models/cardModel");
-const CardClass = require(appRoot + "/models/cardClassModel");
 const Img = require(appRoot + "/models/imgModel");
 const imgService = require("./imgService");
 const userService = require("./userService");
 const logger = config.getLogger(__filename);
 const mongoose = require("mongoose");
 const AWSService = require("./AWSService");
-const categoryService = require("./categoryService");
-
+const deckService = require("./deckService");
 
 function saveCard(cardModel){
     return new Promise((resolve, reject)=>{
@@ -36,17 +34,17 @@ function saveCardClass(cardModel){
     });
 }
 
-function createCard(card, imgs, userId, callback){
-    var cardModel = new Card(card);
+function createUserCard(parameters, callback){
+    var cardModel = new Card(parameters.card);
     var user;
     var warning;
     validateCard(cardModel)
                             .then(()=>{
-                                return userService.userCardLimitsOk(userId);
+                                return userService.userCardLimitsOk(parameters.userId);
                             })
                             .then((result)=>{
                                 user = result;
-                                return imgService.downloadArray(imgs, userId, callback);
+                                return imgService.downloadArray(parameters.imgs, parameters.userId, callback);
                             })
                            .then(r=>{
                                 warning = r.warning;
@@ -62,19 +60,69 @@ function createCard(card, imgs, userId, callback){
                                 return saveCard(cardModel);
                            })
                            .then(()=>{
-                               return categoryService.createCategoryIfNew(userId, user.lang, cardModel.category);
-                           })
-                           .then(()=>{
                                 return userService.decreaseCardCounter(user);
+                            })
+                           .then(()=>{
+                                return deckService.addCard(parameters.deckId, parameters.userId, cardModel._id);
                             })
                            .then(results=>{
                                     logger.debug(results);
                                     if(!warning)
                                         return callback({success:true, msg:"card was created ok!"});
                                     else
-                                        return callback({success:"warning", msg:"card was created but: " + warning});
-                                        
-                                })
+                                        return callback({success:"warning", msg:"card was created but: " + warning});        
+                            })
+                            .catch(msg=>{
+                                 logger.info(msg);
+                                 return callback({success:false, msg:msg});
+                            });
+};
+
+function createClassCard(parameters, classname, callback){
+    var cardModel = new Card(parameters.card);
+    var user;
+    var warning;
+    var Class;
+    validateCard(cardModel)
+                            .then(()=>{
+                                return userService.userCardLimitsOk(parameters.userId);
+                            })
+                            .then((result)=>{
+                                user = result;
+                                return classService.findClassLean(classname, userId, "_id name lang");
+                            })
+                            .then((result)=>{
+                                if(!result)
+                                    return Promise.reject("class not found, user must be in the class");
+                                Class = result;
+                                return imgService.downloadArray(parameters.imgs, parameters.userId, callback);
+                            })
+                           .then(r=>{
+                                warning = r.warning;
+                                cardModel.ownerId = Class._id;
+                                cardModel.ownerName = Class.name;
+                                cardModel.ownerType = "c";
+                                cardModel.lang = Class.lang;
+                                if(r.imgHashes)
+                                    cardModel.imgs = r.imgHashes.filter(v=>{
+                                        if(objectIsNotEmpty(v))
+                                            return true;
+                                        return false;
+                                    });
+                                return saveCard(cardModel);
+                           })
+                           .then(()=>{
+                                return userService.decreaseCardCounter(user);
+                            })
+                           .then(()=>{
+                                return deckService.addCard(parameters.deckId, Class._id, cardModel._id);
+                            })
+                           .then(()=>{
+                                    if(!warning)
+                                        return callback({success:true, msg:"card was created ok!"});
+                                    else
+                                        return callback({success:"warning", msg:"card was created but: " + warning});        
+                            })
                             .catch(msg=>{
                                  logger.info(msg);
                                  return callback({success:false, msg:msg});
@@ -122,9 +170,7 @@ function getCards(userId, params, callback){
           if(params.name){
             query.push({name:{$regex : new RegExp(params.name, "i")}});
           }
-          if(params.category !== undefined)
-            query.push({category:params.category});
-       Card.find({$and: query }).select("name description imgs category lang ownerName updated_at").sort({updated_at: params.sort}).limit(params.limit).exec(
+       Card.find({$and: query }).select("name description imgs lang ownerName updated_at").sort({updated_at: params.sort}).limit(params.limit).exec(
                     (err, cards)=>{
                          return returnCards(err, cards, callback);
                     }
@@ -142,7 +188,7 @@ function getClassCards(classId, params, callback){
         return callback({success: false, msg: "limit must be > 0"});
     var query = [{'ownerId': classId}];
     if(params.last){
-        if(params.sort==="desc")
+        if(params.sort=="desc")
             query.push({updated_at:{$lt: params.last}});
         else
             query.push({updated_at:{$gt: params.last}});
@@ -150,9 +196,7 @@ function getClassCards(classId, params, callback){
     if(params.name){
             query.push({name:{$regex : new RegExp(params.name, "i")}});
         }
-    if(params.category !== undefined)
-            query.push({category:params.category});
-    CardClass.find({$and: query }).select("name description imgs category ownerName updated_at").sort({updated_at: params.sort}).limit(params.limit).exec(
+    CardClass.find({$and: query }).select("name description imgs ownerName updated_at").sort({updated_at: params.sort}).limit(params.limit).exec(
                     (err, cards)=>{
                          return returnCards(err, cards, callback);
                     }
@@ -206,12 +250,10 @@ function cardRecommendations(userId, last, callback){
 }
 
 function deleteCard(cardId, userId, callback){
-    var category;
     Card.findById(cardId).exec()
                         .then(card=>{
                              if(!card)
                                 return Promise.reject("Card id does not exist");
-                             category = card.category;
                              return imgService.deleteImgsOnce(card.imgs);
                          })
                          .then(()=>{
@@ -227,7 +269,7 @@ function deleteCard(cardId, userId, callback){
                                     return callback(r);
                                 }
                                 const lang = r.msg;
-                             return deleteCategoryIfEmpty(userId, lang, category);
+                             return Promise.resolve();
                              });
                          })
                          .then(()=>{
@@ -240,55 +282,22 @@ function deleteCard(cardId, userId, callback){
 };
 
 function deleteCardClass(cardId, classId, callback){
-    var category;
     return CardClass.findById(cardId).exec()
                         .then(card=>{
                              if(!card)
                                 return Promise.reject("Card id does not exist");
-                             category = card.category;
                              return imgService.deleteImgsOnce(card.imgs);
                          })
                          .then(()=>{
                             return CardClass.find({ _id: cardId }).remove().exec();
                          })
-                         .then(()=>{
-                             return deleteCategoryClassIfEmpty(classId, category);
-                         });
-};
-
-
-function deleteCategoryIfEmpty(userId, lang, category){
-    return new Promise((resolve, reject)=>{
-        if(!category)
-            return resolve();
-        Card.count({ownerId: userId, category: category, lang: lang}).exec().then(c=>{
-            if(c > 0)
-                return resolve();
-            categoryService.deleteCategory(userId, category).then(()=>{
-                return resolve();
-            })
-            .catch(err=>{
-                return reject(err);
-            });
-        })
-    });
-};
-
-function deleteCategoryClassIfEmpty(classId, category){
-    return new Promise((resolve, reject)=>{
-        if(!category)
-            return resolve();
-        CardClass.count({ownerId: classId, category: category}).exec().then(c=>{
-            if(c > 0)
-                return resolve();
-            categoryService.deleteCategoryClass(classId, category).then(()=>{
-                return resolve();
-            })
-            .catch(err=>{
-                return reject(err);
-            });
-        })
-    });
+                        .then(()=>{
+                            return callback({success:true});
+                        })
+                        .catch(err=>{
+                            logger.error("error when deleting card class: " + err);
+                            return callback({success:false, msg:err});
+                        })
 };
 
 function duplicateCard2User(userId, cardIdOld, callback){
@@ -405,90 +414,44 @@ function setInitialCards(userId, callback){
 }
 
 function updateCard(id, userId, card, callback){
-    Card.findOne({ '_id': id, ownerId: userId}, "name description category _id").exec().then(doc=>{
+    Card.findOne({ '_id': id, ownerId: userId}, "name description _id").exec().then(doc=>{
             if(!doc){
                 logger.error("no card found for cardId: " + id + ", with and userId: " + userId + "(trying to update card)");
                 return callback({success:false, msg:"This card does not exist in the user collection"});
             }
-            const oldCategory = doc.category;
             doc.name = card.name;
             doc.description = card.description;
-            doc.category = card.category;
             doc.update(doc, (err, updatedCard)=>{
                 if(err){
                     logger.error(err);
                     return callback({success:false, msg: String(err)});
                 }
-                updateCategorys(userId, oldCategory, card.category, err=>{
-                if(err){
-                    logger.error(err);
-                    return callback({success:false, msg: String(err)});
-                }
-                    return callback({success:true, msg: updatedCard});
-                })
+                return callback({success:true, msg: updatedCard});
+
             });
     });
 }
 
 //verify if user who made request is in the class
 function updateCardClass(cardId, classId, card, callback){
-    CardClass.findOne({ '_id': cardId, ownerId: classId}, "name description category _id").exec().then(doc=>{
+    CardClass.findOne({ '_id': cardId, ownerId: classId}, "name description _id").exec().then(doc=>{
             if(!doc){
                 logger.error("no card found for cardId: " + cardId + ", with a classId: " + classId + "(trying to update card)");
                 return callback({success:false, msg:"This card does not exist in the class collection"});
             }
-            const oldCategory = doc.category;
             doc.name = card.name;
             doc.description = card.description;
-            doc.category = card.category;
             doc.update(doc, (err, updatedCard)=>{
                 if(err){
                     logger.error(err);
                     return callback({success:false, msg: String(err)});
                 }
-                updateCategoryClass(classId, oldCategory, card.category, err=>{
-                if(err){
-                    logger.error(err);
-                    return callback({success:false, msg: String(err)});
-                }
-                    return callback({success:true, msg: updatedCard});
-                })
+                return callback({success:true, msg: updatedCard});
             });
     });
 }
 
-function updateCategoryClass(classId, deletedCategory, newCategory, callback){
-        deleteCategoryClassIfEmpty(classId, deletedCategory)
-            .then(()=>{
-                return categoryService.createCategoryClassIfNew(classId, newCategory);
-            })
-            .then(()=>{
-                return callback();
-            })
-            .catch(err=>{
-                return callback(err);
-            })
-}
 
-function updateCategorys(userId, deletedCategory, newCategory, callback){
-    userService.getUserLang(userId, r=>{
-        if(r.success === false){
-            logger.error(r.msg);
-            return callback(r);
-        }
-        const lang = r.msg;
-        deleteCategoryIfEmpty(userId, lang, deletedCategory)
-            .then(()=>{
-                return categoryService.createCategoryIfNew(userId, lang, newCategory);
-            })
-            .then(()=>{
-                return callback();
-            })
-            .catch(err=>{
-                return callback(err);
-            })
-    });
-}
 
 function findCardClassByIdLean(cardId, fields){
     return CardClass.findById(cardId, fields)
@@ -497,7 +460,8 @@ function findCardClassByIdLean(cardId, fields){
 }
 
 module.exports = {
-    createCard: createCard,
+    createUserCard: createUserCard,
+    createClassCard: createClassCard,
     getCards: getCards,
     getAllCards: getAllCards,
     deleteCard: deleteCard,

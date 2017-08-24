@@ -1,12 +1,11 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
-const controllerUtils = require("./utils");
 const logger = config.getLogger(__filename);
 const deckService = require(appRoot + "/service/deckService");
 
 module.exports = function(app){
-    const controllerUtils = require("./utils")(app);
+    const controllerUtils = require(appRoot + "/middleware").utils(app);
 
 /**
  * @api {post} /deck/:type new deck
@@ -21,7 +20,7 @@ module.exports = function(app){
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /deck/u
- *      {
+ * body: {
  *         "name":"people",
  *         "description": "beautiful people",
  *         "parentId": "5998f5ea23cbd123cf8becce"
@@ -52,7 +51,7 @@ module.exports = function(app){
                     break;
             default: return res.json({success:false, msg:"invalid type"}); 
         }
-    });
+});
 
 
 /**
@@ -66,7 +65,7 @@ module.exports = function(app){
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /imageDeckFromUrl/u 
- *      {
+ * body: {
  *         "url":"https://myimage.com/beauty.jpeg",
  *         "deckId": "5998f5ea23cbd123cf8becce"
  *    }
@@ -103,7 +102,7 @@ app.post("/imageDeckFromUrl/:type", (req, res)=>{
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /imageDeckFromUrl/u 
- *      {
+ * body: {
  *         "img": "{Buffer object}",
  *         "deckId": "5998f5ea23cbd123cf8becce"
  *    }
@@ -173,7 +172,7 @@ app.delete("/deckImg/:type/:deckId", (req, res)=>{
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /updateDeck/u/59991371065a2544f7c90288
- *      {
+ * body:  {
  *         "name":"people",
  *         "description": "beautiful people"
  *    }
@@ -199,8 +198,37 @@ app.post("/updateDeck/:type/:deckId", (req, res)=>{
         }
 });
 
+/**
+ * @api {delete} /deck/:type/:deckId delete deck
+ * @apiGroup deck
+ * @apiName delete deck
+ * @apiDescription If success=true deck including all its child decks and cards.
+ * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
+ * @apiHeader (Headers) {string} x-access-token user session token
+ * @apiParamExample {json} Request-Example:
+ * url: /deck/u/59991371065a2544f7c90288
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true
+ *      }
+ * @apiVersion 1.1.0
+ *  */
+app.delete("/deck/:type/:deckId", (req, res)=>{
+    switch (req.params.type) {
+            case "u":
+                    deckService.delete4User(req.userId, req.params.deckId, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            case "c":
+                    deckService.delete4Class(req.userId, req.params.deckId, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            default: return res.json({success:false, msg:"invalid type"}); 
+        }
+});
 
-//delete deck
 //get decks
 
 }

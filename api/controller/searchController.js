@@ -11,7 +11,7 @@ const imgSearchService = require(appRoot + "/service/imgSearchService");
 const shutterstock = require('shutterstock');
 
 module.exports = function(app){
-    const controllerUtils = require("./utils")(app);
+    const controllerUtils = require(appRoot + "/middleware").utils(app);
 
     app.get("/search/:criteria", controllerUtils.requireLogin, function(req,res){
         userService.findById(req.userId, 'lang', (result)=>{

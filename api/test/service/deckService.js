@@ -8,7 +8,7 @@ const User = require(appRoot + "/models/userModel");
 const Class = require(appRoot + "/models/classModel");
 var fs = require("fs");
 describe("deckService", ()=>{
-    describe.only("create and update", ()=>{
+    describe("create and update", ()=>{
        var userId;
        var parentUserDeckId;
        var parentClassDeckId;
@@ -107,7 +107,9 @@ describe("deckService", ()=>{
         it("should delete user deck", done=>{
             deckService.delete4User(userId, parentUserDeckId, r=>{
                 assert.equal(r.success, true);
-                done();
+                setTimeout(function() {
+                    done();
+                }, 8000);
             });
         })
 

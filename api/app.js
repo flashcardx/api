@@ -34,7 +34,7 @@ mongoose.connection.on('disconnected', function () {
 if(env != "production")
     app.use(express.static('public'));
 config.dbEvents();
-middleware(app);
+middleware.init(app);
 controllers(app);
 
 logger.info(packageJson.name + " starting ,  Version: " + packageJson.version);

@@ -1,5 +1,150 @@
 define({ "api": [
   {
+    "type": "post",
+    "url": "/card/:type/:deckId",
+    "title": "create card",
+    "group": "card",
+    "name": "create_card",
+    "description": "<p>create card inside deck.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "deckId",
+            "description": "<p>id for the deck where card will be created.</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>If deck is in class, classname is required.</p>"
+          }
+        ],
+        "Body": [
+          {
+            "group": "Body",
+            "type": "string",
+            "optional": false,
+            "field": "name",
+            "description": "<p>card name.</p>"
+          },
+          {
+            "group": "Body",
+            "type": "string",
+            "optional": true,
+            "field": "description",
+            "description": "<p>description for card.</p>"
+          },
+          {
+            "group": "Body",
+            "type": "Array",
+            "optional": true,
+            "field": "imgs",
+            "description": "<p>Array with either image url or buffer, max 3 iamges supported.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /card/c/59991371065a2544f7c90288?classname=unlam1\nbody: { \"name\":\"car\",\n         \"description\": \"a ferrari\"\n     }",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/cardController.js",
+    "groupTitle": "card"
+  },
+  {
+    "type": "delete",
+    "url": "/deck/:type/:deckId",
+    "title": "delete deck",
+    "group": "deck",
+    "name": "delete_deck",
+    "description": "<p>If success=true deck including all its child decks and cards will be deleted by child process in less than 1 minute.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /deck/u/59991371065a2544f7c90288",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
     "type": "delete",
     "url": "/deckImg/:type/:deckId",
     "title": "delete deck image",
@@ -97,7 +242,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "url: /imageDeckFromUrl/u \n     {\n        \"img\": \"{Buffer object}\",\n        \"deckId\": \"5998f5ea23cbd123cf8becce\"\n   }",
+          "content": "url: /imageDeckFromUrl/u \nbody: {\n        \"img\": \"{Buffer object}\",\n        \"deckId\": \"5998f5ea23cbd123cf8becce\"\n   }",
           "type": "json"
         }
       ]
@@ -166,7 +311,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "url: /imageDeckFromUrl/u \n     {\n        \"url\":\"https://myimage.com/beauty.jpeg\",\n        \"deckId\": \"5998f5ea23cbd123cf8becce\"\n   }",
+          "content": "url: /imageDeckFromUrl/u \nbody: {\n        \"url\":\"https://myimage.com/beauty.jpeg\",\n        \"deckId\": \"5998f5ea23cbd123cf8becce\"\n   }",
           "type": "json"
         }
       ]
@@ -249,7 +394,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "url: /deck/u\n     {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\",\n        \"parentId\": \"5998f5ea23cbd123cf8becce\"\n   }",
+          "content": "url: /deck/u\nbody: {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\",\n        \"parentId\": \"5998f5ea23cbd123cf8becce\"\n   }",
           "type": "json"
         }
       ]
@@ -327,7 +472,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "url: /updateDeck/u/59991371065a2544f7c90288\n     {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\"\n   }",
+          "content": "url: /updateDeck/u/59991371065a2544f7c90288\nbody:  {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\"\n   }",
           "type": "json"
         }
       ]
@@ -364,7 +509,7 @@ define({ "api": [
     "title": "login",
     "group": "login",
     "name": "login",
-    "description": "<p>receives user email and paswword and returns token with userid encrypted in it. note: the client can see the userid easily since getting the real data in the token is really easy, but setting data in a token is impossible(thanks to secret) ;).</p>",
+    "description": "<p>receives user email and password and returns token with userid encrypted in it. note: the client can see the userid easily since getting the real data in the token is really easy, but setting data in a token is impossible(thanks to secret) ;).</p>",
     "parameter": {
       "fields": {
         "Request body": [

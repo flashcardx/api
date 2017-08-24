@@ -21,6 +21,11 @@ const cardSchema = new Schema({
         type: String,
         validate: validators.descriptionValidator
     },
+    ownerType:{
+        type: String,
+        enum: ["u", "c"],
+        default: "u"
+    },
     imgs: [{
         hash:{
             type:String
@@ -48,11 +53,7 @@ const cardSchema = new Schema({
          type: Schema.Types.ObjectId,
          index:true
     },
-    category:{
-        type:String,
-        default: ""
-    },
-     counter:{
+    counter:{
         type:Number,
         unique: true
     },

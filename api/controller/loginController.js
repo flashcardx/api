@@ -50,7 +50,7 @@ function verifyRecaptcha(ip, key, callback) {
 
 
 module.exports = function(app){
-    const controllerUtils = require("./utils")(app);
+    const controllerUtils = require(appRoot + "/middleware").utils(app);
 
     /**
  * @api {post} /signup signup
@@ -110,7 +110,7 @@ module.exports = function(app){
  * @api {post} /login login
  * @apiGroup login
  * @apiName login
- * @apiDescription receives user email and paswword and returns token with userid encrypted in it.
+ * @apiDescription receives user email and password and returns token with userid encrypted in it.
  * note: the client can see the userid easily since getting the real data in the token is really easy, but setting
  * data in a token is impossible(thanks to secret) ;).
  * @apiParam (Request body) {string} email user email.

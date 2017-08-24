@@ -237,6 +237,11 @@ function delete4Class(userId, deckId, callback){
     });
 }
 
+function addCard(deckId, ownerId, cardId){
+    return Deck.update({_id: deckId, ownerId:ownerId}, {$push:{cards: cardId}})
+    .exec();
+}
+
 // HELPER FUNCTIONS:
 
 function getClassDeckLean(userId, deckId, fields){
@@ -415,5 +420,6 @@ module.exports = {
     update4User: update4User,
     update4Class: update4Class,
     delete4User: delete4User,
-    delete4Class: delete4Class
+    delete4Class: delete4Class,
+    addCard: addCard
 }

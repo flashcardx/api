@@ -7,7 +7,7 @@ const preferencesService = require(appRoot + "/service/preferencesService");
 
 
 module.exports = function(app){
-    const controllerUtils = require("./utils")(app);
+    const controllerUtils = require(appRoot + "/middleware").utils(app);
 
     app.get("/langs", (req, res)=>{
         res.json(config.lang);

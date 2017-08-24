@@ -12,7 +12,6 @@ const cacheService = require(appRoot + "/service/cacheService");
 const imgService = require(appRoot + "/service/imgService");
 const AWSService = require(appRoot + "/service/AWSService");
 const feedService = require(appRoot + "/service/feedService");
-const categoryService = require(appRoot + "/service/categoryService");
 const notificationService = require(appRoot + "/service/notificationService");
 const cache = require("memory-cache");
 const ObjectId = require('mongoose').Types.ObjectId;

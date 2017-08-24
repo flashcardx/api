@@ -3,18 +3,10 @@ const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const userService = require(appRoot + "/service/userService");
-const categoryService = require(appRoot + "/service/categoryService");
 const AWSService = require(appRoot + "/service/AWSService");
 
 module.exports = function(app){
-    const controllerUtils = require("./utils")(app);
-
-    app.get("/categories", controllerUtils.requireLogin, (req, res)=>{
-        const userId = req.userId;
-        categoryService.getCategories(userId, r=>{
-            return res.json(r);
-        })
-    });
+    const controllerUtils = require(appRoot + "/middleware").utils(app);
 
     app.get("/userPlan", controllerUtils.requireLogin, (req, res)=>{
         const userId = req.userId;

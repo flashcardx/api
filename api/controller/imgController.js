@@ -1,7 +1,6 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
-const controllerUtils = require("./utils");
 const logger = config.getLogger(__filename);
 const Img = require(appRoot + "/models/imgModel");
 const imgService = require(appRoot + "/service/imgService");

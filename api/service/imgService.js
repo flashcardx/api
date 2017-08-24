@@ -117,7 +117,7 @@ function download(uri, filename){
                         return reject(new Error("size of file too big, size: " + res.headers['content-length']));
                     var rq = request(uri, {headers:{"User-Agent": "NING/1.0"}});
                     rq.on("error", err=>{
-                            logger.warning("error when making request for img download: " + err);
+                            logger.warn("error when making request for img download: " + err);
                             return reject("error when making request for img download: " + err);
                     })
                     rq.pipe(fs.createWriteStream(filename)).on('close',()=>{
@@ -125,8 +125,8 @@ function download(uri, filename){
                         resolve(res.headers['content-type']);
                     })
                     .on("error", (err)=>{
-                        logger.warning("error when downloading file from: " + uri);
-                        logger.warning("err: " + err);
+                        logger.warn("error when downloading file from: " + uri);
+                        logger.warn("err: " + err);
                         reject("error when downloading file");
                     });
                 })

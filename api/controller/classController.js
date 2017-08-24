@@ -1,7 +1,6 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
-const controllerUtils = require("./utils");
 const logger = config.getLogger(__filename);
 const Img = require(appRoot + "/models/imgModel");
 const classService = require(appRoot + "/service/class/classService");
@@ -13,7 +12,7 @@ const notificationService = require(appRoot + "/service/notificationService");
 const purifier = require(appRoot + "/utils/purifier");
 
 module.exports = function(app){
-    const controllerUtils = require("./utils")(app);
+    const controllerUtils = require(appRoot + "/middleware").utils(app);
 
     app.post("/class",  controllerUtils.requireLogin, function(req, res){
         var Class = {
