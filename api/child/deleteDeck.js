@@ -1,10 +1,10 @@
-
+var appRoot = require("app-root-path");
 const Deck = require(appRoot + "/models/deckModel");
 const cardService = require(appRoot + "/service/cardService");
 
 console.log("deleteDeck child process ready!");
 
-process.on('message', (msg) => {
+process.on('message', msg=>{
   if(msg.deckId)
     deleteDeck(msg.deckId);
   else
@@ -38,6 +38,5 @@ function deleteCards(deck){
             cardService.deleteCardClass(c, deck._id);
         });
   else 
-      console.log("invalid deck owner type: " + deck.ownerType + " deckid: " + deck._id);
-      
+      console.log("invalid deck owner type: " + deck.ownerType + " deckid: " + deck._id);  
 }

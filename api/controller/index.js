@@ -8,9 +8,7 @@ const userController = require("./userController");
 const classController = require("./classController");
 const deckController = require("./deckController");
 
-
 module.exports = function(app){
-
     setupController(app);
     loginController(app);
     searchController(app);

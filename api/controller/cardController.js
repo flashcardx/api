@@ -61,7 +61,6 @@ module.exports = function(app){
         var params = {
             last: req.query.last,
             limit: req.query.limit,
-            category: req.query.category,
             sort: req.query.sort,
             name: req.query.q
         };
@@ -70,20 +69,6 @@ module.exports = function(app){
         });
     });
 
-    app.get("/allCards" , function(req, res){
-        var last = req.query.last;
-        cardService.getAllCards(last, function(result){
-            res.json(result);
-        });
-    });
-
-    app.get("/discoverCards", controllerUtils.requireLogin, function(req, res){
-        var last = req.query.last;
-        cardService.cardRecommendations(req.userId, last , result=>{
-            res.json(result);
-        });
-    });
-  
     app.delete("/card/:id", controllerUtils.requireLogin, (req, res)=>{
         const id = req.params.id;
         cardService.deleteCard(id, req.userId, function(result){
@@ -103,8 +88,7 @@ module.exports = function(app){
         const userId = req.userId;
         const card ={
             name : purifier.purify(req.body.name),
-            description : purifier.purify(req.body.description),
-            category: purifier.purify(req.body.category)
+            description : purifier.purify(req.body.description)
         }
         cardService.updateCard(cardId, userId, card, r=>{
             return res.json(r);

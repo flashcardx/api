@@ -86,11 +86,6 @@ const userSchema = new Schema({
         type: String
     },
     classes: [{
-        lang: {
-            type: String,
-            default: "en",
-            enum: langCodes
-        },
         id:{
             type: Schema.Types.ObjectId
         },

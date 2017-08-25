@@ -1,3 +1,4 @@
+require("../../app");
 const appRoot = require('app-root-path');
 const assert = require("chai").assert;
 const cardService = require("../../service/cardService");
@@ -9,16 +10,20 @@ var fs = require("fs");
 
 function dropDatabase(){
     return new Promise((resolve, reject)=>{
-        setTimeout(function() {
-             mongoose.connection.db.dropDatabase();
-             resolve();
-        }, 2000);
+        mongoose.connection.once('connected', () => {
+            mongoose.connection.db.dropDatabase();
+            return resolve();
+        });
     });
 };
 
-describe.only("cardService", ()=>{
-        var userId;
-        var userDeckId;
+describe("cardService", ()=>{
+        var userId,
+            userDeckId,
+            classname = "my class",
+            classDeckId,
+            classId;
+    
 
         before(done=>{
             dropDatabase()
@@ -26,7 +31,7 @@ describe.only("cardService", ()=>{
                 var user = {"name":"tester", password:"1234"};
                 var userModel = new User(user);
                 userId = userModel._id;
-                userModel.save();
+                return userModel.save();
             })
             .then(()=>{
                 var deck = {name:"testdeck", description:"abc", ownerId: userId};
@@ -35,9 +40,21 @@ describe.only("cardService", ()=>{
                 return deckModel.save();
             })
             .then(()=>{
+                var c = {name:classname, descripcion:"abc", owner:userId};
+                var classModel = new Class(c);
+                classId = classModel._id;
+                return classModel.save();
+            })
+            .then(()=>{
+                var deck = {name:"testdeckclass", description:"abc", ownerId: classId};
+                var deckModel = new Deck(deck);
+                classDeckId = deckModel._id;
+                return deckModel.save();
+            })
+            .then(()=>{
                 done();
             })
-              .catch(err=>{
+            .catch(err=>{
                 console.error("error in before method(cardService): " + err);
             });
         });
@@ -55,10 +72,34 @@ describe.only("cardService", ()=>{
             deckId: userDeckId
         };
         cardService.createUserCard(parameters, r=>{
-            console.error("result: " + JSON.stringify(r));
             assert.equal(r.success, true);
+            done();
         });
     });
 
+    it("create user card again", done=>{
+        var card = {name:"test2"};
+        var parameters = {
+            card: card,
+            userId: userId,
+            deckId: userDeckId
+        };
+        cardService.createUserCard(parameters, r=>{
+            assert.equal(r.success, true);
+            done();
+        });
+    });
 
+    it("create class card", done=>{
+        var card = {name:"test2"};
+        var parameters = {
+            card: card,
+            userId: userId,
+            deckId: classDeckId
+        };
+        cardService.createClassCard(parameters, classname, r=>{
+            assert.equal(r.success, true);
+            done();
+        });
+    });
 });

@@ -4,12 +4,6 @@ const logger = config.getLogger(__filename);
 const mongoose = require('mongoose');
 const validators = require("./validators/cardValidators");
 const Schema = mongoose.Schema;
-const lang = config.lang;
-var AutoIncrement = require('mongoose-sequence');
-
-var langCodes = lang.map((value)=>{
-    return value.code;
-});
 
 const cardSchema = new Schema({
     name:{
@@ -37,11 +31,6 @@ const cardSchema = new Schema({
             type: Number
         }
     }],
-    lang:{
-        type: String, 
-        default: "en",
-        enum: langCodes
-    },
     isDuplicated:{
         type: Boolean,
         default: false
@@ -52,10 +41,6 @@ const cardSchema = new Schema({
     ownerId:{
          type: Schema.Types.ObjectId,
          index:true
-    },
-    counter:{
-        type:Number,
-        unique: true
     },
     supermemo:{
         easiness:{
@@ -78,7 +63,6 @@ const cardSchema = new Schema({
     }
 );
 
-cardSchema.plugin(AutoIncrement, {inc_field: 'counter'});
 cardSchema.index({"updated_at": 1});
 
 cardSchema.pre('update', function(next) {

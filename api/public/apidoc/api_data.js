@@ -53,7 +53,7 @@ define({ "api": [
             "type": "Array",
             "optional": true,
             "field": "imgs",
-            "description": "<p>Array with either image url or buffer, max 3 iamges supported.</p>"
+            "description": "<p>Array with either image url or buffer, max 3 images supported.</p>"
           }
         ]
       },
@@ -97,7 +97,7 @@ define({ "api": [
     "title": "delete deck",
     "group": "deck",
     "name": "delete_deck",
-    "description": "<p>If success=true deck including all its child decks and cards will be deleted by child process in less than 1 minute.</p>",
+    "description": "<p>If success=true deck including all its child decks and cards.</p>",
     "parameter": {
       "fields": {
         "Parameters": [
@@ -388,6 +388,14 @@ define({ "api": [
             "optional": true,
             "field": "parentId",
             "description": "<p>required if new deck(child) is inside another deck(parent).</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "lang",
+            "defaultValue": "en",
+            "description": "<p>Language code for the deck.</p>"
           }
         ]
       },

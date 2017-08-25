@@ -659,8 +659,8 @@ function deleteCard(classname, userId, cardId, callback){
         return callback({success:true});
     })
     .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
+                logger.error("err: " + err);
+                return callback({success:false, msg:err});
         });
 }
 
@@ -672,8 +672,8 @@ function getCards(classname, userId, params, callback){
         return cardService.getClassCards(Class._id, params, callback);
     })
     .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
+                logger.error("err: " + err);
+                return callback({success:false, msg:err});
         });
 }
 
@@ -909,5 +909,6 @@ module.exports = {
     deleteProfilePicture: deleteProfilePicture,
     findClassLean: findClassLean,
     findClassLeanNoVerify: findClassLeanNoVerify,
-    findClassLeanById: findClassLeanById
+    findClassLeanById: findClassLeanById,
+    decreaseCardsLeft: decreaseCardsLeft
 }

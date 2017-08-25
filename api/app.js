@@ -3,8 +3,8 @@
     http://www.flashcard-x.com
         Powered By: https://pixabay.com/
 */
-require("./child"); //start child processes
-/*
+
+const appRoot = require('app-root-path');
 const env = process.env.NODE_ENV || "development";
 const bunyan = require("bunyan");
 const mongoose = require("mongoose");
@@ -13,7 +13,6 @@ const express = require("express");
 const packageJson = require("./package.json");
 const config = require("./config");
 const middleware = require("./middleware");
-
 const controllers = require('./controller');
 const app = express();
 const logger = config.getLogger(__filename); 
@@ -37,12 +36,11 @@ if(env != "production")
 config.dbEvents();
 middleware.init(app);
 controllers(app);
-
 logger.info(packageJson.name + " starting ,  Version: " + packageJson.version);
 
 process.on('uncaughtException', err=>{
                         logger.error(err);
                     }); 
 
+require(appRoot + "/service/deckService").initChild();
 app.listen(port);
-*/

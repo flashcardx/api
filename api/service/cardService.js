@@ -1,5 +1,6 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
+
 const config = require(appRoot + "/config");
 const seed = require(appRoot + "/config/seed");
 const User = require(appRoot + "/models/userModel");
@@ -11,6 +12,7 @@ const logger = config.getLogger(__filename);
 const mongoose = require("mongoose");
 const AWSService = require("./AWSService");
 const deckService = require("./deckService");
+const classService = require("./class/classService");
 
 function saveCard(cardModel){
     return new Promise((resolve, reject)=>{
@@ -66,14 +68,13 @@ function createUserCard(parameters, callback){
                                 return deckService.addCard(parameters.deckId, parameters.userId, cardModel._id);
                             })
                            .then(results=>{
-                                    logger.debug(results);
                                     if(!warning)
                                         return callback({success:true, msg:"card was created ok!"});
                                     else
                                         return callback({success:"warning", msg:"card was created but: " + warning});        
                             })
                             .catch(msg=>{
-                                 logger.info(msg);
+                                 logger.error(msg);
                                  return callback({success:false, msg:msg});
                             });
 };
@@ -89,7 +90,7 @@ function createClassCard(parameters, classname, callback){
                             })
                             .then((result)=>{
                                 user = result;
-                                return classService.findClassLean(classname, userId, "_id name lang");
+                                return classService.findClassLean(classname, parameters.userId, "_id name lang");
                             })
                             .then((result)=>{
                                 if(!result)
@@ -112,7 +113,7 @@ function createClassCard(parameters, classname, callback){
                                 return saveCard(cardModel);
                            })
                            .then(()=>{
-                                return userService.decreaseCardCounter(user);
+                                return classService.decreaseCardsLeft(Class._id);
                             })
                            .then(()=>{
                                 return deckService.addCard(parameters.deckId, Class._id, cardModel._id);
@@ -209,44 +210,6 @@ function returnCards(err, cards, callback){
                 return callback({success:false, msg:err});
             }
       return AWSService.addTemporaryUrl(cards, callback);
-}
-
-function getAllCards(last, callback){
-    var restrictions = {
-        'isDuplicated':{$eq: false}
-    }
-    if(last)
-        restrictions.counter = {$lt: last}
-    Card.find(restrictions).sort({counter: 'desc'}).limit(8).exec((err, cards)=>{
-        if(err){
-            logger.error(err);
-            return callback({success:false, msg:String(err)});
-        }
-        return AWSService.addTemporaryUrl(cards, callback);
-    });
-};
-
-
-function cardRecommendations(userId, last, callback){
-    userService.findById(userId,'lang', result=>{
-        if(!result.success)
-            return callback(result);
-        const user = result.msg;
-        var restrictions = {
-            'isDuplicated':{$eq: false},
-            'lang':user.lang,
-             'ownerId': {$ne: userId}
-        }
-        if(last)
-            restrictions.counter = {$lt: last}
-        Card.find(restrictions,{}, { sort:{counter: 'desc'}}).limit(8).select("counter name description imgs lang ownerName updated_at").exec((err, cards)=>{
-            if(err){
-                logger.error(err);
-                return callback({success:false, msg:String(err)});
-            }
-            return AWSService.addTemporaryUrl(cards, callback);
-        });
-    });
 }
 
 function deleteCard(cardId, userId, callback){
@@ -397,22 +360,6 @@ function createDuplicatedCard2User(card, userId, callback){
     });
 }
 
-function setInitialCards(userId, callback){
-            ownerUserEmail = seed.users[0].email;
-            userService.findByEmail(ownerUserEmail, "_id", result=>{
-                    if(result.success === false)
-                        return callback(result);
-                    var user = result.msg;
-                    Card.findOne({'ownerId': user._id}).exec().then(doc=>{
-                        if(!doc){
-                            logger.error("user not found for userId: " + user._id);
-                            return callback({success:false, msg:"This user does not exist"});
-                        }
-                        return duplicateCard2User(userId, doc, callback);
-                    });
-            })
-}
-
 function updateCard(id, userId, card, callback){
     Card.findOne({ '_id': id, ownerId: userId}, "name description _id").exec().then(doc=>{
             if(!doc){
@@ -463,14 +410,11 @@ module.exports = {
     createUserCard: createUserCard,
     createClassCard: createClassCard,
     getCards: getCards,
-    getAllCards: getAllCards,
     deleteCard: deleteCard,
     deleteCardClass: deleteCardClass,
-    cardRecommendations: cardRecommendations,
     duplicateCard2User: duplicateCard2User,
     duplicateCard2Class: duplicateCard2Class,
     duplicateCardUserClass: duplicateCardUserClass,
-    setInitialCards: setInitialCards,
     updateCard: updateCard,
     updateCardClass: updateCardClass,
     returnCards: returnCards,

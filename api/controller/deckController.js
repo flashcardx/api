@@ -17,13 +17,15 @@ module.exports = function(app){
  * @apiParam (Request body) {string} description description for deck.
  * @apiParam (Request body) {string} [classname] needed if deck will be for a class.
  * @apiParam (Request body) {string} [parentId] required if new deck(child) is inside another deck(parent).
+ * @apiParam (Request body) {string} [lang=en] Language code for the deck.
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /deck/u
  * body: {
  *         "name":"people",
  *         "description": "beautiful people",
- *         "parentId": "5998f5ea23cbd123cf8becce"
+ *         "parentId": "5998f5ea23cbd123cf8becce",
+ *         "lang": "es"
  *    }
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
@@ -165,10 +167,11 @@ app.delete("/deckImg/:type/:deckId", (req, res)=>{
  * @api {post} /updateDeck/:type/:deckId update deck
  * @apiGroup deck
  * @apiName update deck
- * @apiDescription update name and/or description of the deck.
+ * @apiDescription update name/description/language of the deck. *Only defined parameters will be updated.
  * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
- * @apiParam (Request body) {string} name name for the deck.
- * @apiParam (Request body) {string} description description for deck.
+ * @apiParam (Request body) {string} [name] name for the deck.
+ * @apiParam (Request body) {string} [description] description for deck.
+ * @apiParam (Request body) {string} [lang] Language code for the deck.
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /updateDeck/u/59991371065a2544f7c90288
@@ -228,7 +231,5 @@ app.delete("/deck/:type/:deckId", (req, res)=>{
             default: return res.json({success:false, msg:"invalid type"}); 
         }
 });
-
-//get decks
 
 }

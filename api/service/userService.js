@@ -111,16 +111,22 @@ function saveUser(userModel, callback){
 // returns true if recycle mode is activated
 function userCardLimitsOk(userId){
     return new Promise((resolve, reject)=>{
-        User.findById(userId, 'preferences plan lang name', (err, user)=>{
-            if(err){
-                logger.error(err);
-                return reject(String(err));
+        User.findOne({_id:userId}, 'preferences plan lang name')
+        .exec()
+        .then(user=>{
+            if(!user){
+                logger.error("user not found");
+                return reject("user not found");
             }
             if(user.preferences.recycleMode == true)
                 return resolve(user);
             if(user.plan.cardsLeft <= 0)
                 return reject("You do not have more space for new cards, delete some cards!");
             return resolve(user);
+        })
+        .catch(err=>{
+            logger.error("error in userCardLimitsOk: " + err);
+            return reject(err);
         })
     })
 }
@@ -341,11 +347,7 @@ function registerNewFbUser(user, callback){
                                 logger.error(err);
                                 return callback({success: false, msg:"could not register facebook user, " + String(err)});;
                             }
-                            cardService.setInitialCards(newUser._id, r=>{
-                                    if(r.success == false)
-                                        return callback(r);
-                                    return loginFbUser(user.facebookId, callback);
-                            });
+                            return loginFbUser(user.facebookId, callback);
                     })
         })
     .catch(err=>{

@@ -5,7 +5,9 @@ const mongoose = require('mongoose');
 const validators = require("./validators/deckValidators");
 const Schema = mongoose.Schema;
 const lang = config.lang;
-
+var langCodes = lang.map((value)=>{
+    return value.code;
+});
 
 const deckSchema = new Schema({
     decks:{
@@ -43,6 +45,15 @@ const deckSchema = new Schema({
     recursiveOrder:{
         type: Number,
         default: 3
+    },
+    lang:{
+        type: String,
+        default: "en",
+        enum: langCodes
+    },
+    active:{
+        type: Boolean,
+        default: true
     }
 },
     {

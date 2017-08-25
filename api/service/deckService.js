@@ -9,7 +9,15 @@ const logger = config.getLogger(__filename);
 const mongoose = require("mongoose");
 const AWSService = require("./AWSService");
 const classService = require("./class/classService");
-const childProcess = require(appRoot + "/child");
+var childProcess;
+var childProcessActive = false;
+
+function initChild(){
+    if(childProcessActive == true)
+        return logger.error("initChild was already called");
+    childProcessActive = true;
+    childProcess = require(appRoot + "/child");
+}
 
 function create4User(userId, deck, callback){
     deck.ownerType = "u";
@@ -28,6 +36,7 @@ function update4User(userId, deckId, deck, callback){
             return callback({success: false, msg: "Deck not found"});
         d.name = deck.name;
         d.description = deck.description;
+        d.lang = deck.lang;
         d.update(d, err=>{
             if(err)
                 return Promise.reject(err);
@@ -47,6 +56,7 @@ function update4Class(userId, deckId, deck, callback){
             return callback({success: false, msg: "Deck not found"});
         d.name = deck.name;
         d.description = deck.description;
+        d.lang = deck.lang;
         d.update(d, err=>{
             if(err)
                 return Promise.reject(err);
@@ -59,18 +69,18 @@ function update4Class(userId, deckId, deck, callback){
     });
 }
 
-function create4Class(userId, classname, deck, callback){
-    classService.findClassLean(classname, userId, "_id")//verifies user is in class
+function create4Class(userId, data, callback){
+    classService.findClassLean(data.classname, userId, "_id")//verifies user is in class
     .then(Class=>{
         if(!Class){
             logger.error("class not found");
             return callback({success:false, msg:"Class not found(user must be in the class)"});
         }
-        deck.ownerType = "c";
-        deck.ownerId = Class._id;
-        var deckModel = new Deck(deck);
-        if(deck.parentId)
-            createChildDeck(deckModel, deck.parentId, callback);
+        data.ownerType = "c";
+        data.ownerId = Class._id;
+        var deckModel = new Deck(data);
+        if(data.parentId)
+            createChildDeck(deckModel, data.parentId, callback);
         else
             saveDeck(deckModel, callback);
     })
@@ -421,5 +431,6 @@ module.exports = {
     update4Class: update4Class,
     delete4User: delete4User,
     delete4Class: delete4Class,
-    addCard: addCard
+    addCard: addCard,
+    initChild: initChild
 }

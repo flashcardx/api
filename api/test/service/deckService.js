@@ -1,4 +1,3 @@
-/*
 require("../../app");
 const appRoot = require('app-root-path');
 const assert = require("chai").assert;
@@ -9,7 +8,7 @@ const User = require(appRoot + "/models/userModel");
 const Class = require(appRoot + "/models/classModel");
 var fs = require("fs");
 describe("deckService", ()=>{
-    describe("create and update", ()=>{
+    describe.only("create and update", ()=>{
        var userId;
        var parentUserDeckId;
        var parentClassDeckId;
@@ -72,15 +71,15 @@ describe("deckService", ()=>{
         })
 
         it("should update user deck", done=>{
-            var deck = {name:"deck2", description:"best deck ever"};
+            var deck = {name:"update1", description:"best deck ever"};
             deckService.update4User(userId, parentUserDeckId, deck, r=>{
                 assert.equal(r.success, true);
                 done();
             });
         })
 
-        it("should update user deck", done=>{
-            var deck = {name:"deck3", description:"best deck of the class"};
+        it("should update class deck", done=>{
+            var deck = {name:"update2"};
             deckService.update4Class(userId, parentClassDeckId, deck, r=>{
                 assert.equal(r.success, true);
                 done();
@@ -88,8 +87,8 @@ describe("deckService", ()=>{
         })
 
         it("should validate that user is in class and create deck for class", done=>{
-            var deck = {name:"deck1"};
-            deckService.create4Class(userId, classname, deck, r=>{
+            var deck = {name:"deck1", classname:classname};
+            deckService.create4Class(userId, deck, r=>{
                 assert.equal(r.success, true);
                 assert.exists(r.id, 'id is neither `null` nor `undefined`');
                 done();
@@ -97,8 +96,8 @@ describe("deckService", ()=>{
         })
 
         it("should validate that user is in class and create child deck for class from parent deck", done=>{
-            var deck = {name:"deck1", parentId:parentClassDeckId};
-            deckService.create4Class(userId, classname, deck, r=>{
+            var deck = {name:"deck1", parentId:parentClassDeckId, classname:classname};
+            deckService.create4Class(userId, deck, r=>{
                 assert.equal(r.success, true);
                 assert.exists(r.id, 'id is neither `null` nor `undefined`');
                 done();
@@ -236,4 +235,3 @@ describe("deckService", ()=>{
             });
     });
 });
-*/
