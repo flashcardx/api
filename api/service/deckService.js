@@ -218,11 +218,11 @@ function deleteImgClassDeck(userId, deckId, callback){
 }
 
 function delete4User(userId, deckId, callback){
-    Deck.findOne({_id:deckId, ownerId:userId}, "_id")
+    Deck.update({_id:deckId, ownerId:userId}, {$set:{active: false}})
     .lean()
     .exec()
     .then(d=>{
-        if(!d)
+        if(d.nModified == 0)
             return callback({success:false, msg:"deck not found or user is not the deck owner"});
         childProcess.deleteDeckSubP(deckId);
         return callback({success:true});

@@ -5,14 +5,16 @@ const cardService = require(appRoot + "/service/cardService");
 console.log("deleteDeck child process ready!");
 
 process.on('message', msg=>{
+  console.error("msg: " + JSON.stringify(msg));
   if(msg.deckId)
-    deleteDeck(msg.deckId);
+      deleteDeck(msg.deckId);
   else
-    console.log('child process: delete deck got message without deckid');
+      console.log('child process: delete deck got message without deckid');
 });
 
 
 function deleteDeck(deckId){
+  console.error("child will delete : " + deckId);
    Deck.findOne({_id:deckId}, "decks cards ownerType ownerId")
    .then(deck=>{
       if(!deck)
