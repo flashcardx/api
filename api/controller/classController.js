@@ -61,7 +61,6 @@ module.exports = function(app){
         });
     });
 
-
     //if manny users to add, call this endpoint for each user
     app.post("/addUserToClass",  controllerUtils.requireLogin, function(req, res){
         var joinerEmail = req.body.userEmail;
@@ -177,15 +176,6 @@ module.exports = function(app){
         var classname = req.params.classname;
         var userId = req.userId;
         classService.getStats(classname, userId, r=>{
-            return res.json(r);
-        });
-    });
-
-    app.delete("/classCard/:classname/:id", controllerUtils.requireLogin, (req, res)=>{
-        var classname = req.params.classname;
-        var cardId = req.params.id;
-        var userId = req.userId;
-        classService.deleteCard(classname, userId, cardId, r=>{
             return res.json(r);
         });
     });

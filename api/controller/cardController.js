@@ -56,7 +56,7 @@ module.exports = function(app){
                          break;
                 default: return res.json({success:false, msg:"invalid type"}); 
             }
-    } );
+    });
 
     app.get("/myCards", controllerUtils.requireLogin, function(req, res){
         var params = {
@@ -70,17 +70,43 @@ module.exports = function(app){
         });
     });
 
-    app.delete("/card/:id", controllerUtils.requireLogin, (req, res)=>{
-        const id = req.params.id;
-        cardService.deleteCard(id, req.userId, function(result){
-            res.json(result);
-        });
+    /**
+     * @api {delete} /card/:type/:cardId delete card
+     * @apiGroup card
+     * @apiName delete card
+     * @apiDescription deletes the card.
+     * @apiParam (Parameters) {string} type u:user card, c:class card.
+     * @apiParam (Parameters) {string} cardId id of the card to be deleted.
+     * @apiParam (Query) {string} classname needed when type=c.
+     * @apiHeader (Headers) {string} x-access-token user session token
+     * @apiParamExample {json} Request-Example:
+     * url: /card/u/59991371065a2544f7c90288
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {"success":true
+     *      }
+     * @apiVersion 1.1.0
+     *  */
+    app.delete("/card/:type/:cardId", controllerUtils.requireLogin, (req, res)=>{
+        const cardId = req.params.cardId;
+        const type = req.params.type;
+        const userId = req.userId;
+        const classname = req.query.classname;
+        switch (type) {
+            case "u":  cardService.deleteCard(cardId, userId);
+                       break;
+            case "c":  classService.deleteCard(classname, cardId, userId);
+                       break;
+            default: res.json({success:false, msg:"invalid type"});
+                    break;
+        }
     });
 
     /**
-     * @api {get} /duplicateCard/:type/:cardId/:deckId duplicate card from user to user
+     * @api {get} /duplicateCard/:type/:cardId/:deckId duplicate card
      * @apiGroup card
-     * @apiName duplicate card from user to user
+     * @apiName duplicate card
      * @apiDescription duplicates card from user to user.
      * @apiParam (Parameters) {string} type uu:user to user, uc:user to class, cu: class to user.
      * @apiParam (Parameters) {string} cardId id of the card to be duplicated.
@@ -95,7 +121,7 @@ module.exports = function(app){
      *      }
      * @apiVersion 1.1.0
      *  */
-    app.get("/duplicateCard/:cardId/:deckId", controllerUtils.requireLogin, (req, res)=>{
+    app.get("/duplicateCard/:type/:cardId/:deckId", controllerUtils.requireLogin, (req, res)=>{
         const cardId = req.params.id;
         const deckId = req.params.id;
         switch (req.params.type){
@@ -107,35 +133,12 @@ module.exports = function(app){
                                     res.json(result);
                                 });
                                 break;
-                    case "cu": break;
+                    case "cu": classService.duplicateCardCU(req.userId, cardId, deckId, result=>{
+                                    res.json(result);
+                                });
+                               break;
                     default: return res.json({success:false, msg: "invalid type"});
                 }
-    });
-
-    /**
-     * @api {get} /duplicateCardUC/:classname/:cardId/:deckId duplicate card from user to class
-     * @apiGroup card
-     * @apiName duplicate card from user to class
-     * @apiDescription duplicates card from user to class.
-     * @apiParam (Parameters) {string} cardId id of the card to be duplicated.
-     * @apiParam (Parameters) {string} classname name of the class where card will be duplicated.
-     * @apiParam (Parameters) {string} deckId id for the deck where card will be created.
-     * @apiHeader (Headers) {string} x-access-token user session token
-     * @apiParamExample {json} Request-Example:
-     * url: /duplicateCardUC/unlam/59991371065a2544f7c90288/59991371065a2544f7c9028a
-     * 
-     * @apiSuccessExample {json} Success-Response:
-     *     HTTP/1.1 200 OK
-     *     {"success":true
-     *      }
-     * @apiVersion 1.1.0
-     *  */
-    app.get("/duplicateCardUU/:cardId/:deckId", controllerUtils.requireLogin, (req, res)=>{
-        const cardId = req.params.id;
-        const deckId = req.params.id;
-        cardService.duplicateCardUU(req.userId, cardId, deckId, result=>{
-            res.json(result);
-        });
     });
 
     app.post("/updateCard/:cardId",  controllerUtils.requireLogin, (req, res)=>{

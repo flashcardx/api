@@ -20,10 +20,6 @@ module.exports = function(app){
             logger.warn("database is about to be dropped");
             mongoose.connection.db.dropDatabase();
             createUsers()
-            .then(result=>{
-              var idRandomUser = result[0]._id;
-              return createCards(idRandomUser);
-            })
             .then(()=>{
               logger.info("users were created ok");
               res.send("setup succeded!");
@@ -35,22 +31,6 @@ module.exports = function(app){
       /*    }*/
     });
 };
-
-function createCards(idRandomUser){
-    return new Promise((resolve, reject)=>{
-      const cardService = require(appRoot + "/service/cardService");
-      seed.cards.forEach((card, index)=>{
-        cardService.createCard(card, card.imgs, idRandomUser, (r)=>{
-          if(r.success === false){
-              logger.error(r.msg);
-              return reject(r);
-          }
-          if(index === seed.cards.length-1)
-            return resolve();
-        });
-      });
-    });
-}
 
 function createUsers(result){
             logger.info("cards were created ok");

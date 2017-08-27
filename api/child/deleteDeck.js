@@ -41,7 +41,7 @@ function deleteCards(deck){
         });
   else if(deck.ownerType == "c")
         deck.cards.forEach(c=>{
-            cardService.deleteCardClass(c, deck._id);
+            cardService.deleteCardClassInsecure(c, deck._id);
         });
   else 
       console.log("invalid deck owner type: " + deck.ownerType + " deckid: " + deck._id);  

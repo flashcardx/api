@@ -127,10 +127,8 @@ function setImgUserDeckFromBuffer(userId, data, callback){
         return setImageFromBuffer(d._id, data.img);
     })
     .then(()=>{
-        logger.error("imgHash: " + imgHash);
         if(!imgHash)
             return callback({success: true});
-        logger.error("will delete: " + imgHash);
         imgService.deleteImgOnce(imgHash, r=>{
                 if(r.success == false)
                     return Promise.reject(r.msg);
@@ -257,6 +255,23 @@ function delete4Class(userId, deckId, callback){
 function addCard(deckId, ownerId, cardId){
     return Deck.update({_id: deckId, ownerId:ownerId, active:true}, {$push:{cards: cardId}})
     .exec();
+}
+
+function validateOwnership(ownerId, deckId){
+    return new Promise((resolve, reject)=>{
+        Deck.findOne({_id: deckId, ownerId: ownerId, active:true}, "_id")
+          .lean()
+          .exec()
+          .then(r=>{
+              if(!r)
+                return reject("Deck not found");
+              return resolve();
+          })
+          .catch(err=>{
+              logger.error("error when validating deck ownership: " + err);
+              return reject(err);
+          })
+    })
 }
 
 // HELPER FUNCTIONS:
@@ -444,7 +459,8 @@ module.exports = {
     delete4Class: delete4Class,
     addCard: addCard,
     initChild: initChild,
-    findByIdLean: findByIdLean
+    findByIdLean: findByIdLean,
+    validateOwnership: validateOwnership
 }
 
 const classService = require("./class/classService");

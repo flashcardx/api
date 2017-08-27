@@ -380,7 +380,7 @@ function getFeed(userId, lastId, callback){
                     return callback({success:true, msg:[]});
                 r.results.forEach((obj, i)=>{
                     if(obj.type == "card"){
-                        cardService.findCardClassByIdLean(obj.object, "name description imgs ownerName category updated_at classname")
+                        cardService.findByIdLean(obj.object, "name description imgs ownerName category updated_at classname")
                         .then(card=>{
                             if(!card){
                                 logger.error("no card found for activity(trying to fetch user feed): " + JSON.stringify(obj));

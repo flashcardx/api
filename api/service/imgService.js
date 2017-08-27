@@ -224,7 +224,7 @@ function downloadArray(imgs, userId, callback){
                                 if(!hash)
                                     return Promise.resolve(null);
                                 return saveImgDb(imgPath, hash, contentType);
-                                    })
+                            })
                             .then(hash=>{
                                     if(!hash){
                                         imgHashes.push({});

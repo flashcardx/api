@@ -29,7 +29,8 @@ describe.only("classService", ()=>{
             classname = "my class",
             classDeckId,
             classId,
-            cardIdUser;
+            cardIdUser,
+            cardIdClass;
     
         before(done=>{
             dropDatabase()
@@ -64,6 +65,12 @@ describe.only("classService", ()=>{
                 return cardModel.save();
             })
             .then(()=>{
+                var card = {name: "test card class", description:"Iam a card in a class", ownerType:"c", ownerId: classId};
+                var cardModel = new Card(card);
+                cardIdClass = cardModel._id;
+                return cardModel.save();
+            })
+            .then(()=>{
                 done();
             })
             .catch(err=>{
@@ -78,13 +85,18 @@ describe.only("classService", ()=>{
 
         describe("duplication uc and cu", ()=>{
 
-            it("duplicate uc", done=>{
+            it("duplicate card user to class", done=>{
                 classService.duplicateCardUC(userId, cardIdUser, classDeckId, r=>{
                     assert.equal(r.success, true);
                     done();
                 });
             });
 
-
+            it("duplicate card class to user", done=>{
+                classService.duplicateCardCU(userId, classname, cardIdClass, userDeckId, r=>{
+                    assert.equal(r.success, true);
+                    done();
+                });
+            });
         })
 });

@@ -496,7 +496,6 @@ function removeUser(classname, leaverId, requesterId, callback){
         });   
 }
 
-
 function mark4delete(classname, userId, callback){
     var classModel;
     var allIntegrants;
@@ -554,41 +553,6 @@ function findByNamePopulateOwner(classname, fields, fields2){
         .exec();
 }
 
-function duplicateCard2User(classname, cardId, userId, callback){
-    var classId;
-    findClassLean(classname, userId, "cardsLeft")
-        .then(Class=>{
-            classId = Class._id;
-            if(!Class)
-                    return Promise.reject("Either class does not exist or user is not in the class");
-            if(Class.cardsLeft <= 0){
-                return Promise.reject("Class is full, no space for more cards");
-            }
-            userService.findById(userId, "name", r=>{
-                if(r.success === false){
-                    logger.error(r.msg);
-                    return Promise.reject(r.msg);
-                }
-                const username = r.msg.name;
-                cardService.duplicateCardUserClass(cardId, userId, r=>{
-                    if(r.success == false)
-                        return Promise.reject(r.msg);
-                    return Promise.resolve();
-                })
-            })
-        })
-        .then(()=>{
-            return increaseRank(classId, 2);
-        })
-        .then(()=>{
-            return callback({success:true});
-        })
-        .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
-        });
-}
-
 function increaseRank(classId, n){
     return classModel.update({_id:classId}, {$inc:{"rank":n}}).exec();
 }
@@ -609,7 +573,7 @@ function deleteCard(classname, userId, cardId, callback){
         if(!Class)
             return Promise.reject("Either class does not exist or user is not in the class");
         classModel = Class;
-        return cardService.deleteCardClass(cardId, Class._id)
+        return cardService.deleteCardClassInsecure(cardId, Class._id)
     })
     .then(()=>{
             return increaseCardsLeft(classModel._id);
@@ -709,23 +673,6 @@ function updateCard(classname, userId, cardId, card, callback){
                     logger.error("err: " + err);
                     return callback({success:false, msg:err});
     });
-}
-
-function getCategories(classname, userId, callback){
-    findClassLean(classname, userId, "_id")
-    .then(Class=>{
-        if(!Class)
-            return Promise.reject("Either class does not exist or user is not in the class");
-        categoryService.getCategoriesClass(Class._id, r=>{
-            if(r.success == false)
-                return Promise.reject(r.msg);
-            return callback(r);
-        });
-    })
-    .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
-        });
 }
 
 function getStats(classname, userId, callback){
@@ -843,10 +790,6 @@ function deleteProfilePicture(classname, userId, callback){
         });
 }
 
-
-
-
-
 module.exports = {
     create: create,
     listAll: listAll,
@@ -859,11 +802,8 @@ module.exports = {
     listAllShort: listAllShort,
     getCards: getCards,
     updateCard: updateCard,
-    getCategories: getCategories,
-    getStats: getStats,
     deleteCard: deleteCard,
     getClassIntegrants: getClassIntegrants,
-    duplicateCard2User: duplicateCard2User,
     changeProfilePicture: changeProfilePicture,
     deleteProfilePicture: deleteProfilePicture,
     findClassLean: findClassLean,
@@ -896,19 +836,12 @@ function duplicateCardUC(userId, cardId, deckId, callback){
                     return Promise.reject(r.msg);
                 }
                 const username = r.msg.name;
-                cardService.duplicateCardUC(Class, cardId, username, deckId, r=>{
+                cardService.duplicateCardUCUnsafe(Class, cardId, username, deckId, r=>{
                     if(r.success == false)
                         return Promise.reject(r.msg);
                     cardId = r.msg._id;
-                    decreaseCardsLeft(Class._id)
-                    .then(r=>{
-                        feedService.publishCardClassFeed(classId, cardId);
-                        return callback({success:true});
-                    })
-                    .catch(err=>{
-                        logger.error("error:" + err);
-                        return callback({success:false, msg:err});
-                    })
+                    feedService.publishCardClassFeed(classId, cardId);
+                    return callback({success:true});
                 })
             })
         })
@@ -918,4 +851,18 @@ function duplicateCardUC(userId, cardId, deckId, callback){
         });
 }
 
+function duplicateCardCU(userId, classname, cardId, deckId, callback){
+    findClassLean(classname, userId, "_id")
+    .then(r=>{
+        if(!r)
+            return Promise.reject("Class not found");
+        return cardService.duplicateCardUU(userId, cardId, deckId, callback);
+    })
+    .catch(err=>{
+        logger.error("error in duplicateclasscu: " + err);
+        return callback({success:false, msg:err});
+    })
+}
+
 module.exports.duplicateCardUC = duplicateCardUC;
+module.exports.duplicateCardCU = duplicateCardCU;
