@@ -874,7 +874,7 @@ module.exports = {
 
 const deckService = require(appRoot + "/service/deckService");
 
-function duplicateCardUC(cardId, userId, deckId, callback){
+function duplicateCardUC(userId, cardId, deckId, callback){
     var cardId;
     var classId;
     deckService.findByIdLean(deckId, "ownerId")

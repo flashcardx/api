@@ -23,7 +23,7 @@ function dropDatabase(){
     });
 };
 
-describe("classService", ()=>{
+describe.only("classService", ()=>{
         var userId,
             userDeckId,
             classname = "my class",

@@ -11,47 +11,8 @@ const userService = require("./userService");
 const logger = config.getLogger(__filename);
 const mongoose = require("mongoose");
 const AWSService = require("./AWSService");
-const deckService = require("./deckService");
-const classService = require("./class/classService");
 
-function saveCardUser(cardModel, userId, deckId){
-    return new Promise((resolve, reject)=>{
-        cardModel.save().then(()=>{
-             userService.decreaseCardCounter(userId)
-             .then(()=>{
-                        return deckService.addCard(deckId, userId, cardModel._id);
-            })
-            .then(()=>{
-                resolve();
-            })
-            .catch(err=>{
-                logger.error(err);
-                reject(String(err));    
-            })
-        }, (err)=>{
-            logger.error(err);
-            reject(String(err));
-        });
-    });
-}
 
-function saveCardClass(cardModel, classId, deckId){
-    return new Promise((resolve, reject)=>{
-        cardModel.save().then(()=>{
-                deckService.addCard(deckId, classId, cardModel._id)
-                .then(()=>{
-                    resolve();
-                })
-                .catch(err=>{
-                    logger.error(err);
-                    reject(String(err));    
-            })
-        }, err=>{
-            logger.error(err);
-            reject(String(err));
-        });
-    });
-}
 
 
 function createUserCard(parameters, callback){
@@ -87,51 +48,6 @@ function createUserCard(parameters, callback){
                             })
                             .catch(msg=>{
                                  logger.error(msg);
-                                 return callback({success:false, msg:msg});
-                            });
-};
-
-function createClassCard(parameters, classname, callback){
-    var cardModel = new Card(parameters.card);
-    var user;
-    var warning;
-    var Class;
-    validateCard(cardModel)
-                            .then(()=>{
-                                return userService.userCardLimitsOk(parameters.userId);
-                            })
-                            .then((result)=>{
-                                user = result;
-                                return classService.findClassLean(classname, parameters.userId, "_id name lang");
-                            })
-                            .then((result)=>{
-                                if(!result)
-                                    return Promise.reject("class not found, user must be in the class");
-                                Class = result;
-                                return imgService.downloadArray(parameters.imgs, parameters.userId, callback);
-                            })
-                           .then(r=>{
-                                warning = r.warning;
-                                cardModel.ownerId = Class._id;
-                                cardModel.ownerName = Class.name;
-                                cardModel.ownerType = "c";
-                                cardModel.lang = Class.lang;
-                                if(r.imgHashes)
-                                    cardModel.imgs = r.imgHashes.filter(v=>{
-                                        if(objectIsNotEmpty(v))
-                                            return true;
-                                        return false;
-                                    });
-                                return saveCardClass(cardModel, Class._id, parameters.deckId);
-                           })
-                           .then(()=>{
-                                    if(!warning)
-                                        return callback({success:true, msg:"card was created ok!"});
-                                    else
-                                        return callback({success:"warning", msg:"card was created but: " + warning});        
-                            })
-                            .catch(msg=>{
-                                 logger.info(msg);
                                  return callback({success:false, msg:msg});
                             });
 };
@@ -429,10 +345,103 @@ module.exports = {
     deleteCard: deleteCard,
     deleteCardClass: deleteCardClass,
     duplicateCardUU: duplicateCardUU,
-    duplicateCardUC: duplicateCardUC,
     updateCard: updateCard,
     updateCardClass: updateCardClass,
     returnCards: returnCards,
     getClassCards: getClassCards,
     findCardClassByIdLean: findCardClassByIdLean
 }
+
+
+const classService = require("./class/classService");
+const deckService = require("./deckService");
+
+module.exports.duplicateCardUC = duplicateCardUC;
+
+
+function saveCardUser(cardModel, userId, deckId){
+    return new Promise((resolve, reject)=>{
+        cardModel.save().then(()=>{
+             userService.decreaseCardCounter(userId)
+             .then(()=>{
+                        return deckService.addCard(deckId, userId, cardModel._id);
+            })
+            .then(()=>{
+                resolve();
+            })
+            .catch(err=>{
+                logger.error(err);
+                reject(String(err));    
+            })
+        }, (err)=>{
+            logger.error(err);
+            reject(String(err));
+        });
+    });
+}
+
+function saveCardClass(cardModel, classId, deckId){
+    return new Promise((resolve, reject)=>{
+        cardModel.save().then(()=>{
+                deckService.addCard(deckId, classId, cardModel._id)
+                .then(()=>{
+                    resolve();
+                })
+                .catch(err=>{
+                    logger.error(err);
+                    reject(String(err));    
+            })
+        }, err=>{
+            logger.error(err);
+            reject(String(err));
+        });
+    });
+}
+
+
+function createClassCard(parameters, classname, callback){
+    var cardModel = new Card(parameters.card);
+    var user;
+    var warning;
+    var Class;
+    validateCard(cardModel)
+                            .then(()=>{
+                                return userService.userCardLimitsOk(parameters.userId);
+                            })
+                            .then((result)=>{
+                                user = result;
+                                return classService.findClassLean(classname, parameters.userId, "_id name lang");
+                            })
+                            .then((result)=>{
+                                if(!result)
+                                    return Promise.reject("class not found, user must be in the class");
+                                Class = result;
+                                return imgService.downloadArray(parameters.imgs, parameters.userId, callback);
+                            })
+                           .then(r=>{
+                                warning = r.warning;
+                                cardModel.ownerId = Class._id;
+                                cardModel.ownerName = Class.name;
+                                cardModel.ownerType = "c";
+                                cardModel.lang = Class.lang;
+                                if(r.imgHashes)
+                                    cardModel.imgs = r.imgHashes.filter(v=>{
+                                        if(objectIsNotEmpty(v))
+                                            return true;
+                                        return false;
+                                    });
+                                return saveCardClass(cardModel, Class._id, parameters.deckId);
+                           })
+                           .then(()=>{
+                                    if(!warning)
+                                        return callback({success:true, msg:"card was created ok!"});
+                                    else
+                                        return callback({success:"warning", msg:"card was created but: " + warning});        
+                            })
+                            .catch(msg=>{
+                                 logger.info(msg);
+                                 return callback({success:false, msg:msg});
+                            });
+};
+
+module.exports.createClassCard = createClassCard;

@@ -235,7 +235,6 @@ function delete4User(userId, deckId, callback){
 }
 
 function delete4Class(userId, deckId, callback){
-    logger.error("userId: " + userId + ", deckId: " + deckId);
     getClassDeckLean(userId, deckId)
     .then(c=>{
         if(!c)
@@ -265,9 +264,8 @@ function addCard(deckId, ownerId, cardId){
 function getClassDeckLean(userId, deckId, fields){
     var deck;
     return new Promise((resolve, reject)=>{
-        findByIdLean("ownerId " + fields)
+        findByIdLean(deckId, "ownerId " + fields)
         .then(d=>{
-            logger.error("d: " + JSON.stringify(d));
             if(!d)
                 return Promise.reject("deck not found");
             deck = d;
