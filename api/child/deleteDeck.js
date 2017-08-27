@@ -1,11 +1,18 @@
 var appRoot = require("app-root-path");
 const Deck = require(appRoot + "/models/deckModel");
 const cardService = require(appRoot + "/service/cardService");
+const config = require(appRoot + "/config");
+const mongoose = require("mongoose");
 
 console.log("deleteDeck child process ready!");
+mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
+
+mongoose.connection.on('disconnected', function () {  
+  logger.warn('Mongoose default connection disconnected(child process)'); 
+  mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
+});
 
 process.on('message', msg=>{
-  console.error("msg: " + JSON.stringify(msg));
   if(msg.deckId)
       deleteDeck(msg.deckId);
   else
@@ -14,19 +21,16 @@ process.on('message', msg=>{
 
 
 function deleteDeck(deckId){
-  console.error("child will delete : " + deckId);
-   Deck.findOne({_id:deckId}, "decks cards ownerType ownerId")
-   .then(deck=>{
-      if(!deck)
-        return Promise.reject("deck not found");
-      deck.decks.forEach(d=>{
-          deleteDeck(d);
-      })
-      deleteCards(deck);
-      deck.remove();
-   })
-   .catch(err=>{
-     console.log("deleteDeck child process failed, deckId: " + deckId +", err: " + err);
+   Deck.findOne({_id:deckId}, "decks cards ownerType ownerId", (err, deck)=>{
+        if(err)
+            return console.error("deleteDeck child process failed, deckId: " + deckId +", err: " + err)
+        if(!deck)
+            return console.error("deck not found");
+        deck.decks.forEach(d=>{
+            deleteDeck(d);
+        })
+        deleteCards(deck);
+        deck.remove();
    })
 }
 

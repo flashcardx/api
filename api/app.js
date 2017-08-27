@@ -1,7 +1,6 @@
 /*
     ©2017 FlashCardX By: Pablo Nicolas Marino,
     http://www.flashcard-x.com
-        Powered By: https://pixabay.com/
 */
 
 const appRoot = require('app-root-path');

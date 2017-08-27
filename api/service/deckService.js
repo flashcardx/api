@@ -8,7 +8,6 @@ const userService = require("./userService");
 const logger = config.getLogger(__filename);
 const mongoose = require("mongoose");
 const AWSService = require("./AWSService");
-const classService = require("./class/classService");
 var childProcess;
 var childProcessActive = false;
 
@@ -30,7 +29,7 @@ function create4User(userId, deck, callback){
 }
 
 function update4User(userId, deckId, deck, callback){
-    Deck.findOne({_id:deckId, ownerId:userId}, "_id name description")
+    Deck.findOne({_id:deckId, ownerId:userId, active:true}, "_id name description")
     .then(d=>{
         if(!d)
             return callback({success: false, msg: "Deck not found"});
@@ -92,7 +91,7 @@ function create4Class(userId, data, callback){
 
 function setImgUserDeckFromUrl(userId, data, callback){
     var imgHash;
-    Deck.findOne({_id:data.deckId, ownerId:userId}, "_id thumbnail")
+    Deck.findOne({_id:data.deckId, ownerId:userId, active:true}, "_id thumbnail")
     .lean()
     .exec()
     .then(d=>{
@@ -118,7 +117,7 @@ function setImgUserDeckFromUrl(userId, data, callback){
 
 function setImgUserDeckFromBuffer(userId, data, callback){
     var imgHash;
-    Deck.findOne({_id:data.deckId, ownerId:userId}, "_id thumbnail")
+    Deck.findOne({_id:data.deckId, ownerId:userId, active:true}, "_id thumbnail")
     .lean()
     .exec()
     .then(d=>{
@@ -128,11 +127,13 @@ function setImgUserDeckFromBuffer(userId, data, callback){
         return setImageFromBuffer(d._id, data.img);
     })
     .then(()=>{
+        logger.error("imgHash: " + imgHash);
         if(!imgHash)
             return callback({success: true});
+        logger.error("will delete: " + imgHash);
         imgService.deleteImgOnce(imgHash, r=>{
                 if(r.success == false)
-                    return callback(r);
+                    return Promise.reject(r.msg);
                 return callback({success: true});
             });
         })
@@ -234,10 +235,17 @@ function delete4User(userId, deckId, callback){
 }
 
 function delete4Class(userId, deckId, callback){
+    logger.error("userId: " + userId + ", deckId: " + deckId);
     getClassDeckLean(userId, deckId)
     .then(c=>{
         if(!c)
-            return callback({success:false, msg:"deck not found or user is not in the class"});
+            return Promise.reject("deck not found or user is not in the class");
+        return Deck.update({_id:deckId}, {$set:{active: false}})
+              .exec()
+    })
+    .then(r=>{
+        if(r.nModified == 0)
+            return Promise.reject("deck not found(deleteclassdeck child process)");
         childProcess.deleteDeckSubP(deckId);
         return callback({success:true});
     })
@@ -248,7 +256,7 @@ function delete4Class(userId, deckId, callback){
 }
 
 function addCard(deckId, ownerId, cardId){
-    return Deck.update({_id: deckId, ownerId:ownerId}, {$push:{cards: cardId}})
+    return Deck.update({_id: deckId, ownerId:ownerId, active:true}, {$push:{cards: cardId}})
     .exec();
 }
 
@@ -257,45 +265,50 @@ function addCard(deckId, ownerId, cardId){
 function getClassDeckLean(userId, deckId, fields){
     var deck;
     return new Promise((resolve, reject)=>{
-        Deck.findOne({_id:deckId}, "ownerId " + fields)
-    .lean()
-    .exec()
-    .then(d=>{
-        if(!d)
-            return Promise.reject("deck not found");
-        deck = d;
-        return classService.findClassLeanById(d.ownerId, userId, "_id");
+        findByIdLean("ownerId " + fields)
+        .then(d=>{
+            logger.error("d: " + JSON.stringify(d));
+            if(!d)
+                return Promise.reject("deck not found");
+            deck = d;
+            return classService.findClassLeanById(d.ownerId, userId, "_id");
+            })
+        .then(c=>{
+            if(!c)
+                return reject("class not found");
+            return resolve(deck);
         })
-    .then(c=>{
-        if(!c)
-            return reject("class not found");
-        return resolve(deck);
-    })
-    .catch(err=>{
-        return reject(err);
-        });
+        .catch(err=>{
+            return reject(err);
+            });
     });
+}
+
+function findByIdLean(id, fields){
+     return Deck.findOne({_id:id, active:true}, fields)
+    .lean()
+    .exec();
 }
 
 function getClassDeck(userId, deckId, fields){
     var deck;
     return new Promise((resolve, reject)=>{
-        Deck.findOne({_id:deckId}, "ownerId " + fields)
-    .exec()
-    .then(d=>{
-        if(!d)
-            return Promise.reject("deck not found");
-        deck = d;
-        return classService.findClassLeanById(d.ownerId, userId, "_id");
+         Deck.findOne({_id:deckId, active:true}, "ownerId " + fields)
+        .exec()
+        .then(d=>{
+            if(!d)
+                return Promise.reject("deck not found");
+            deck = d;
+            return classService.findClassLeanById(d.ownerId, userId, "_id");
+            })
+        .then(c=>{
+            if(!c)
+                return reject("class not found");
+            return resolve(deck);
         })
-    .then(c=>{
-        if(!c)
-            return reject("class not found");
-        return resolve(deck);
-    })
-    .catch(err=>{
-        return reject(err);
-        });
+        .catch(err=>{
+            return reject(err);
+            });
     });
 }
 
@@ -324,7 +337,7 @@ function deleteImg(hash, deckId){
 
 function verifyDeleteImg(ownerId, deckId){
     return new Promise((resolve, reject)=>{
-    Deck.findOne({_id:deckId, ownerId:ownerId}, "_id thumbnail")
+    Deck.findOne({_id:deckId, ownerId:ownerId, active:true}, "_id thumbnail")
         .lean()
         .exec()
         .then(d=>{
@@ -394,7 +407,7 @@ function createChildDeck(deckModel, parentId, callback){
         logger.error("Deck can not be its own parent ;)");
         return callback({success:false, msg:"Deck can not be its own parent ;)"});
     }
-    Deck.findOneAndUpdate({_id: parentId, recursiveOrder:{$gt:0}, ownerId:deckModel.ownerId}, {"$push":{"decks":deckModel._id}}, "recursiveOrder")
+    Deck.findOneAndUpdate({_id: parentId, recursiveOrder:{$gt:0}, ownerId:deckModel.ownerId, active:true}, {"$push":{"decks":deckModel._id}}, "recursiveOrder")
     .then(parent=>{
         if(!parent)
             return callback({success:false, msg:"could not find parent deck, or max deck recursive level reached"});
@@ -432,5 +445,8 @@ module.exports = {
     delete4User: delete4User,
     delete4Class: delete4Class,
     addCard: addCard,
-    initChild: initChild
+    initChild: initChild,
+    findByIdLean: findByIdLean
 }
+
+const classService = require("./class/classService");

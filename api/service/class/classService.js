@@ -554,46 +554,6 @@ function findByNamePopulateOwner(classname, fields, fields2){
         .exec();
 }
 
-
-function duplicateCard2Class(classname, cardId, userId, callback){
-    var cardId;
-    var classId;
-    findClassLean(classname, userId, "cardsLeft name")
-    .then(Class=>{
-            if(!Class)
-                return Promise.reject("Either class does not exist or user is not in the class");
-            if(Class.cardsLeft <= 0){
-                return Promise.reject("Class is full, no space for more cards");
-            }
-            classId = Class._id;
-            userService.findById(userId, "name", r=>{
-                if(r.success == false){
-                    logger.error(r.msg);
-                    return Promise.reject(r.msg);
-                }
-                const username = r.msg.name;
-                cardService.duplicateCard2Class(Class, cardId, username, r=>{
-                    if(r.success == false)
-                        return Promise.reject(r.msg);
-                    cardId = r.msg._id;
-                    decreaseCardsLeft(Class._id)
-                    .then(r=>{
-                        feedService.publishCardClassFeed(classId, cardId);
-                        return callback({success:true});
-                    })
-                    .catch(err=>{
-                        logger.error("error:" + err);
-                        return callback({success:false, msg:err});
-                    })
-                })
-            })
-        })
-        .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
-        });
-}
-
 function duplicateCard2User(classname, cardId, userId, callback){
     var classId;
     findClassLean(classname, userId, "cardsLeft")
@@ -748,7 +708,7 @@ function updateCard(classname, userId, cardId, card, callback){
     .catch(err=>{
                     logger.error("err: " + err);
                     return callback({success:false, msg:err});
-        });
+    });
 }
 
 function getCategories(classname, userId, callback){
@@ -897,7 +857,6 @@ module.exports = {
     removeUser: removeUser,
     mark4delete: mark4delete,
     listAllShort: listAllShort,
-    duplicateCard2Class: duplicateCard2Class,
     getCards: getCards,
     updateCard: updateCard,
     getCategories: getCategories,
@@ -912,3 +871,51 @@ module.exports = {
     findClassLeanById: findClassLeanById,
     decreaseCardsLeft: decreaseCardsLeft
 }
+
+const deckService = require(appRoot + "/service/deckService");
+
+function duplicateCardUC(cardId, userId, deckId, callback){
+    var cardId;
+    var classId;
+    deckService.findByIdLean(deckId, "ownerId")
+    .then(r=>{
+        if(!r)
+            return Promise.reject("deck not found");
+        return findClassLeanById(r.ownerId, userId, "cardsLeft name")
+    })
+    .then(Class=>{
+            if(!Class)
+                return Promise.reject("Either class does not exist or user is not in the class");
+            if(Class.cardsLeft <= 0){
+                return Promise.reject("Class is full, no space for more cards");
+            }
+            classId = Class._id;
+            userService.findById(userId, "name", r=>{
+                if(r.success == false){
+                    logger.error(r.msg);
+                    return Promise.reject(r.msg);
+                }
+                const username = r.msg.name;
+                cardService.duplicateCardUC(Class, cardId, username, deckId, r=>{
+                    if(r.success == false)
+                        return Promise.reject(r.msg);
+                    cardId = r.msg._id;
+                    decreaseCardsLeft(Class._id)
+                    .then(r=>{
+                        feedService.publishCardClassFeed(classId, cardId);
+                        return callback({success:true});
+                    })
+                    .catch(err=>{
+                        logger.error("error:" + err);
+                        return callback({success:false, msg:err});
+                    })
+                })
+            })
+        })
+        .catch(err=>{
+                    logger.error("err: " + err);
+                    return callback({success:false, msg:err});
+        });
+}
+
+module.exports.duplicateCardUC = duplicateCardUC;

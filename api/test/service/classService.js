@@ -1,7 +1,7 @@
 require("../../app");
 const appRoot = require('app-root-path');
 const assert = require("chai").assert;
-const cardService = require("../../service/cardService");
+const classService = require("../../service/class/classService");
 const mongoose = require("mongoose");
 const Deck = require(appRoot + "/models/deckModel");
 const User = require(appRoot + "/models/userModel");
@@ -23,7 +23,7 @@ function dropDatabase(){
     });
 };
 
-describe("cardService", ()=>{
+describe("classService", ()=>{
         var userId,
             userDeckId,
             classname = "my class",
@@ -76,49 +76,15 @@ describe("cardService", ()=>{
             done();
         });
 
-    it("create user card", done=>{
-        var card = {name:"test"};
-        var parameters = {
-            card: card,
-            userId: userId,
-            deckId: userDeckId
-        };
-        cardService.createUserCard(parameters, r=>{
-            assert.equal(r.success, true);
-            done();
-        });
-    });
+        describe("duplication uc and cu", ()=>{
 
-    it("create user card again", done=>{
-        var card = {name:"test2"};
-        var parameters = {
-            card: card,
-            userId: userId,
-            deckId: userDeckId
-        };
-        cardService.createUserCard(parameters, r=>{
-            assert.equal(r.success, true);
-            done();
-        });
-    });
+            it("duplicate uc", done=>{
+                classService.duplicateCardUC(userId, cardIdUser, classDeckId, r=>{
+                    assert.equal(r.success, true);
+                    done();
+                });
+            });
 
-    it("create class card", done=>{
-        var card = {name:"test2"};
-        var parameters = {
-            card: card,
-            userId: userId,
-            deckId: classDeckId
-        };
-        cardService.createClassCard(parameters, classname, r=>{
-            assert.equal(r.success, true);
-            done();
-        });
-    });
 
-    it("duplicate card user to user" ,done=>{
-        cardService.duplicateCardUU(userId, cardIdUser, userDeckId, r=>{
-                assert.equal(r.success, true);
-                done();
-        });
-    });
+        })
 });

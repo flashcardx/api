@@ -1,4 +1,4 @@
-require("../../app");
+require("../../app"); // opens db connection
 const appRoot = require('app-root-path');
 const assert = require("chai").assert;
 const deckService = require("../../service/deckService");
@@ -7,8 +7,9 @@ const Deck = require(appRoot + "/models/deckModel");
 const User = require(appRoot + "/models/userModel");
 const Class = require(appRoot + "/models/classModel");
 var fs = require("fs");
-describe("deckService", ()=>{
-    describe.only("create and update", ()=>{
+
+describe.only("deckService", ()=>{
+    describe("create update and delete", ()=>{
        var userId;
        var parentUserDeckId;
        var parentClassDeckId;
@@ -107,9 +108,7 @@ describe("deckService", ()=>{
         it("should delete user deck", done=>{
             deckService.delete4User(userId, parentUserDeckId, r=>{
                 assert.equal(r.success, true);
-                setTimeout(function() {
-                    done();
-                }, 8000);
+                done();
             });
         })
 
@@ -213,18 +212,8 @@ describe("deckService", ()=>{
                     });
             });
 
-             it("set image for user deck from buffer again so we test if replace works ok", done=>{
-                fs.readFile(appRoot+"/test/resources/test.jpg", function (err, buffer) {
-                    if (err) throw err;
-                    var data = {deckId: deckUserId, img: buffer};
-                    deckService.setImgUserDeckFromBuffer(userId, data, r=>{
-                        assert.equal(r.success, true);
-                        done();
-                        });
-                    });
-            });
-            it("set image for class deck from buffer again so we test if replace works ok", done=>{
-                fs.readFile(appRoot+"/test/resources/test.jpg", function (err, buffer) {
+            it("set image for class deck from buffer", done=>{
+                fs.readFile(appRoot+"/test/resources/test2.jpg", function (err, buffer) {
                     if (err) throw err;
                     var data = {deckId: deckClassId, img: buffer};
                     deckService.setImgClassDeckFromBuffer(userId, data, r=>{
@@ -233,5 +222,6 @@ describe("deckService", ()=>{
                         });
                     });
             });
+             
     });
 });

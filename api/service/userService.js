@@ -131,14 +131,18 @@ function userCardLimitsOk(userId){
     })
 }
 
-function decreaseCardCounter(userModel){
+function decreaseCardCounter(userId){
     return new Promise((resolve, reject)=>{
-        userModel.plan.cardsLeft--;
-        saveUser(userModel, r=>{
-            if(r.success === false)
-                return reject(r.msg);
-            return resolve(r.msg);
-        });
+        User.update({_id:userId}, {$inc: {"plan.cardsLeft":-1}})
+        .then(r=>{
+            if(r.nModified == 0)
+                return reject("user not found");
+            return resolve();
+        })
+        .catch(err=>{
+            logger.error("error in decrease cardcounter" + err);
+            return reject(err);
+        })
     });
 }
 

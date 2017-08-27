@@ -5,6 +5,7 @@ const purifier = require(appRoot + "/utils/purifier");
 const logger = config.getLogger(__filename);
 const Cards = require(appRoot + "/models/cardModel");
 const cardService = require(appRoot + "/service/cardService");
+const classService = require(appRoot + "/service/class/classService");
 const practiceCardsService = require(appRoot + "/service/practiceCardsService");
 
 module.exports = function(app){
@@ -76,9 +77,63 @@ module.exports = function(app){
         });
     });
 
-    app.get("/duplicateCard/:id", controllerUtils.requireLogin, (req, res)=>{
+    /**
+     * @api {get} /duplicateCard/:type/:cardId/:deckId duplicate card from user to user
+     * @apiGroup card
+     * @apiName duplicate card from user to user
+     * @apiDescription duplicates card from user to user.
+     * @apiParam (Parameters) {string} type uu:user to user, uc:user to class, cu: class to user.
+     * @apiParam (Parameters) {string} cardId id of the card to be duplicated.
+     * @apiParam (Parameters) {string} deckId id for the deck where card will be created.
+     * @apiHeader (Headers) {string} x-access-token user session token
+     * @apiParamExample {json} Request-Example:
+     * url: /duplicateCard/uu/59991371065a2544f7c90288/59991371065a2544f7c9028a
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {"success":true
+     *      }
+     * @apiVersion 1.1.0
+     *  */
+    app.get("/duplicateCard/:cardId/:deckId", controllerUtils.requireLogin, (req, res)=>{
         const cardId = req.params.id;
-        cardService.duplicateCard2User(req.userId, cardId, result=>{
+        const deckId = req.params.id;
+        switch (req.params.type){
+                    case "uu": cardService.duplicateCardUU(req.userId, cardId, deckId, result=>{
+                                    res.json(result);
+                                });
+                                break;
+                    case "uc": classService.duplicateCardUC(req.userId, cardId, deckId, result=>{
+                                    res.json(result);
+                                });
+                                break;
+                    case "cu": break;
+                    default: return res.json({success:false, msg: "invalid type"});
+                }
+    });
+
+    /**
+     * @api {get} /duplicateCardUC/:classname/:cardId/:deckId duplicate card from user to class
+     * @apiGroup card
+     * @apiName duplicate card from user to class
+     * @apiDescription duplicates card from user to class.
+     * @apiParam (Parameters) {string} cardId id of the card to be duplicated.
+     * @apiParam (Parameters) {string} classname name of the class where card will be duplicated.
+     * @apiParam (Parameters) {string} deckId id for the deck where card will be created.
+     * @apiHeader (Headers) {string} x-access-token user session token
+     * @apiParamExample {json} Request-Example:
+     * url: /duplicateCardUC/unlam/59991371065a2544f7c90288/59991371065a2544f7c9028a
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {"success":true
+     *      }
+     * @apiVersion 1.1.0
+     *  */
+    app.get("/duplicateCardUU/:cardId/:deckId", controllerUtils.requireLogin, (req, res)=>{
+        const cardId = req.params.id;
+        const deckId = req.params.id;
+        cardService.duplicateCardUU(req.userId, cardId, deckId, result=>{
             res.json(result);
         });
     });
