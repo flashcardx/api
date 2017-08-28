@@ -3,7 +3,7 @@ const appRoot = require('app-root-path');
 const assert = require("chai").assert;
 const classService = require("../../service/class/classService");
 const mongoose = require("mongoose");
-const Deck = require(appRoot + "/models/deckModel");
+const Deck = require(appRoot + "/models/deckModel").deck;
 const User = require(appRoot + "/models/userModel");
 const Card = require(appRoot + "/models/cardModel");
 const Class = require(appRoot + "/models/classModel");
@@ -23,7 +23,7 @@ function dropDatabase(){
     });
 };
 
-describe.only("classService", ()=>{
+describe("classService", ()=>{
         var userId,
             userDeckId,
             classname = "my class",

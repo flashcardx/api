@@ -93,6 +93,142 @@
   },
   {
     "type": "delete",
+    "url": "/card/:type/:cardId",
+    "title": "delete card",
+    "group": "card",
+    "name": "delete_card",
+    "description": "<p>deletes the card.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u:user card, c:class card.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "cardId",
+            "description": "<p>id of the card to be deleted.</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": false,
+            "field": "classname",
+            "description": "<p>needed when type=c.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /card/u/59991371065a2544f7c90288",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/cardController.js",
+    "groupTitle": "card"
+  },
+  {
+    "type": "get",
+    "url": "/duplicateCard/:type/:cardId/:deckId",
+    "title": "duplicate card",
+    "group": "card",
+    "name": "duplicate_card",
+    "description": "<p>duplicates card from user to user.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>uu:user to user, uc:user to class, cu: class to user.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "cardId",
+            "description": "<p>id of the card to be duplicated.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "deckId",
+            "description": "<p>id for the deck where card will be created.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /duplicateCard/uu/59991371065a2544f7c90288/59991371065a2544f7c9028a",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/cardController.js",
+    "groupTitle": "card"
+  },
+  {
+    "type": "delete",
     "url": "/deck/:type/:deckId",
     "title": "delete deck",
     "group": "deck",
@@ -402,7 +538,7 @@
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "url: /deck/u\nbody: {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\",\n        \"parentId\": \"5998f5ea23cbd123cf8becce\"\n   }",
+          "content": "url: /deck/u\nbody: {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\",\n        \"parentId\": \"5998f5ea23cbd123cf8becce\",\n        \"lang\": \"es\"\n   }",
           "type": "json"
         }
       ]
@@ -448,7 +584,7 @@
     "title": "update deck",
     "group": "deck",
     "name": "update_deck",
-    "description": "<p>update name and/or description of the deck.</p>",
+    "description": "<p>update name/description/language of the deck. *Only defined parameters will be updated.</p>",
     "parameter": {
       "fields": {
         "Parameters": [
@@ -464,16 +600,23 @@
           {
             "group": "Request body",
             "type": "string",
-            "optional": false,
+            "optional": true,
             "field": "name",
             "description": "<p>name for the deck.</p>"
           },
           {
             "group": "Request body",
             "type": "string",
-            "optional": false,
+            "optional": true,
             "field": "description",
             "description": "<p>description for deck.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "lang",
+            "description": "<p>Language code for the deck.</p>"
           }
         ]
       },

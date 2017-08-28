@@ -8,6 +8,7 @@ const lang = config.lang;
 var langCodes = lang.map((value)=>{
     return value.code;
 });
+const DEFAULT_RECURSIVE_ORDER = 3;
 
 const deckSchema = new Schema({
     decks:{
@@ -32,7 +33,8 @@ const deckSchema = new Schema({
         default: "u"
     },
     ownerId:{
-        type:  Schema.Types.ObjectId
+        type: Schema.Types.ObjectId,
+        index: true
         },
     cards:{
         type: [Schema.Types.ObjectId],
@@ -44,7 +46,8 @@ const deckSchema = new Schema({
     },
     recursiveOrder:{
         type: Number,
-        default: 3
+        default: DEFAULT_RECURSIVE_ORDER,
+        index: true
     },
     lang:{
         type: String,
@@ -76,4 +79,7 @@ Deck.on('index', function(error) {
 
 
 
-module.exports = Deck;
+module.exports = {
+    deck:deck,
+    DEFAULT_RECURSIVE_ORDER: DEFAULT_RECURSIVE_ORDER
+}

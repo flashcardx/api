@@ -232,4 +232,80 @@ app.delete("/deck/:type/:deckId", (req, res)=>{
         }
 });
 
+/**
+ * @api {post} /alldecks/:type Get all decks
+ * @apiGroup deck
+ * @apiName Get all decks
+ * @apiDescription Returns all decks(name and id) from user or class.
+ * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
+ * @apiParam (Query) {string} [classname] Needed for getting class decks.
+ * @apiHeader (Headers) {string} x-access-token user session token
+ * @apiParamExample {json} Request-Example:
+ * url: /decks/u
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true,
+ *      "decks": [{"name": "deck1", id:"59991371065a2544f7c90288"},
+ *                {"name": "math", id:"59991371065a2544fasd8888"}]
+ *      }
+ * @apiErrorExample {json} Error-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success": false,
+ *       "msg": "some mongodb error"
+ *     }
+ * @apiVersion 1.1.0
+ *  */
+    app.get("/alldecks/:type", controllerUtils.requireLogin, (req, res)=>{
+        switch (req.params.type) {
+            case "u":
+                    deckService.allUserDecks(req.userId, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            case "c":
+                    deckService.allClassDecks(req.userId, req.query.classname, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            default: return res.json({success:false, msg:"invalid type"}); 
+        }
+});
+
+/**
+ * @api {post} /deckschildren/:type Get decks inside specific deck
+ * @apiGroup deck
+ * @apiName Get decks inside specific deck
+ * @apiDescription Returns all decks(name, id and thumbnail) inside a deck.
+ * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
+ * @apiParam (Query) {string} [parentId] id of the parent deck, if not specified returns all decks in root.
+ * @apiParam (Query) {string} [classname] needed when type=c.
+ * @apiHeader (Headers) {string} x-access-token user session token
+ * @apiParamExample {json} Request-Example:
+ * url: /deckschildren/u?parentId=59991371065a2544f7c9028c
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true,
+ *      "decks": [{"name": "deck1", id:"59991371065a2544f7c90288", "thumbnail":"https://d32suzxs6u0rur.cloudfront.net/18428b0dd352776131a209bd24785b8f"},
+ *                {"name": "math", id:"59991371065a2544fasd8888", "thumbnail":"https://d32suzxs6u0rur.cloudfront.net/18428b0dd352776131a209bd24785b8f"}]
+ *      }
+ * @apiVersion 1.1.0
+ *  */
+    app.get("/deckschildren/:type", controllerUtils.requireLogin, (req, res)=>{
+        switch (req.params.type) {
+            case "u":
+                    deckService.childUserDecks(req.userId, req.query.parentId, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            case "c":
+                    deckService.childClassDecks(req.userId, req.query.parentId, req.query.classname, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            default: return res.json({success:false, msg:"invalid type"}); 
+        }
+});
+
+
+
 }

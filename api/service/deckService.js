@@ -1,7 +1,8 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
-const Deck = require(appRoot + "/models/deckModel");
+const Deck = require(appRoot + "/models/deckModel").deck;
+const DEFAULT_RECURSIVE_ORDER = require(appRoot + "/models/deckModel").DEFAULT_RECURSIVE_ORDER;
 const Deckduplication = require(appRoot + "/models/deckduplicationModel");
 const imgService = require("./imgService");
 const userService = require("./userService");
@@ -274,7 +275,66 @@ function validateOwnership(ownerId, deckId){
     })
 }
 
+function allUserDecks(userId, callback){
+    Deck.find({ownerId: userId, ownerType: "u", active: true}, "name _id")
+    .lean()
+    .exec()
+    .then(r=>{
+        return callback({success:true, msg: r});
+    })
+    .catch(err=>{
+            logger.error("error when getting all user decks: " + err);
+            return callback({success:false, msg: err});
+    })
+}
+
+function childUserDecks(userId, parentId, callback){
+    var parameters = {  ownerId: userId,
+                        ownerType: "u",
+                        active: true};
+    if(!parentId){
+        parameters.recursiveOrder = DEFAULT_RECURSIVE_ORDER;
+        return findDecksByParam(parameters, "name _id thumbnail", callback);
+    }// verify mongo uses the 2 indexes(_id and recursiveorder)
+    else{
+       //check for children
+    }
+}
+
+function allClassDecks(userId, classname, callback){
+    classService.findClassLean(classname, userId, "_id")//verifies user is in class
+    .then(Class=>{
+        if(!Class){
+            logger.error("class not found");
+            return callback({success:false, msg:"Class not found(user must be in the class)"});
+        }
+        return Deck.find({ownerId: Class._id, ownerType: "c", active: true}, "name _id")
+        .lean()
+        .exec();
+    })
+    .then(r=>{
+         return callback({success:true, msg: r});
+    })
+    .catch(err=>{
+        logger.error("error when getting all class decks: " + err);
+        return callback({success: false, msg: err});
+    });
+}
+
 // HELPER FUNCTIONS:
+
+function findDeckByParams(parameters, fields, callback){
+    Deck.find(parameters, fields)
+    .lean()
+    .exec()
+    .then(r=>{
+        return callback({success:true, msg: r});
+    })
+    .catch(err=>{
+            logger.error("error when getting all user decks: " + err);
+            return callback({success:false, msg: err});
+    })
+}
 
 function getClassDeckLean(userId, deckId, fields){
     var deck;
@@ -460,7 +520,10 @@ module.exports = {
     addCard: addCard,
     initChild: initChild,
     findByIdLean: findByIdLean,
-    validateOwnership: validateOwnership
+    validateOwnership: validateOwnership,
+    allUserDecks: allUserDecks,
+    allClassDecks: allClassDecks,
+    childUserDecks: childUserDecks
 }
 
 const classService = require("./class/classService");

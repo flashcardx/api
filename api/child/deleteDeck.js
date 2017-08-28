@@ -1,5 +1,5 @@
 var appRoot = require("app-root-path");
-const Deck = require(appRoot + "/models/deckModel");
+const Deck = require(appRoot + "/models/deckModel").deck;
 const cardService = require(appRoot + "/service/cardService");
 const config = require(appRoot + "/config");
 const mongoose = require("mongoose");

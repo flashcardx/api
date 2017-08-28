@@ -352,7 +352,6 @@ function saveCardClass(cardModel, classId, deckId){
     });
 }
 
-
 function createClassCard(parameters, classname, callback){
     var cardModel = new Card(parameters.card);
     var user;

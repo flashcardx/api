@@ -3,7 +3,7 @@ const appRoot = require('app-root-path');
 const assert = require("chai").assert;
 const deckService = require("../../service/deckService");
 const mongoose = require("mongoose");
-const Deck = require(appRoot + "/models/deckModel");
+const Deck = require(appRoot + "/models/deckModel").deck;
 const User = require(appRoot + "/models/userModel");
 const Class = require(appRoot + "/models/classModel");
 var fs = require("fs");
@@ -222,7 +222,67 @@ describe("deckService", ()=>{
                         done();
                         });
                     });
-            });
-             
+            });          
     });
+
+    describe.only("Get decks", ()=>{
+            var userId;
+            var deckUserId;
+            var deckClassId;
+            var classname = "testclass";
+            var classId;
+            before(done=>{
+                mongoose.connection.db.dropDatabase();
+                var user = {"name":"tester", password:"1234"};
+                var userModel = new User(user);
+                userId = userModel._id;
+                userModel.save()
+                .then(()=>{
+                    var c = {name:classname, descripcion:"abc", owner:userId};
+                    var classModel = new Class(c);
+                    classId = classModel._id;
+                        return classModel.save();
+                })
+                .then(()=>{
+                    var deck = {name:"testdeck", description:"abc", ownerId: userId};
+                    var deckModel = new Deck(deck);
+                    deckUserId = deckModel._id;
+                    return deckModel.save();
+                })
+                .then(()=>{
+                    var deck = {name:"testdeckclass", description:"abc", ownerId: classId, ownerType:"c"};
+                    var deckModel = new Deck(deck);
+                    deckClassId = deckModel._id;
+                    return deckModel.save();
+                })
+                .then(()=>{
+                    done();
+                })
+                .catch(err=>{
+                    logger.error("error in before method: " + err);
+                })
+            });
+
+            after(done=>{
+               // mongoose.connection.db.dropDatabase();
+                done();
+            });
+        
+        it("get all user decks, should get 1 deck", done=>{
+            deckService.allUserDecks(userId, r=>{
+                console.error("got: " + JSON.stringify(r));
+                assert.equal(r.success, true);
+                assert.equal(r.msg.length, 1);
+                done();
+            })
+        })
+
+        it("get all class decks, should get 1 deck", done=>{
+            deckService.allClassDecks(userId, classname, r=>{
+                assert.equal(r.success, true);
+                assert.equal(r.msg.length, 1);
+                done();
+            })
+        })
+    })
 });
