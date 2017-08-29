@@ -4,7 +4,6 @@ const logger = config.getLogger(__filename);
 const mongoose = require('mongoose');
 const validators = require("./validators/deckValidators");
 const Schema = mongoose.Schema;
-const lang = config.lang;
 
 
 const deckDupSchema = new Schema({

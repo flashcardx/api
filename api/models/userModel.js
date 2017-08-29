@@ -43,8 +43,8 @@ const userSchema = new Schema({
         cardsLeft:{
             type: Number,
             default: 2000,
-            min: [0, 'card limit reached'],
-            max: [2000, 'card limit reached']
+            min: [0, 'card min limit reached'],
+            max: [2000, 'card max limit reached']
         }
     },
     preferences:{

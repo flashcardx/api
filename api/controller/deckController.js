@@ -178,7 +178,7 @@ app.delete("/deckImg/:type/:deckId", (req, res)=>{
  * url: /updateDeck/u/59991371065a2544f7c90288
  * body:  {
  *         "name":"people",
- *         "description": "beautiful people"
+ *         "description": "beautiful people in a deck"
  *    }
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
@@ -276,7 +276,7 @@ app.delete("/deck/:type/:deckId", (req, res)=>{
  * @api {get} /deckschildren/:type Get decks inside deck
  * @apiGroup deck
  * @apiName Get decks inside deck
- * @apiDescription Returns all decks(name, id and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the imgBaseUrl parameter that this endpoint will return.
+ * @apiDescription Returns all decks(name, id, lang and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the imgBaseUrl parameter that this endpoint will return.
  * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
  * @apiParam (Query) {string} [parentId] id of the parent deck, if not specified returns all decks in root.
  * @apiParam (Query) {string} [classname] needed when type=c.
@@ -287,8 +287,8 @@ app.delete("/deck/:type/:deckId", (req, res)=>{
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
  *     {"success":true,
- *      "decks": [{"name": "deck1", id:"59991371065a2544f7c90288", "thumbnail":"18428b0dd352776131a209bd24785b8f"},
- *                {"name": "math", id:"59991371065a2544fasd8888", "thumbnail":"18428b0dd352776131a209bd24785b8f"}],
+ *      "decks": [{"name": "deck1", id:"59991371065a2544f7c90288", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "es"},
+ *                {"name": "math", id:"59991371065a2544fasd8888", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "en"}],
  *      "imgBaseUrl": "https://d32suzxs6u0rur.cloudfront.net"
  *      }
  * @apiVersion 1.1.0

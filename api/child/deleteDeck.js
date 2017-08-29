@@ -41,6 +41,7 @@ function deleteCards(deck){
         });
   else if(deck.ownerType == "c")
         deck.cards.forEach(c=>{
+            /*This method is unsafe however we use it since the module who calls this is supposed to do the validations*/ 
             cardService.deleteCardClassInsecure(c, deck._id);
         });
   else 

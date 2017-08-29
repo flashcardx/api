@@ -29,12 +29,13 @@ describe("cardService", ()=>{
             classname = "my class",
             classDeckId,
             classId,
-            cardIdUser;
+            cardIdUser,
+            cardIdClass;
     
         before(done=>{
             dropDatabase()
             .then(()=>{
-                var user = {"name":"tester", password:"1234"};
+                var user = {"name":"tester", password:"1234", "plan.cardsLeft":200};
                 var userModel = new User(user);
                 userId = userModel._id;
                 return userModel.save();
@@ -58,9 +59,15 @@ describe("cardService", ()=>{
                 return deckModel.save();
             })
             .then(()=>{
-                var card = {name: "test", description:"I can fly", ownerType:"u", ownerId: userId};
+                var card = {name: "test", description:"I can fly", ownerType:"u", ownerId: userId, deckId: userDeckId};
                 var cardModel = new Card(card);
                 cardIdUser = cardModel._id;
+                return cardModel.save();
+            })
+            .then(()=>{
+                var card = {name: "card class", description:"I can fly in a class", ownerType:"c", ownerId: classId, deckId: classDeckId};
+                var cardModel = new Card(card);
+                cardIdClass = cardModel._id;
                 return cardModel.save();
             })
             .then(()=>{
@@ -121,4 +128,39 @@ describe("cardService", ()=>{
                 done();
         });
     });
+
+    it("Get user cards" ,done=>{
+        var parameters = {deckId: userDeckId};
+        cardService.getCards(userId, parameters, r=>{
+                assert.equal(r.success, true);
+                assert.equal(r.msg.length, 3);
+                done();
+        });
+    });
+
+    it("Get class cards" ,done=>{
+        var parameters = {deckId: classDeckId};
+        cardService.getClassCardsUnsafe(classId, parameters, r=>{
+                assert.equal(r.success, true);
+                assert.equal(r.msg.length, 2);
+                done();
+        });
+    });
+
+    it("update user card" ,done=>{
+        var card = {name:"updated card"};
+        cardService.updateCard(cardIdUser, userId, card, r=>{
+                assert.equal(r.success, true);
+                done();
+        });
+    });
+
+    it("delete card" ,done=>{
+        cardService.deleteCard(cardIdUser, userId, r=>{
+                assert.equal(r.success, true);
+                done();
+        });
+    });
+
+
 });

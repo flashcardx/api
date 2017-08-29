@@ -58,16 +58,50 @@ module.exports = function(app){
             }
     });
 
-    app.get("/myCards", controllerUtils.requireLogin, function(req, res){
+
+
+    /**
+     * @api {get} /cards/:type/:deckId get cards
+     * @apiGroup card
+     * @apiName get cards
+     * @apiDescription returns cards inside deck.
+     * @apiParam (Parameters) {string} type u: deck in user. c: deck in class.
+     * @apiParam (Parameters) {string} [deckId] id for the deck where the cards are. if undefined will return/search cards in all decks!
+     * @apiParam (Query) {string} [classname] needed when type=c
+     * @apiParam (Query) {string} [limit=12] limit how manny cards will be returned
+     * @apiParam (Query) {string} [sort=asc] sort asc or deck, sorts cards by last update date 
+     * @apiParam (Query) {string} [last] last for pagination needs 'updated_at' parameter of the last card listed 
+     * @apiParam (Query) {string} [name] name send this parameter for searching by card name(reg expressions accepted)
+     * @apiHeader (Headers) {string} x-access-token user session token
+     * @apiParamExample {json} Request-Example:
+     * url: /cards/u/59991371065a2544f7c90288?limit=10
+     * 
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {"success":true,
+     *      "msg": [{"_id":"59a5c98fb2ec6536aa422456","updated_at":"2017-08-29T20:07:43.325Z","name":"card class","description":"I can fly in a class","imgs":[]}]
+     *      }
+     * @apiVersion 1.1.0
+     *  */
+    app.get("/cards/:type/:deckId", controllerUtils.requireLogin, function(req, res){
         var params = {
             last: req.query.last,
             limit: req.query.limit,
             sort: req.query.sort,
-            name: req.query.q
+            name: req.query.q,
+            deckId: req.params.deckId
         };
-        cardService.getCards(req.userId, params, function(result){
-            res.json(result);
-        });
+        switch (req.params.type){
+                case "u": cardService.getCards(req.userId, params, function(result){
+                            res.json(result);
+                          });
+                        break;
+                case "c": classService.getCards(req.query.classname, req.userId, params, function(result){
+                            res.json(result);
+                          });
+                         break;
+                default: return res.json({success:false, msg:"invalid type"}); 
+            }
     });
 
     /**
@@ -77,7 +111,7 @@ module.exports = function(app){
      * @apiDescription deletes the card.
      * @apiParam (Parameters) {string} type u:user card, c:class card.
      * @apiParam (Parameters) {string} cardId id of the card to be deleted.
-     * @apiParam (Query) {string} classname needed when type=c.
+     * @apiParam (Query) {string} [classname] needed when type=c.
      * @apiHeader (Headers) {string} x-access-token user session token
      * @apiParamExample {json} Request-Example:
      * url: /card/u/59991371065a2544f7c90288
@@ -141,17 +175,47 @@ module.exports = function(app){
                 }
     });
 
-    app.post("/updateCard/:cardId",  controllerUtils.requireLogin, (req, res)=>{
+     /**
+     * @api {post} /updateCard/:type/:cardId update card
+     * @apiGroup card
+     * @apiName update card
+     * @apiDescription updates card's name and description, *undefined values wont be updated.
+     * @apiParam (Parameters) {string} type u:user, c:class.
+     * @apiParam (Parameters) {string} cardId id of the card to be updated.
+     * @apiParam (Query) {string} [classname] needed when type=c.
+     * @apiParam (Request body) {string} [name] name for the card.
+     * @apiParam (Request body) {string} [description] description for the card.
+     * @apiHeader (Headers) {string} x-access-token user session token
+     * @apiParamExample {json} Request-Example:
+     * url: /updateCard/u/59991371065a2544f7c90288
+     * body: { "name":"car",
+     *          "description": "a ferrari updated"
+     *      }
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {"success":true
+     *      }
+     * @apiVersion 1.1.0
+     *  */
+    app.post("/updateCard/:type/:cardId",  controllerUtils.requireLogin, (req, res)=>{
         const cardId = req.params.cardId;
+        const classname = req.query.classname;
         const userId = req.userId;
-        const card ={
+        const card = {
             name : purifier.purify(req.body.name),
             description : purifier.purify(req.body.description)
         }
-        cardService.updateCard(cardId, userId, card, r=>{
-            return res.json(r);
-        });
-
+        switch (req.params.type){
+                case "u": cardService.updateCard(cardId, userId, card, r=>{
+                                return res.json(r);
+                         });
+                        break;
+                case "c":  classService.updateCard(classname, userId, cardId, card, r=>{
+                                return res.json(r);
+                            });
+                         break;
+                default: return res.json({success:false, msg:"invalid type"}); 
+            }
     });
 
     app.get("/practiceCards",  controllerUtils.requireLogin, (req, res)=>{

@@ -36,10 +36,6 @@ const deckSchema = new Schema({
         type: Schema.Types.ObjectId,
         index: true
         },
-    cards:{
-        type: [Schema.Types.ObjectId],
-        ref: "cards"
-    },
     duplicates:{
         type: Number,
         default: 0

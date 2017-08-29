@@ -253,11 +253,6 @@ function delete4Class(userId, deckId, callback) {
         });
 }
 
-function addCard(deckId, ownerId, cardId) {
-    return Deck.update({ _id: deckId, ownerId: ownerId, active: true }, { $push: { cards: cardId } })
-        .exec();
-}
-
 function validateOwnership(ownerId, deckId) {
     return new Promise((resolve, reject) => {
         Deck.findOne({ _id: deckId, ownerId: ownerId, active: true }, "_id")
@@ -298,10 +293,10 @@ function childUserDecks(userId, parentId, skip, callback) {
     };
     if (!parentId) {
         parameters.recursiveOrder = DEFAULT_RECURSIVE_ORDER;
-        return findDecksByParams(parameters, 14, skip, "name _id thumbnail", callback);
+        return findDecksByParams(parameters, 14, skip, "name _id thumbnail lang", callback);
     }
     parameters._id = parentId;
-    return findDeckChildren(parameters, 14, skip, "name _id thumbnail", callback);
+    return findDeckChildren(parameters, 14, skip, "name _id thumbnail lang", callback);
 }
 
 function childClassDecks(userId, parentId, classname, skip, callback) {
@@ -318,10 +313,10 @@ function childClassDecks(userId, parentId, classname, skip, callback) {
                 };
                 if (!parentId) {
                     parameters.recursiveOrder = DEFAULT_RECURSIVE_ORDER;
-                    return findDecksByParams(parameters, 14, skip, "name _id thumbnail", callback);
+                    return findDecksByParams(parameters, 14, skip, "name _id thumbnail lang", callback);
                 }
                 parameters._id = parentId;
-                return findDeckChildren(parameters, 14, skip, "name _id thumbnail", callback);
+                return findDeckChildren(parameters, 14, skip, "name _id thumbnail lang", callback);
             })
             .catch(err=>{
                 logger.error("error when getting class(for verification)childClassDecks: " + err);
@@ -570,7 +565,6 @@ module.exports = {
     update4Class: update4Class,
     delete4User: delete4User,
     delete4Class: delete4Class,
-    addCard: addCard,
     initChild: initChild,
     findByIdLean: findByIdLean,
     validateOwnership: validateOwnership,

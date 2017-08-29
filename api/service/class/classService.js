@@ -593,7 +593,7 @@ function getCards(classname, userId, params, callback){
     .then(Class=>{
         if(!Class)
             return Promise.reject("Either class does not exist or user is not in the class");
-        return cardService.getClassCards(Class._id, params, callback);
+        return cardService.getClassCardsUnsafe(Class._id, params, callback);
     })
     .catch(err=>{
                 logger.error("err: " + err);

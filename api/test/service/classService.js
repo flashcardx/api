@@ -99,4 +99,15 @@ describe("classService", ()=>{
                 });
             });
         })
+
+        describe("class cards", ()=>{
+            it.only("update class card" ,done=>{
+                var card = {name:"updated class card"};
+                classService.updateCard(classname, userId, cardIdClass, card, r=>{
+                        assert.equal(r.success, true);
+                        done();
+                });
+            });
+
+        })
 });

@@ -137,32 +137,6 @@ module.exports = function(app){
         });
     });
 
-    app.get("/classCards/:classname", controllerUtils.requireLogin, function(req, res){
-        var params = {
-            last: req.query.last,
-            limit: req.query.limit,
-            category: req.query.category,
-            sort: req.query.sort,
-            name: req.query.q
-        };
-        classService.getCards(req.params.classname, req.userId, params, function(result){
-            res.json(result);
-        });
-    });
-
-    app.post("/updateCardClass/:classname/:cardId",  controllerUtils.requireLogin, (req, res)=>{
-        const cardId = req.params.cardId;
-        const classname = req.params.classname;
-        const userId = req.userId;
-        const card = {
-            name : purifier.purify(req.body.name),
-            description : purifier.purify(req.body.description),
-            category: purifier.purify(req.body.category)
-        };
-        classService.updateCard(classname, userId, cardId, card, r=>{
-            return res.json(r);
-        });
-    });
 
     app.get("/classCategories/:classname", controllerUtils.requireLogin, (req, res)=>{
         var classname = req.params.classname;

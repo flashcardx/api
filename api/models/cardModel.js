@@ -40,7 +40,12 @@ const cardSchema = new Schema({
     },
     ownerId:{
          type: Schema.Types.ObjectId,
-         index:true
+         ref: "users",
+         index: true
+    },
+    deckId:{
+         type: Schema.Types.ObjectId,
+         ref: "decks"
     },
     supermemo:{
         easiness:{
@@ -64,6 +69,7 @@ const cardSchema = new Schema({
 );
 
 cardSchema.index({"updated_at": 1});
+cardSchema.index({ownerId: 1, deckId: 1});
 
 cardSchema.pre('update', function(next) {
   this.options.runValidators = true;

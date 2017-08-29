@@ -13,21 +13,6 @@ const shutterstock = require('shutterstock');
 module.exports = function(app){
     const controllerUtils = require(appRoot + "/middleware").utils(app);
 
-    app.get("/search/:criteria", controllerUtils.requireLogin, function(req,res){
-        userService.findById(req.userId, 'lang', (result)=>{
-                if(!result.success)
-                    return res.json(result);
-                const user = result.msg;
-                const criteria = S(req.params.criteria).replaceAll(" ", "+").s;
-                var page = 1;
-                if( req.query.page)
-                    page = req.query.page;
-               imgSearchService.search(criteria, user.lang, page, result=>{
-                    return res.json(result);
-               });
-            });
-        });
-
         app.get("/searchBing/:q/:clientIp", controllerUtils.requireLogin, function(req,res){
                //const criteria = S(req.params.criteria).replaceAll(" ", "+").s;
                imgSearchService.searchBing(req.params.q, req.params.clientIp, result=>{

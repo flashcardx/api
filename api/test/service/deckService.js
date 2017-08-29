@@ -225,7 +225,7 @@ describe("deckService", ()=>{
             });          
     });
 
-    describe.only("Get decks", ()=>{
+    describe("Get decks", ()=>{
             var userId;
             var deckUserId;
             var childrenDeckUserId;

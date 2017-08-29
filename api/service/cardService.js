@@ -12,6 +12,7 @@ const mongoose = require("mongoose");
 const AWSService = require("./AWSService");
 
 function createUserCard(parameters, callback){
+    parameters.card.deckId = parameters.deckId;
     var cardModel = new Card(parameters.card);
     var user;
     var warning;
@@ -30,7 +31,6 @@ function createUserCard(parameters, callback){
                                 warning = r.warning;
                                 cardModel.ownerId = user._id;
                                 cardModel.ownerName = user.name;
-                                cardModel.lang = user.lang;
                                 if(r.imgHashes)
                                     cardModel.imgs = r.imgHashes.filter(v=>{
                                         if(objectIsNotEmpty(v))
@@ -70,6 +70,7 @@ function validateCard(cardModel){
 }
 
 function getCards(userId, params, callback){
+    //we don't verify user is the deck owner since other people have access to all users decks
     params.limit = parseInt(params.limit);
     if(!params.sort || (params.sort!=="asc" && params.sort!=="desc")){
         logger.warn("sort argument invalid(should be asc or desc), got: " + params.sort);
@@ -77,37 +78,36 @@ function getCards(userId, params, callback){
     }
     if(params.limit <= 0)
         return callback({success: false, msg: "limit must be > 0"});
-    userService.findById(userId, 'lang', result=>{
-          if(result.success === false)
-                return callback(result);
-          const user = result.msg;
-          var query = [{'ownerId': userId, 'lang':user.lang}];
-          if(params.last){
-            if(params.sort==="desc")
-                query.push({updated_at:{$lt: params.last}});
-            else
-                query.push({updated_at:{$gt: params.last}});
-          }
-          if(params.name){
+    var query = [{'ownerId': userId}, {"ownerType": "u"}];
+    if(params.deckId)
+        query.push({"deckId": params.deckId});
+    if(params.last){
+        if(params.sort==="desc")
+            query.push({updated_at:{$lt: params.last}});
+        else
+            query.push({updated_at:{$gt: params.last}});
+    }
+    if(params.name){
             query.push({name:{$regex : new RegExp(params.name, "i")}});
-          }
-       Card.find({$and: query }).select("name description imgs lang ownerName updated_at").sort({updated_at: params.sort}).limit(params.limit).exec(
+    }
+       Card.find({$and: query }).select("name description imgs ownerName updated_at").sort({updated_at: params.sort}).limit(params.limit).exec(
                     (err, cards)=>{
                          return returnCards(err, cards, callback);
                     }
-                );
-        })
+        );
 }
 
-function getClassCards(classId, params, callback){
+function getClassCardsUnsafe(classId, params, callback){
     params.limit = parseInt(params.limit);
     if(!params.sort || (params.sort!=="asc" && params.sort!=="desc")){
         logger.warn("sort argument invalid(should be asc or desc), got: " + params.sort);
         params.sort= "asc";
     }
-    if(params.limit <= 0)
-        return callback({success: false, msg: "limit must be > 0"});
-    var query = [{'ownerId': classId}];
+    if(!params.limit)
+        params.limit=12;
+    if(params.limit <= 0 || params.limit > 50)
+        return callback({success: false, msg: "limit must be > 0 and <50"});
+    var query = [{'ownerId': classId},{"ownerType": "c"}];
     if(params.last){
         if(params.sort=="desc")
             query.push({updated_at:{$lt: params.last}});
@@ -117,7 +117,9 @@ function getClassCards(classId, params, callback){
     if(params.name){
             query.push({name:{$regex : new RegExp(params.name, "i")}});
         }
-    CardClass.find({$and: query }).select("name description imgs ownerName updated_at").sort({updated_at: params.sort}).limit(params.limit).exec(
+    if(params.deckId)
+            query.push({"deckId": params.deckId});
+    Card.find({$and: query }).select("name description imgs ownerName updated_at").sort({updated_at: params.sort}).limit(params.limit).exec(
                     (err, cards)=>{
                          return returnCards(err, cards, callback);
                     }
@@ -133,7 +135,7 @@ function returnCards(err, cards, callback){
 }
 
 function deleteCard(cardId, userId, callback){
-    Card.findById(cardId).exec()
+    Card.find({_id:cardId, ownerId: userId, ownerType:"u"}).exec()
                         .then(card=>{
                              if(!card)
                                 return Promise.reject("Card id does not exist");
@@ -146,14 +148,7 @@ function deleteCard(cardId, userId, callback){
                                 return userService.increaseCardCounter(userId);
                          })
                          .then(()=>{
-                             return userService.getUserLang(userId, r=>{
-                                if(r.success == false){
-                                    logger.error(r.msg);
-                                    return callback(r);
-                                }
-                                const lang = r.msg;
                              return Promise.resolve();
-                             });
                          })
                          .then(()=>{
                              return callback({success:true, msg:"Card deleted ok"});
@@ -246,7 +241,7 @@ function duplicateCardUCUnsafe(Class, cardIdOld, username, deckId, callback){
 
 
 function updateCard(id, userId, card, callback){
-    Card.findOne({ '_id': id, ownerId: userId}, "name description _id").exec().then(doc=>{
+    Card.findOne({ '_id': id, ownerId: userId, ownerType:"u"}, "name description _id").exec().then(doc=>{
             if(!doc){
                 logger.error("no card found for cardId: " + id + ", with and userId: " + userId + "(trying to update card)");
                 return callback({success:false, msg:"This card does not exist in the user collection"});
@@ -264,9 +259,9 @@ function updateCard(id, userId, card, callback){
     });
 }
 
-//verify if user who made request is in the class
 function updateCardClass(cardId, classId, card, callback){
-    CardClass.findOne({ '_id': cardId, ownerId: classId}, "name description _id").exec().then(doc=>{
+//verify if user who made request is in the class
+    Card.findOne({ '_id': cardId, ownerId: classId, ownerType:"c"}, "name description _id").exec().then(doc=>{
             if(!doc){
                 logger.error("no card found for cardId: " + cardId + ", with a classId: " + classId + "(trying to update card)");
                 return callback({success:false, msg:"This card does not exist in the class collection"});
@@ -283,8 +278,6 @@ function updateCardClass(cardId, classId, card, callback){
     });
 }
 
-
-
 function findByIdLean(cardId, fields){
     return Card.findById(cardId, fields)
     .lean()
@@ -300,7 +293,7 @@ module.exports = {
     updateCard: updateCard,
     updateCardClass: updateCardClass,
     returnCards: returnCards,
-    getClassCards: getClassCards,
+    getClassCardsUnsafe: getClassCardsUnsafe,
     findByIdLean: findByIdLean
 }
 
@@ -314,9 +307,6 @@ function saveCardUser(cardModel, userId, deckId){
     return new Promise((resolve, reject)=>{
         cardModel.save().then(()=>{
              userService.decreaseCardCounter(userId)
-             .then(()=>{
-                        return deckService.addCard(deckId, userId, cardModel._id);
-            })
             .then(()=>{
                 resolve();
             })
@@ -334,10 +324,7 @@ function saveCardUser(cardModel, userId, deckId){
 function saveCardClass(cardModel, classId, deckId){
     return new Promise((resolve, reject)=>{
         cardModel.save().then(()=>{
-                deckService.addCard(deckId, classId, cardModel._id)
-                .then(()=>{
-                    return classService.decreaseCardsLeft(classId);
-                })
+                classService.decreaseCardsLeft(classId)
                 .then(()=>{
                     resolve();
                 })
@@ -353,6 +340,7 @@ function saveCardClass(cardModel, classId, deckId){
 }
 
 function createClassCard(parameters, classname, callback){
+    parameters.card.deckId = parameters.deckId;
     var cardModel = new Card(parameters.card);
     var user;
     var warning;
@@ -360,7 +348,7 @@ function createClassCard(parameters, classname, callback){
     validateCard(cardModel) 
                             .then((result)=>{
                                 user = result;
-                                return classService.findClassLean(classname, parameters.userId, "_id name lang cardsLeft");
+                                return classService.findClassLean(classname, parameters.userId, "_id name cardsLeft");
                             })
                             .then(result=>{
                                 if(!result)
@@ -378,7 +366,6 @@ function createClassCard(parameters, classname, callback){
                                 cardModel.ownerId = Class._id;
                                 cardModel.ownerName = Class.name;
                                 cardModel.ownerType = "c";
-                                cardModel.lang = Class.lang;
                                 if(r.imgHashes)
                                     cardModel.imgs = r.imgHashes.filter(v=>{
                                         if(objectIsNotEmpty(v))
