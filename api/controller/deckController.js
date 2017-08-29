@@ -3,6 +3,7 @@ const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const deckService = require(appRoot + "/service/deckService");
+const credentials = config.AWSCredentials;
 
 module.exports = function(app){
     const controllerUtils = require(appRoot + "/middleware").utils(app);
@@ -233,7 +234,7 @@ app.delete("/deck/:type/:deckId", (req, res)=>{
 });
 
 /**
- * @api {post} /alldecks/:type Get all decks
+ * @api {get} /alldecks/:type Get all decks
  * @apiGroup deck
  * @apiName Get all decks
  * @apiDescription Returns all decks(name and id) from user or class.
@@ -272,33 +273,39 @@ app.delete("/deck/:type/:deckId", (req, res)=>{
 });
 
 /**
- * @api {post} /deckschildren/:type Get decks inside specific deck
+ * @api {get} /deckschildren/:type Get decks inside deck
  * @apiGroup deck
- * @apiName Get decks inside specific deck
- * @apiDescription Returns all decks(name, id and thumbnail) inside a deck.
+ * @apiName Get decks inside deck
+ * @apiDescription Returns all decks(name, id and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the imgBaseUrl parameter that this endpoint will return.
  * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
  * @apiParam (Query) {string} [parentId] id of the parent deck, if not specified returns all decks in root.
  * @apiParam (Query) {string} [classname] needed when type=c.
+ * @apiParam (Query) {string} [skip=0] Used for pagination, if every page has 14 items, when skip=14 you will get items from page 2.
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
- * url: /deckschildren/u?parentId=59991371065a2544f7c9028c
+ * url: /deckschildren/u?parentId=59991371065a2544f7c9028c&skip=14
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
  *     {"success":true,
- *      "decks": [{"name": "deck1", id:"59991371065a2544f7c90288", "thumbnail":"https://d32suzxs6u0rur.cloudfront.net/18428b0dd352776131a209bd24785b8f"},
- *                {"name": "math", id:"59991371065a2544fasd8888", "thumbnail":"https://d32suzxs6u0rur.cloudfront.net/18428b0dd352776131a209bd24785b8f"}]
+ *      "decks": [{"name": "deck1", id:"59991371065a2544f7c90288", "thumbnail":"18428b0dd352776131a209bd24785b8f"},
+ *                {"name": "math", id:"59991371065a2544fasd8888", "thumbnail":"18428b0dd352776131a209bd24785b8f"}],
+ *      "imgBaseUrl": "https://d32suzxs6u0rur.cloudfront.net"
  *      }
  * @apiVersion 1.1.0
  *  */
     app.get("/deckschildren/:type", controllerUtils.requireLogin, (req, res)=>{
         switch (req.params.type) {
             case "u":
-                    deckService.childUserDecks(req.userId, req.query.parentId, r=>{
+                    deckService.childUserDecks(req.userId, req.query.parentId, req.query.skip, r=>{
+                        if(r.success == true)
+                            r.imgBaseUrl = credentials.cloudfrontUrl;
                         return res.json(r);
                     })
                     break;
             case "c":
-                    deckService.childClassDecks(req.userId, req.query.parentId, req.query.classname, r=>{
+                    deckService.childClassDecks(req.userId, req.query.parentId, req.query.classname, req.query.skip, r=>{
+                        if(r.success == true)
+                            r.imgBaseUrl = credentials.cloudfrontUrl;  
                         return res.json(r);
                     })
                     break;

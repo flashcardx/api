@@ -228,6 +228,8 @@ describe("deckService", ()=>{
     describe.only("Get decks", ()=>{
             var userId;
             var deckUserId;
+            var childrenDeckUserId;
+            var childrenDeckClassId;
             var deckClassId;
             var classname = "testclass";
             var classId;
@@ -244,13 +246,25 @@ describe("deckService", ()=>{
                         return classModel.save();
                 })
                 .then(()=>{
-                    var deck = {name:"testdeck", description:"abc", ownerId: userId};
+                    var deck = {name:"children deck", description:"abc", ownerId: userId};
+                    var deckModel = new Deck(deck);
+                    childrenDeckUserId = deckModel._id;
+                    return deckModel.save();
+                })
+                .then(()=>{
+                    var deck = {name:"parent deck",decks:[childrenDeckUserId], description:"abc", ownerId: userId};
                     var deckModel = new Deck(deck);
                     deckUserId = deckModel._id;
                     return deckModel.save();
                 })
                 .then(()=>{
-                    var deck = {name:"testdeckclass", description:"abc", ownerId: classId, ownerType:"c"};
+                    var deck = {name:"children class deck", description:"abc", ownerId: classId, ownerType:"c"};
+                    var deckModel = new Deck(deck);
+                    childrenDeckClassId = deckModel._id;
+                    return deckModel.save();
+                })
+                .then(()=>{
+                    var deck = {name:"parent class deck", decks:[childrenDeckClassId], description:"abc", ownerId: classId, ownerType:"c"};
                     var deckModel = new Deck(deck);
                     deckClassId = deckModel._id;
                     return deckModel.save();
@@ -268,21 +282,53 @@ describe("deckService", ()=>{
                 done();
             });
         
-        it("get all user decks, should get 1 deck", done=>{
+        it("get all user decks, should get 2 decks", done=>{
             deckService.allUserDecks(userId, r=>{
-                console.error("got: " + JSON.stringify(r));
+                assert.equal(r.success, true);
+                assert.equal(r.msg.length, 2);
+                done();
+            })
+        })
+
+        it("get all class decks, should get 2 decks", done=>{
+            deckService.allClassDecks(userId, classname, r=>{
+                assert.equal(r.success, true);
+                assert.equal(r.msg.length, 2);
+                done();
+            })
+        })
+
+         it("get child user decks, should get 1 deck", done=>{
+            deckService.childUserDecks(userId, undefined, 1, r=>{
                 assert.equal(r.success, true);
                 assert.equal(r.msg.length, 1);
                 done();
             })
         })
 
-        it("get all class decks, should get 1 deck", done=>{
-            deckService.allClassDecks(userId, classname, r=>{
+        it("get child user decks, should get 1 deck", done=>{
+            deckService.childUserDecks(userId, deckUserId, 1, r=>{
+                assert.equal(r.success, true);
+                 assert.equal(r.msg.length, 0);
+                done();
+            })
+        })
+
+        it("get child class decks, should get 1 decks", done=>{
+            deckService.childClassDecks(userId, undefined, classname,1, r=>{
                 assert.equal(r.success, true);
                 assert.equal(r.msg.length, 1);
                 done();
             })
         })
+
+        it("get child class child decks, should get 0 decks", done=>{
+            deckService.childClassDecks(userId, deckClassId, classname, 4, r=>{
+                assert.equal(r.success, true);
+                assert.equal(r.msg.length, 0);
+                done();
+            })
+        })
+
     })
 });

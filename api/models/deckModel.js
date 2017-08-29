@@ -46,8 +46,7 @@ const deckSchema = new Schema({
     },
     recursiveOrder:{
         type: Number,
-        default: DEFAULT_RECURSIVE_ORDER,
-        index: true
+        default: DEFAULT_RECURSIVE_ORDER
     },
     lang:{
         type: String,
@@ -64,7 +63,7 @@ const deckSchema = new Schema({
     }
 );
 
-
+deckSchema.index({recursiveOrder: 1, _id: 1});
 deckSchema.pre('update', function(next) {
   this.options.runValidators = true;
   next();
@@ -80,6 +79,6 @@ Deck.on('index', function(error) {
 
 
 module.exports = {
-    deck:deck,
+    deck:Deck,
     DEFAULT_RECURSIVE_ORDER: DEFAULT_RECURSIVE_ORDER
 }

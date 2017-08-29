@@ -228,6 +228,154 @@
     "groupTitle": "card"
   },
   {
+    "type": "post",
+    "url": "/alldecks/:type",
+    "title": "Get all decks",
+    "group": "deck",
+    "name": "Get_all_decks",
+    "description": "<p>Returns all decks(name and id) from user or class.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>Needed for getting class decks.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /decks/u",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"decks\": [{\"name\": \"deck1\", id:\"59991371065a2544f7c90288\"},\n           {\"name\": \"math\", id:\"59991371065a2544fasd8888\"}]\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "examples": [
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\": false,\n  \"msg\": \"some mongodb error\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "post",
+    "url": "/deckschildren/:type",
+    "title": "Get decks inside deck",
+    "group": "deck",
+    "name": "Get_decks_inside_deck",
+    "description": "<p>Returns all decks(name, id and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the imgBaseUrl parameter that this endpoint will return.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "parentId",
+            "description": "<p>id of the parent deck, if not specified returns all decks in root.</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>needed when type=c.</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "skip",
+            "defaultValue": "0",
+            "description": "<p>Used for pagination, if every page has 14 items, when skip=14 you will get items from page 2.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /deckschildren/u?parentId=59991371065a2544f7c9028c&skip=14",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"decks\": [{\"name\": \"deck1\", id:\"59991371065a2544f7c90288\", \"thumbnail\":\"18428b0dd352776131a209bd24785b8f\"},\n           {\"name\": \"math\", id:\"59991371065a2544fasd8888\", \"thumbnail\":\"18428b0dd352776131a209bd24785b8f\"}],\n \"imgBaseUrl\": \"https://d32suzxs6u0rur.cloudfront.net\"\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
     "type": "delete",
     "url": "/deck/:type/:deckId",
     "title": "delete deck",
