@@ -10,7 +10,7 @@
     },
     "pi":{
         "myUrl": "http://localhost:3000",
-        "urlWeb":"http://192.241.134.52",
+        "urlWeb":"http://pi.flashcardx.co",
         "pixabayUrl":"https://pixabay.com/api",
         "pixabayKey":"3968365-5443b188192b2d22a49cf77be",
         "maxSizeUploadFiles": "2097152",
@@ -18,7 +18,7 @@
     },
     "production":{
         "myUrl": "http://localhost:3000",
-        "urlWeb":"http://www.flashcard-x.com",
+        "urlWeb":"http://www.flashcardx.co",
         "pixabayUrl":"https://pixabay.com/api",
         "pixabayKey":"3968365-5443b188192b2d22a49cf77be",
         "maxSizeUploadFiles": "2097152",

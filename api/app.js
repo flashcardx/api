@@ -1,6 +1,6 @@
 /*
     ©2017 FlashCardX By: Pablo Nicolas Marino,
-    http://www.flashcard-x.com
+    http://www.flashcardx.co
         Powered By: https://pixabay.com/
 */
 const env = process.env.NODE_ENV || "development";

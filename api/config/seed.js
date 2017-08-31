@@ -27,7 +27,7 @@ const cards=[
                     description:"Welcome! we are pleased you are here, hope you enjoy our tool!Remember: <br/>"+
                                 "Everything in your profile is linked with the language set in your profile(English is set by default), you can change it in settings.<br/>"+
                                 "If you will create cards in other language than the one you have selected, please change this setting,it will affect your recommendations and some services that need to know wich language you are using(the language setting does not change the language of the webpage).<br/>"+
-                                "Feel free to ask us anything, write us to: contact@flashcard-x.com",
+                                "Feel free to ask us anything, write us to: contact@flashcardx.co",
                     imgs: [
                     {
                         url:"https://cdn.pixabay.com/photo/2016/11/21/15/38/dock-1846008_640.jpg?attachment",

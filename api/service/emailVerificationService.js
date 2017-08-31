@@ -29,8 +29,8 @@ nev.configure({
     confirmMailOptions: {
         from: 'FlashCardX <pablonicolasm.pm@gmail.com>',
         subject: 'Welcome on board!',
-        html: 'Your account has been successfully verified.</p>We really hope you enjoy our app!, if you have any suggestions or comments just write us to contact@flashcard-x.com, we will get back to you asap.</p>',
-        text: 'Your account has been successfully verified. We really hope you enjoy our app!, if you have any suggestions or comments just write us to contact@flashcard-x.com, we will get back to you asap.'
+        html: 'Your account has been successfully verified.</p>We really hope you enjoy our app!, if you have any suggestions or comments just write us to contact@flashcardx.co, we will get back to you asap.</p>',
+        text: 'Your account has been successfully verified. We really hope you enjoy our app!, if you have any suggestions or comments just write us to contact@flashcardx.co, we will get back to you asap.'
     }
 }, function(err, options){
     if (err) 
