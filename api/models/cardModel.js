@@ -45,7 +45,8 @@ const cardSchema = new Schema({
     },
     deckId:{
          type: Schema.Types.ObjectId,
-         ref: "decks"
+         ref: "decks",
+         index: true
     },
     supermemo:{
         easiness:{

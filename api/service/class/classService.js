@@ -622,6 +622,16 @@ function findClassLeanNoVerify(classname, fields){
         .exec();
 }
 
+function findByIdLeanUnsafe(id, fields){
+    return classModel.findOne({$and: [
+                        {_id:id},
+                        {isActive:true}
+                        ]},
+                        fields)
+        .lean()
+        .exec();
+}
+
 function findClass(classname, userId, fields){
     return classModel.findOne({$and: [
                         {name:classname},
@@ -663,15 +673,14 @@ function updateCard(classname, userId, cardId, card, callback){
     .then(Class=>{
         if(!Class)
             return Promise.reject("Either class does not exist or user is not in the class");
-        cardService.updateCardClass(cardId, Class._id, card, r=>{
-            if(r.success == false)
-                return Promise.reject(r.msg);
-            return callback({success:true});
-        });
+        return cardService.updateCardClass(cardId, Class._id, card);
+    })
+    .then(()=>{
+        return callback({success:true});
     })
     .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
+                logger.error("err: " + err);
+                return callback({success:false, msg:err});
     });
 }
 
@@ -809,7 +818,8 @@ module.exports = {
     findClassLean: findClassLean,
     findClassLeanNoVerify: findClassLeanNoVerify,
     findClassLeanById: findClassLeanById,
-    decreaseCardsLeft: decreaseCardsLeft
+    decreaseCardsLeft: decreaseCardsLeft,
+    findByIdLeanUnsafe: findByIdLeanUnsafe
 }
 
 const deckService = require(appRoot + "/service/deckService");

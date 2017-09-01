@@ -150,22 +150,28 @@ function increaseImgsCounter(imgs){
         if(imgs.length === 0)
             return resolve();
         imgs.forEach((img, index)=>{
-                    Img.findOne({ 'hash': img.hash}).exec().then(doc=>{
-                        if(doc){
-                            doc.timesUsed++;
-                            doc.save((err)=>{
-                                if(err)return reject(err);
-                                index++;
-                                if(index === imgs.length)
-                                    return resolve();
-                            });
-                        }
-                        else{
-                            return reject("image does not exist");
-                        }
-                    })
-                })
-        })     
+                    if(!img.hash){
+                        index++;
+                        if(index == imgs.length)
+                            return resolve();
+                    }
+                    else
+                        Img.findOne({ 'hash': img.hash}).exec().then(doc=>{
+                            if(doc){
+                                doc.timesUsed++;
+                                doc.save((err)=>{
+                                    if(err)return reject(err);
+                                    index++;
+                                    if(index === imgs.length)
+                                        return resolve();
+                                });
+                            }
+                            else{
+                                return reject("image does not exist");
+                            }
+                        })
+            })
+    })     
 }
 
 function saveImgDb(filename, hash, contentType){

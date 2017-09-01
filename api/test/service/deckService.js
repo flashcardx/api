@@ -1,25 +1,33 @@
 require("../../app"); // opens db connection
 const appRoot = require('app-root-path');
+const config = require(appRoot + "/config");
+const logger = config.getLogger(__filename);
 const assert = require("chai").assert;
 const deckService = require("../../service/deckService");
+const cardService = require("../../service/cardService");
 const mongoose = require("mongoose");
 const Deck = require(appRoot + "/models/deckModel").deck;
 const User = require(appRoot + "/models/userModel");
+const Card = require(appRoot + "/models/cardModel");
 const Class = require(appRoot + "/models/classModel");
 var fs = require("fs");
+const { exec } = require('child_process');
 
-
-describe("deckService", ()=>{
-    describe("create update and delete", ()=>{
+describe.only("deckService", ()=>{
+    describe("create update, duplicate and delete", ()=>{
        var userId;
        var parentUserDeckId;
+       var cardIdUser;
+       var cardIdClass;
        var parentClassDeckId;
        var classname = "testclass";
        var classId;
+       var newUserDeckId;
+       var newClassDeckId;
 
         before(done=>{
             mongoose.connection.db.dropDatabase();
-            var user = {"name":"tester", password:"1234"};
+            var user = {"name":"tester", password:"1234", "plan.cardsLeft":200};
             var userModel = new User(user);
             userId = userModel._id;
             userModel.save()
@@ -36,10 +44,34 @@ describe("deckService", ()=>{
                 return deckModel.save();
             })
             .then(()=>{
-                var deck = {name:"testdeckclass", description:"abc", ownerId: classId};
+                var deck = {name:"new user deck", description:"new abc", ownerId: userId};
+                var deckModel = new Deck(deck);
+                newUserDeckId = deckModel._id;
+                return deckModel.save();
+            })
+            .then(()=>{
+                var card = {name: "test", description:"I can fly", ownerType:"u", ownerId: userId, deckId: parentUserDeckId};
+                var cardModel = new Card(card);
+                cardIdUser = cardModel._id;
+                return cardModel.save();
+            })
+            .then(()=>{
+                var deck = {name:"testdeckclass", description:"abc", ownerType:"c", ownerId: classId};
                 var deckModel = new Deck(deck);
                 parentClassDeckId = deckModel._id;
                 return deckModel.save();
+            })
+            .then(()=>{
+                var deck = {name:"new deck class", description:"new deck for class", ownerType:"c", ownerId: classId};
+                var deckModel = new Deck(deck);
+                newClassDeckId = deckModel._id;
+                return deckModel.save();
+            })
+            .then(()=>{
+                var card = {name: "card class", description:"I can fly in a class", ownerType:"c", ownerId: classId, deckId: parentClassDeckId};
+                var cardModel = new Card(card);
+                cardIdClass = cardModel._id;
+                return cardModel.save();
             })
             .then(()=>{
                 done();
@@ -51,6 +83,8 @@ describe("deckService", ()=>{
 
         after(done=>{
             //mongoose.connection.db.dropDatabase();
+            console.log("killing child processes");
+            exec("killall node"); //kills child processes
             done();
         });
 
@@ -106,6 +140,38 @@ describe("deckService", ()=>{
             });
         })
 
+        it("should duplicate user deck", done=>{
+            deckService.duplicate2User(userId, parentUserDeckId, newUserDeckId,r=>{
+                setTimeout(()=>{
+                    assert.equal(r.success, true);
+                    done();
+                }, 3000);
+            });
+        })
+
+        it("should duplicate class deck", done=>{
+            deckService.duplicate2Class(userId, classname, parentUserDeckId, newUserDeckId,r=>{
+                assert.equal(r.success, false);
+                done();
+            });
+        })
+        
+        it.only("should duplicate class deck", done=>{
+            setTimeout(()=>{
+                deckService.duplicate2Class(userId, classname, parentUserDeckId, undefined, r=>{
+                    assert.equal(r.success, true);
+                    done();
+                });
+            }, 3000);
+        })
+
+        it("should duplicate class deck", done=>{
+            deckService.duplicate2Class(userId, classname, parentUserDeckId, newClassDeckId, r=>{
+                assert.equal(r.success, true);
+                done();
+            });
+        })
+
         it("should delete user deck", done=>{
             deckService.delete4User(userId, parentUserDeckId, r=>{
                 assert.equal(r.success, true);
@@ -113,7 +179,7 @@ describe("deckService", ()=>{
             });
         })
 
-        it("should delete class deck", done=>{
+        it("should delete class deck", done=>{ 
             deckService.delete4Class(userId, parentClassDeckId, r=>{
                 assert.equal(r.success, true);
                 done();

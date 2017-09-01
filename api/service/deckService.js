@@ -344,6 +344,72 @@ function allClassDecks(userId, classname, callback) {
         });
 }
 
+function duplicate2User(userId, srcId, destId, callback){
+    Deck.findOne({_id:srcId}, "ownerType ownerId")
+    .then(r=>{
+        if(!r)
+            return Promise.reject("src deck not found");
+        if(r.ownerType == "c")
+            return classService.findClassLeanById(r.ownerId, userId, "_id");
+        else return Promise.resolve(true);
+    })
+    .then((ok)=>{
+        if(!ok)
+            return Promise.reject("User must have access to the class");
+        if(destId)
+            return Deck.findOne({_id:destId, ownerId:userId, ownerType:"u", active:true})
+                  .lean();
+        else return Promise.resolve(true);
+    })
+    .then(r=>{
+         if(!r)
+                return Promise.reject("User must be the owner of deck of destiny");
+         childProcess.duplicateDeck2USubP(userId, srcId, destId);
+         return callback({success:true});
+    })
+    .catch(err=>{
+            logger.error("error in duplicate2User: " + err);
+            return callback({success:false, msg:err});
+    });
+}
+
+function duplicate2Class(userId, classname, srcId, destId, callback){
+    var classId;
+    Deck.findOne({_id:srcId}, "ownerType ownerId")
+    .then(r=>{
+        if(!r)
+            return Promise.reject("src deck not found");
+        if(r.ownerType =="c")
+            return classService.findClassLeanById(r.ownerId, userId, "_id");
+        else return Promise.resolve(true);
+    })
+    .then((ok)=>{
+        if(!ok)
+            return Promise.reject("User must have access to the class");
+        return classService.findClassLean(classname, userId, "_id");
+    })
+    .then(c=>{
+            if(!c)
+                return Promise.reject("class not found");
+            classId = c._id;
+            if(destId)
+                return Deck.findOne({_id:destId, ownerId:classId, ownerType:"c", active:true})
+                  .lean();
+            else return Promise.resolve(true);
+    })
+    .then(r=>{
+         if(!r)
+            return Promise.reject("destiny deck not found in class");
+         childProcess.duplicateDeck2CSubP(userId, classId, srcId, destId);
+         return callback({success:true});
+    })
+    .catch(err=>{
+            logger.error("error in duplicate 2 class: " + err);
+            return callback({success:false, msg:err});
+    });
+}
+
+
 // HELPER FUNCTIONS:
 
 function findDeckChildren(parameters, limit, skip, childrenFields, callback) {
@@ -414,7 +480,7 @@ function findByIdLean(id, fields) {
 function getClassDeck(userId, deckId, fields) {
     var deck;
     return new Promise((resolve, reject) => {
-        Deck.findOne({ _id: deckId, active: true }, "ownerId " + fields)
+        Deck.findOne({ _id: deckId, active: true}, "ownerId " + fields)
             .exec()
             .then(d => {
                 if (!d)
@@ -432,6 +498,8 @@ function getClassDeck(userId, deckId, fields) {
             });
     });
 }
+
+
 
 function deleteImg(hash, deckId) {
     return new Promise((resolve, reject) => {
@@ -509,11 +577,8 @@ function setImageFromBuffer(deckId, buffer) {
             })
             .then(r => {
                 if (r.nModified == 0) {
-                    return reject("nModifier=0 when unpdating thumbnail hash in deck document(database)");
+                    return Promise.reject("nModifier=0 when unpdating thumbnail hash in deck document(database)");
                 }
-                return imgService.deleteImgOnce
-            })
-            .then(() => {
                 return resolve();
             })
             .catch(err => {
@@ -552,6 +617,7 @@ function saveDeck(deckModel, callback) {
 }
 
 
+
 module.exports = {
     create4User: create4User,
     create4Class: create4Class,
@@ -571,7 +637,9 @@ module.exports = {
     allUserDecks: allUserDecks,
     allClassDecks: allClassDecks,
     childUserDecks: childUserDecks,
-    childClassDecks: childClassDecks
+    childClassDecks: childClassDecks,
+    duplicate2User: duplicate2User,
+    duplicate2Class: duplicate2Class
 }
 
 const classService = require("./class/classService");

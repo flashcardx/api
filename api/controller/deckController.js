@@ -234,6 +234,39 @@ app.delete("/deck/:type/:deckId", (req, res)=>{
 });
 
 /**
+ * @api {get} /duplicateDeck/:type/:deckIdSrc duplicate deck
+ * @apiGroup deck
+ * @apiName duplicate deck
+ * @apiDescription duplicates deck to other deck, or root path of user/class.
+ * @apiParam (Parameters) {string} type 2u: duplicates to user(from class or other user), 2c: to class(from user or other class where user has access).
+ * @apiParam (Parameters) {string} deckIdSrc id of deck to be duplicated
+ * @apiParam (Query) {string} [dest] id for the deck of destiny, if not specified deck will go to the root
+ * @apiParam (Query) {string} [classname] needed if type=2c
+ * @apiHeader (Headers) {string} x-access-token user session token
+ * @apiParamExample {json} Request-Example:
+ * url: /duplicateDeck/2u/59991371065a2544f7c90288?dest=59991371065a2544f7c90288
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true
+ *      }
+ * @apiVersion 1.1.0
+ *  */
+app.get("/duplicateDeck/:type/:deckIdSrc", (req, res)=>{
+    switch (req.params.type) {
+            case "2c": deckService.duplicate2Class(req.userId, req.query.classname, req.params.deckIdSrc, req.query.dest, r=>{
+                            return res.json(r);
+                    });
+                    break;
+            case "2u":
+                    deckService.duplicate2User(req.userId, req.params.deckIdSrc, req.query.dest, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            default: return res.json({success:false, msg:"invalid type"}); 
+        }
+});
+
+/**
  * @api {get} /alldecks/:type Get all decks
  * @apiGroup deck
  * @apiName Get all decks

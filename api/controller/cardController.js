@@ -157,7 +157,7 @@ module.exports = function(app){
      *  */
     app.get("/duplicateCard/:type/:cardId/:deckId", controllerUtils.requireLogin, (req, res)=>{
         const cardId = req.params.id;
-        const deckId = req.params.id;
+        const deckId = req.params.deckId;
         switch (req.params.type){
                     case "uu": cardService.duplicateCardUU(req.userId, cardId, deckId, result=>{
                                     res.json(result);
@@ -185,6 +185,7 @@ module.exports = function(app){
      * @apiParam (Query) {string} [classname] needed when type=c.
      * @apiParam (Request body) {string} [name] name for the card.
      * @apiParam (Request body) {string} [description] description for the card.
+     * @apiParam (Request body) {string} [deckId] if defined card will be moved to this deck, the deck of destiny must be in the same user or class that the source deck.
      * @apiHeader (Headers) {string} x-access-token user session token
      * @apiParamExample {json} Request-Example:
      * url: /updateCard/u/59991371065a2544f7c90288
@@ -203,7 +204,8 @@ module.exports = function(app){
         const userId = req.userId;
         const card = {
             name : purifier.purify(req.body.name),
-            description : purifier.purify(req.body.description)
+            description : purifier.purify(req.body.description),
+            deckId: deckId
         }
         switch (req.params.type){
                 case "u": cardService.updateCard(cardId, userId, card, r=>{

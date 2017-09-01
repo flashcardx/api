@@ -1,0 +1,4 @@
+list all node proceses:  ps -e|grep node
+
+kill node proccess: kill -9 XXXX 
+kill all node proceses: killall node

@@ -3,6 +3,8 @@ const Deck = require(appRoot + "/models/deckModel").deck;
 const cardService = require(appRoot + "/service/cardService");
 const config = require(appRoot + "/config");
 const mongoose = require("mongoose");
+mongoose.Promise = global.Promise;
+const logger = config.getLogger(__filename);
 
 console.log("deleteDeck child process ready!");
 mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
@@ -19,9 +21,8 @@ process.on('message', msg=>{
       console.log('child process: delete deck got message without deckid');
 });
 
-
 function deleteDeck(deckId){
-   Deck.findOne({_id:deckId}, "decks cards ownerType ownerId", (err, deck)=>{
+   Deck.findOne({_id:deckId, active:true}, "decks ownerType ownerId", (err, deck)=>{
         if(err)
             return console.error("deleteDeck child process failed, deckId: " + deckId +", err: " + err)
         if(!deck)
@@ -35,15 +36,33 @@ function deleteDeck(deckId){
 }
 
 function deleteCards(deck){
+    logger.error("deletecards, deck: " + JSON.stringify(deck));
   if(deck.ownerType == "u")
-        deck.cards.forEach(c=>{
-            cardService.deleteCard(c, deck.ownerId);
-        });
+        cardService.findInDeck(deck._id, "_id", r=>{
+            logger.error("delete cards got: " + JSON.stringify(r));
+            if(r.success == true)
+                r.cards.forEach(c=>{
+                    cardService.deleteCard(c, deck.ownerId,r=>{
+                        if(r.success == false)
+                            logger.fatal("error when deleting card: " + r.msg)
+                    });
+                });
+            else
+                logger.fatal("cards in deck will not be deleted since got error: " + r.msg);
+        })
   else if(deck.ownerType == "c")
-        deck.cards.forEach(c=>{
-            /*This method is unsafe however we use it since the module who calls this is supposed to do the validations*/ 
-            cardService.deleteCardClassInsecure(c, deck._id);
-        });
+        cardService.findInDeck(deck._id,"_id", r=>{
+            if(r.success == true)
+                r.cards.forEach(c=>{
+                    /*This method is unsafe however we use it since the module who calls this is supposed to do the validations*/ 
+                    cardService.deleteCardClassInsecure(c, deck._id, r=>{
+                        if(r.success == false)
+                            logger.fatal("error when deleting card: " + r.msg)
+                    });
+                });
+            else
+                logger.fatal("cards in deck will not be deleted since got error: " + r.msg);
+        })
   else 
-      console.log("invalid deck owner type: " + deck.ownerType + " deckid: " + deck._id);  
+      logger.fatal("invalid deck owner type: " + deck.ownerType + " deckid: " + deck._id);  
 }

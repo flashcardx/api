@@ -160,14 +160,14 @@ function deleteCard(cardId, userId, callback){
 };
 
 function deleteCardClassInsecure(cardId, classId, callback){
-    return CardClass.findById(cardId).exec()
+    return Card.findById(cardId).exec()
                         .then(card=>{
                              if(!card)
                                 return Promise.reject("Card id does not exist");
                              return imgService.deleteImgsOnce(card.imgs);
                          })
                          .then(()=>{
-                            return CardClass.find({ _id: cardId }).remove().exec();
+                            return Card.find({ _id: cardId }).remove().exec();
                          })
                         .then(()=>{
                             return callback({success:true});
@@ -179,33 +179,40 @@ function deleteCardClassInsecure(cardId, classId, callback){
 };
 
 function duplicateCardUU(userId, cardIdOld, deckId, callback){
-        Card.findById(cardIdOld, "name description imgs").exec().then(doc=>{
-            if(!doc){
-                logger.error("no card found for cardId: " + cardIdOld + "(trying to duplicate card)");
-                return callback({success:false, msg:"This card does not exist anymore"});
-            }
-             var card = {
-                name: doc.name,
-                description: doc.description,
-                imgs: doc.imgs,
-                isDuplicated: true                
-            };
-            userService.userCardLimitsOk(userId)
-            .then(()=>{
+    var card;
+    deckService.validateOwnership(userId, deckId)
+    .then(()=>{
+            return Card.findById(cardIdOld, "name description imgs").exec();
+    })
+    .then(doc=>{
+                if(!doc){
+                    logger.error("no card found for cardId: " + cardIdOld + "(trying to duplicate card)");
+                    return callback({success:false, msg:"This card does not exist anymore"});
+                }
+                 card = {
+                    name: doc.name,
+                    description: doc.description,
+                    imgs: doc.imgs,
+                    ownerId: userId,
+                    deckId: deckId,
+                    isDuplicated: true                
+                };
+                return userService.userCardLimitsOk(userId);
+    })
+    .then(()=>{
                 var cardModel = new Card(card);
                 return saveCardUser(cardModel, userId, deckId, callback);
-            })
-            .then(()=>{
-                    return imgService.increaseImgsCounter(card.imgs);
-            })
-            .then(()=>{
+    })
+    .then(()=>{
+                 return imgService.increaseImgsCounter(card.imgs);
+    })
+    .then(()=>{
                 return callback({success:true});
-            })
-            .catch(err=>{
+    })
+    .catch(err=>{
                 logger.error("duplicateCardUU: " + err);
                 return callback({success:false, msg:err});
-            })
-        });
+    });
 }
 
 function duplicateCardUCUnsafe(Class, cardIdOld, username, deckId, callback){
@@ -241,47 +248,111 @@ function duplicateCardUCUnsafe(Class, cardIdOld, username, deckId, callback){
 
 
 function updateCard(id, userId, card, callback){
-    Card.findOne({ '_id': id, ownerId: userId, ownerType:"u"}, "name description _id").exec().then(doc=>{
+    var Doc;
+    Card.findOne({ '_id': id, ownerId: userId, ownerType:"u"}, "name description _id")
+    .exec()
+    .then(doc=>{
             if(!doc){
                 logger.error("no card found for cardId: " + id + ", with and userId: " + userId + "(trying to update card)");
                 return callback({success:false, msg:"This card does not exist in the user collection"});
             }
             doc.name = card.name;
             doc.description = card.description;
-            doc.update(doc, (err, updatedCard)=>{
-                if(err){
-                    logger.error(err);
-                    return callback({success:false, msg: String(err)});
-                }
-                return callback({success:true, msg: updatedCard});
-
+            Doc = doc;
+            return Promise.resolve();
+    })
+    .then(()=>{
+            if(card.deckId){
+                    return deckService.findByIdLean(card.deckId, "ownerId ownerType");
+            }
+            else return Promise.resolve();
+    })
+    .then(r=>{
+            if(r){
+                if(r.ownerType !="u" || r.ownerId.toString()  != userId.toString() )
+                        return Promise.reject("This deck is not in the class");
+                Doc.deckId = card.deckId;
+            }
+            return Promise.resolve();
+    })
+    .then(()=>{ 
+            Doc.update(Doc, (err, updatedCard)=>{
+                    if(err){
+                            logger.error(err);
+                            return Promise.reject(err);
+                        }
+                    return callback({success:true});
             });
-    });
+    })
+    .catch(err=>{
+                logger.error("error when finding deck: " + err);
+                return callback({success:false, msg:err});
+    })
 }
 
-function updateCardClass(cardId, classId, card, callback){
-//verify if user who made request is in the class
-    Card.findOne({ '_id': cardId, ownerId: classId, ownerType:"c"}, "name description _id").exec().then(doc=>{
+function updateCardClass(cardId, classId, card){
+    //verify if user who made request is in the class
+    var Doc;
+    return Card.findOne({ '_id': cardId, ownerId: classId, ownerType:"c"}, "name description _id")
+    .exec()
+    .then(doc=>{
             if(!doc){
                 logger.error("no card found for cardId: " + cardId + ", with a classId: " + classId + "(trying to update card)");
-                return callback({success:false, msg:"This card does not exist in the class collection"});
+                return Promise.reject("This card does not exist in the class collection");
             }
             doc.name = card.name;
             doc.description = card.description;
-            doc.update(doc, (err, updatedCard)=>{
-                if(err){
-                    logger.error(err);
-                    return callback({success:false, msg: String(err)});
-                }
-                return callback({success:true, msg: updatedCard});
+            Doc = doc;
+            return Promise.resolve();
+    })
+    .then(()=>{
+            if(card.deckId){
+                return deckService.findByIdLean(card.deckId, "ownerId ownerType");
+            }
+            else return Promise.resolve();
+    })
+    .then(r=>{
+         if(r){
+            if(r.ownerType !="c" || r.ownerId.toString()  != classId.toString() )
+                return Promise.reject("This deck is not in the class");
+            Doc.deckId = card.deckId;
+         }
+         return Promise.resolve();
+    })
+    .then(()=>{ 
+            Doc.update(Doc, (err, updatedCard)=>{
+                    if(err){
+                        logger.error(err);
+                        return Promise.reject(err);
+                    }
+                    return Promise.resolve();
             });
-    });
+    })
+    .catch(err=>{
+            logger.error("error when finding deck: " + err);
+            return Promise.reject(err);
+    })
 }
 
 function findByIdLean(cardId, fields){
     return Card.findById(cardId, fields)
     .lean()
     .exec();
+}
+
+function findInDeck(deckId, fields, callback){
+    Card.find({deckId: deckId}, fields)
+    .then(r=>{
+        return callback({success:true, cards: r});
+    })
+    .catch(err=>{
+        return callback({success:false, msg:err});
+    })
+}
+
+function findInDeckLean(deckId, fields){
+    return Card.find({deckId: deckId}, fields)
+    .lean();
 }
 
 module.exports = {
@@ -294,7 +365,9 @@ module.exports = {
     updateCardClass: updateCardClass,
     returnCards: returnCards,
     getClassCardsUnsafe: getClassCardsUnsafe,
-    findByIdLean: findByIdLean
+    findByIdLean: findByIdLean,
+    findInDeck: findInDeck,
+    findInDeckLean: findInDeckLean
 }
 
 const classService = require("./class/classService");

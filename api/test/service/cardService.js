@@ -155,6 +155,22 @@ describe("cardService", ()=>{
         });
     });
 
+     it("update user card, change deck" ,done=>{
+        var card = {name:"updated card", deckId: classDeckId};
+        cardService.updateCard(cardIdUser, userId, card, r=>{
+                assert.equal(r.success, false);
+                done();
+        });
+    });
+
+    it("update user card, change deck" ,done=>{
+        var card = {name:"updated card", deckId: userDeckId};
+        cardService.updateCard(cardIdUser, userId, card, r=>{
+                assert.equal(r.success, true);
+                done();
+        });
+    });
+
     it("delete card" ,done=>{
         cardService.deleteCard(cardIdUser, userId, r=>{
                 assert.equal(r.success, true);

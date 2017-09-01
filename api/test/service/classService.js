@@ -53,7 +53,7 @@ describe("classService", ()=>{
                 return classModel.save();
             })
             .then(()=>{
-                var deck = {name:"testdeckclass", description:"abc", ownerId: classId};
+                var deck = {name:"testdeckclass", description:"abc", ownerId: classId, ownerType:"c"};
                 var deckModel = new Deck(deck);
                 classDeckId = deckModel._id;
                 return deckModel.save();
@@ -100,14 +100,21 @@ describe("classService", ()=>{
             });
         })
 
-        describe("class cards", ()=>{
-            it.only("update class card" ,done=>{
-                var card = {name:"updated class card"};
+        describe("class cards, should not succeed", ()=>{
+            it("update class card" ,done=>{
+                var card = {name:"updated class card", deckId: userDeckId};
+                classService.updateCard(classname, userId, cardIdClass, card, r=>{
+                        assert.equal(r.success, false);
+                        done();
+                });
+            });
+
+            it("update class card" ,done=>{
+                var card = {name:"updated class card ;)", deckId: classDeckId};
                 classService.updateCard(classname, userId, cardIdClass, card, r=>{
                         assert.equal(r.success, true);
                         done();
                 });
             });
-
         })
 });
