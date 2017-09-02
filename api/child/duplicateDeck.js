@@ -38,13 +38,12 @@ function duplicate(ownerType, ownerId, srcId, destId, userId){
     .then(deck=>{
         if(!deck)
             return Promise.reject("deck not found");
-        //WHAT HAPPENS IF DECKID=UNDEFINED?
-        return parsedeck(deck, ownerType, ownerId, destId);
+        deckBackup = deck;
+        return makeDeck(deck, ownerType, ownerId, destId);
    }) 
     .then(d=>{
-        deckBackup = deck;
         newDeckModel = new Deck(d);
-        return imgService.increaseImgsCounter([{hash:deck.thumbnail}])
+        return imgService.increaseImgsCounter([{hash:deckBackup.thumbnail}])
     })
     .then(()=>{
             newDeckModel.save(err=>{
@@ -57,7 +56,8 @@ function duplicate(ownerType, ownerId, srcId, destId, userId){
         })
     .then(()=>{
                 deckBackup.decks.forEach(d=>{
-                    duplicate(ownerType, ownerId, srcId, newDeckModel._id);
+                    logger.error("d: " + d);
+                    duplicate(ownerType, ownerId, d, newDeckModel._id);
                 })
                 if(ownerType =="u")
                     duplicateCards2User(ownerId, srcId, newDeckModel._id);
@@ -92,16 +92,18 @@ function duplicateCards2Class(userId, ownerId, srcDeckId, destDeckId){
                 .then(Class=>{
                         if(!Class)
                             return logger.fatal("class not found when duplicating cards to class");
-                    else
-                    userService.findByIdLean(userId, "name", r=>{
-                        if(r.success == false)
-                            return logger.fatal("error when grtting user name for duplicating deck to class: " + err);
-                        const username = r.msg.name;
-                        cardService.duplicateCardUCUnsafe(Class, c._id, username, destDeckId, r=>{
-                            if(r.success == false)
-                                logger.fatal("error when duplicating card to class: "+ r.msg);
-                        });
-                    })
+                        else
+                            userService.findByIdLean(userId, "name", r=>{
+                                if(r.success == false)
+                                    return logger.fatal("error when getting user name for duplicating deck to class: " + err);
+                                const username = r.msg.name;
+                                  cards.forEach(c=>{
+                                        cardService.duplicateCardUCUnsafe(Class, c._id, username, destDeckId, r=>{
+                                            if(r.success == false)
+                                                logger.fatal("error when duplicating card to class: "+ r.msg);
+                                        });
+                                  });
+                            })
                 })
                 .catch(err=>{
                     logger.fatal("error when findinf class for duplicating card 2 class: " + err);
@@ -112,27 +114,39 @@ function duplicateCards2Class(userId, ownerId, srcDeckId, destDeckId){
     })
 }
 
-function parsedeck(deck, ownerType, ownerId, destId){
-    return new Pomisie((resolve, reject)=>{
+function makeDeck(deck, ownerType, ownerId, destId){
+    logger.error("deck: " + JSON.stringify(deck));
+    return new Promise((resolve, reject)=>{
+        if(!destId){
+            var r = parseDeck(deck, ownerType, ownerId, 0);
+            return resolve(r);
+        } 
         deckService.findByIdLean(destId, "recursiveOrder")
         .then(r=>{
             if(!r)
                 return reject("deck not found");
             if(r.recursiveOrder == 0)
-                return reject("");
-            var r = {ownerType: ownerType,
-                        ownerId: ownerId,
-                        decks: deck.decks,
-                        name: deck.name,
-                        description: deck.description,
-                        thumbnail: deck.thumbnail,
-                        recursiveOrder: r.recursiveOrder - 1,
-                        lang: deck.lang
-                    };
+                return reject("Destiny deck recusive order <= 0");
+            return Promise.resolve(r.recursiveOrder);
+        })
+        .then(recursiveOrder=>{
+            var r = parseDeck(deck, ownerType, ownerId, recursiveOrder-1);
             return resolve(r);
         })
         .catch(err=>{
             return reject(err);
         })
     });
+}
+
+function parseDeck(deck, ownerType, ownerId, recursiveOrder){
+    return {ownerType: ownerType,
+                        ownerId: ownerId,
+                        decks: deck.decks,
+                        name: deck.name,
+                        description: deck.description,
+                        thumbnail: deck.thumbnail,
+                        recursiveOrder: recursiveOrder,
+                        lang: deck.lang
+                    };
 }
