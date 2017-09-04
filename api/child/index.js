@@ -7,7 +7,6 @@ const logger = config.getLogger(__filename);
 
 console.log("starting child processes");
 
-
 deleteDeck.on('exit', function (code, signal) {
   logger.fatal('child process deletedeck exited with ' +
               `code ${code} and signal ${signal}`);

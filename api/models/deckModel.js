@@ -8,7 +8,7 @@ const lang = config.lang;
 var langCodes = lang.map((value)=>{
     return value.code;
 });
-const DEFAULT_RECURSIVE_ORDER = 3;
+const DEFAULT_RECURSIVE_ORDER = 4;
 
 const deckSchema = new Schema({
     decks:{

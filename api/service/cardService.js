@@ -10,46 +10,23 @@ const userService = require("./userService");
 const logger = config.getLogger(__filename);
 const mongoose = require("mongoose");
 const AWSService = require("./AWSService");
-
-function createUserCard(parameters, callback){
-    parameters.card.deckId = parameters.deckId;
-    var cardModel = new Card(parameters.card);
-    var user;
-    var warning;
-    validateCard(cardModel)
-                            .then(()=>{
-                                return deckService.validateOwnership(parameters.userId, parameters.deckId);
-                            })
-                            .then(()=>{
-                                return userService.userCardLimitsOk(parameters.userId);
-                            })
-                            .then((result)=>{
-                                user = result;
-                                return imgService.downloadArray(parameters.imgs, parameters.userId, callback);
-                            })
-                           .then(r=>{
-                                warning = r.warning;
-                                cardModel.ownerId = user._id;
-                                cardModel.ownerName = user.name;
-                                if(r.imgHashes)
-                                    cardModel.imgs = r.imgHashes.filter(v=>{
-                                        if(objectIsNotEmpty(v))
-                                            return true;
-                                        return false;
-                                    });
-                                return saveCardUser(cardModel, parameters.userId,  parameters.deckId);
-                           })
-                           .then(()=>{
-                                    if(!warning)
-                                        return callback({success:true, msg:"card was created ok!"});
-                                    else
-                                        return callback({success:"warning", msg:"card was created but: " + warning});        
-                            })
-                            .catch(msg=>{
-                                 logger.error(msg);
-                                 return callback({success:false, msg:msg});
-                            });
-};
+function saveCardUser(cardModel, userId, deckId){
+    return new Promise((resolve, reject)=>{
+        cardModel.save().then(()=>{
+             userService.decreaseCardCounter(userId)
+            .then(()=>{
+                resolve();
+            })
+            .catch(err=>{
+                logger.error(err);
+                reject(String(err));    
+            })
+        }, (err)=>{
+            logger.error(err);
+            reject(String(err));
+        });
+    });
+}
 
 function objectIsNotEmpty(o){
     return Object.keys(o).length != 0;
@@ -178,43 +155,6 @@ function deleteCardClassInsecure(cardId, classId, callback){
                         })
 };
 
-function duplicateCardUU(userId, cardIdOld, deckId, callback){
-    var card;
-    deckService.validateOwnership(userId, deckId)
-    .then(()=>{
-            return Card.findById(cardIdOld, "name description imgs").exec();
-    })
-    .then(doc=>{
-                if(!doc){
-                    logger.error("no card found for cardId: " + cardIdOld + "(trying to duplicate card)");
-                    return callback({success:false, msg:"This card does not exist anymore"});
-                }
-                 card = {
-                    name: doc.name,
-                    description: doc.description,
-                    imgs: doc.imgs,
-                    ownerId: userId,
-                    deckId: deckId,
-                    isDuplicated: true                
-                };
-                return userService.userCardLimitsOk(userId);
-    })
-    .then(()=>{
-                var cardModel = new Card(card);
-                return saveCardUser(cardModel, userId, deckId, callback);
-    })
-    .then(()=>{
-                 return imgService.increaseImgsCounter(card.imgs);
-    })
-    .then(()=>{
-                return callback({success:true});
-    })
-    .catch(err=>{
-                logger.error("duplicateCardUU: " + err);
-                return callback({success:false, msg:err});
-    });
-}
-
 function duplicateCardUCUnsafe(Class, cardIdOld, username, deckId, callback){
         Card.findById(cardIdOld, "name description imgs").exec().then(doc=>{
             if(!doc){
@@ -228,7 +168,9 @@ function duplicateCardUCUnsafe(Class, cardIdOld, username, deckId, callback){
                 classname: Class.name,
                 ownerType: "c",
                 ownerName: username,
-                ownerId: Class._id
+                ownerId: Class._id,
+                deckId: deckId,
+                isDuplicated: true
             };
             const cardModel = new Card(card);
             imgService.increaseImgsCounter(card.imgs)
@@ -247,92 +189,6 @@ function duplicateCardUCUnsafe(Class, cardIdOld, username, deckId, callback){
 }
 
 
-function updateCard(id, userId, card, callback){
-    var Doc;
-    Card.findOne({ '_id': id, ownerId: userId, ownerType:"u"}, "name description _id")
-    .exec()
-    .then(doc=>{
-            if(!doc){
-                logger.error("no card found for cardId: " + id + ", with and userId: " + userId + "(trying to update card)");
-                return callback({success:false, msg:"This card does not exist in the user collection"});
-            }
-            doc.name = card.name;
-            doc.description = card.description;
-            Doc = doc;
-            return Promise.resolve();
-    })
-    .then(()=>{
-            if(card.deckId){
-                    return deckService.findByIdLean(card.deckId, "ownerId ownerType");
-            }
-            else return Promise.resolve();
-    })
-    .then(r=>{
-            if(r){
-                if(r.ownerType !="u" || r.ownerId.toString()  != userId.toString() )
-                        return Promise.reject("This deck is not in the class");
-                Doc.deckId = card.deckId;
-            }
-            return Promise.resolve();
-    })
-    .then(()=>{ 
-            Doc.update(Doc, (err, updatedCard)=>{
-                    if(err){
-                            logger.error(err);
-                            return Promise.reject(err);
-                        }
-                    return callback({success:true});
-            });
-    })
-    .catch(err=>{
-                logger.error("error when finding deck: " + err);
-                return callback({success:false, msg:err});
-    })
-}
-
-function updateCardClass(cardId, classId, card){
-    //verify if user who made request is in the class
-    var Doc;
-    return Card.findOne({ '_id': cardId, ownerId: classId, ownerType:"c"}, "name description _id")
-    .exec()
-    .then(doc=>{
-            if(!doc){
-                logger.error("no card found for cardId: " + cardId + ", with a classId: " + classId + "(trying to update card)");
-                return Promise.reject("This card does not exist in the class collection");
-            }
-            doc.name = card.name;
-            doc.description = card.description;
-            Doc = doc;
-            return Promise.resolve();
-    })
-    .then(()=>{
-            if(card.deckId){
-                return deckService.findByIdLean(card.deckId, "ownerId ownerType");
-            }
-            else return Promise.resolve();
-    })
-    .then(r=>{
-         if(r){
-            if(r.ownerType !="c" || r.ownerId.toString()  != classId.toString() )
-                return Promise.reject("This deck is not in the class");
-            Doc.deckId = card.deckId;
-         }
-         return Promise.resolve();
-    })
-    .then(()=>{ 
-            Doc.update(Doc, (err, updatedCard)=>{
-                    if(err){
-                        logger.error(err);
-                        return Promise.reject(err);
-                    }
-                    return Promise.resolve();
-            });
-    })
-    .catch(err=>{
-            logger.error("error when finding deck: " + err);
-            return Promise.reject(err);
-    })
-}
 
 function findByIdLean(cardId, fields){
     return Card.findById(cardId, fields)
@@ -353,45 +209,6 @@ function findInDeck(deckId, fields, callback){
 function findInDeckLean(deckId, fields){
     return Card.find({deckId: deckId}, fields)
     .lean();
-}
-
-module.exports = {
-    createUserCard: createUserCard,
-    getCards: getCards,
-    deleteCard: deleteCard,
-    deleteCardClassInsecure: deleteCardClassInsecure,
-    duplicateCardUU: duplicateCardUU,
-    updateCard: updateCard,
-    updateCardClass: updateCardClass,
-    returnCards: returnCards,
-    getClassCardsUnsafe: getClassCardsUnsafe,
-    findByIdLean: findByIdLean,
-    findInDeck: findInDeck,
-    findInDeckLean: findInDeckLean
-}
-
-const classService = require("./class/classService");
-const deckService = require("./deckService");
-
-module.exports.duplicateCardUCUnsafe = duplicateCardUCUnsafe;
-
-
-function saveCardUser(cardModel, userId, deckId){
-    return new Promise((resolve, reject)=>{
-        cardModel.save().then(()=>{
-             userService.decreaseCardCounter(userId)
-            .then(()=>{
-                resolve();
-            })
-            .catch(err=>{
-                logger.error(err);
-                reject(String(err));    
-            })
-        }, (err)=>{
-            logger.error(err);
-            reject(String(err));
-        });
-    });
 }
 
 function saveCardClass(cardModel, classId, deckId){
@@ -459,4 +276,193 @@ function createClassCard(parameters, classname, callback){
                             });
 };
 
+
+function createUserCard(parameters, callback){
+    parameters.card.deckId = parameters.deckId;
+    var cardModel = new Card(parameters.card);
+    var user;
+    var warning;
+    validateCard(cardModel)
+                            .then(()=>{
+                                return deckService.validateOwnership(parameters.userId, parameters.deckId);
+                            })
+                            .then(()=>{
+                                return userService.userCardLimitsOk(parameters.userId);
+                            })
+                            .then((result)=>{
+                                user = result;
+                                return imgService.downloadArray(parameters.imgs, parameters.userId, callback);
+                            })
+                           .then(r=>{
+                                warning = r.warning;
+                                cardModel.ownerId = user._id;
+                                cardModel.ownerName = user.name;
+                                if(r.imgHashes)
+                                    cardModel.imgs = r.imgHashes.filter(v=>{
+                                        if(objectIsNotEmpty(v))
+                                            return true;
+                                        return false;
+                                    });
+                                return saveCardUser(cardModel, parameters.userId,  parameters.deckId);
+                           })
+                           .then(()=>{
+                                    if(!warning)
+                                        return callback({success:true, msg:"card was created ok!"});
+                                    else
+                                        return callback({success:"warning", msg:"card was created but: " + warning});        
+                            })
+                            .catch(msg=>{
+                                 logger.error(msg);
+                                 return callback({success:false, msg:msg});
+                            });
+};
+
+
+function updateCard(id, userId, card, callback){
+    var Doc;
+    Card.findOne({ '_id': id, ownerId: userId, ownerType:"u"}, "name description _id")
+    .exec()
+    .then(doc=>{
+            if(!doc){
+                logger.error("no card found for cardId: " + id + ", with and userId: " + userId + "(trying to update card)");
+                return callback({success:false, msg:"This card does not exist in the user collection"});
+            }
+            doc.name = card.name;
+            doc.description = card.description;
+            Doc = doc;
+            return Promise.resolve();
+    })
+    .then(()=>{
+            if(card.deckId){
+                    return deckService.findByIdLean(card.deckId, "ownerId ownerType");
+            }
+            else return Promise.resolve();
+    })
+    .then(r=>{
+            if(r){
+                if(r.ownerType !="u" || r.ownerId.toString()  != userId.toString() )
+                        return Promise.reject("This deck is not in the class");
+                Doc.deckId = card.deckId;
+            }
+            return Promise.resolve();
+    })
+    .then(()=>{ 
+            Doc.update(Doc, (err, updatedCard)=>{
+                    if(err){
+                            logger.error(err);
+                            return Promise.reject(err);
+                        }
+                    return callback({success:true});
+            });
+    })
+    .catch(err=>{
+                logger.error("error when finding deck: " + err);
+                return callback({success:false, msg:err});
+    })
+}
+
+function updateCardClassUnsafe(cardId, classId, card){
+    var Doc;
+    return Card.findOne({ '_id': cardId, ownerId: classId, ownerType:"c"}, "name description _id")
+    .exec()
+    .then(doc=>{
+            if(!doc){
+                logger.error("no card found for cardId: " + cardId + ", with a classId: " + classId + "(trying to update card)");
+                return Promise.reject("This card does not exist in the class collection");
+            }
+            doc.name = card.name;
+            doc.description = card.description;
+            Doc = doc;
+            return Promise.resolve();
+    })
+    .then(()=>{
+            if(card.deckId){
+                return deckService.findByIdLean(card.deckId, "ownerId ownerType");
+            }
+            else return Promise.resolve();
+    })
+    .then(r=>{
+         if(r){
+            if(r.ownerType !="c" || r.ownerId.toString()  != classId.toString() )
+                return Promise.reject("This deck is not in the class");
+            Doc.deckId = card.deckId;
+         }
+         return Promise.resolve();
+    })
+    .then(()=>{ 
+            Doc.update(Doc, (err, updatedCard)=>{
+                    if(err){
+                        logger.error(err);
+                        return Promise.reject(err);
+                    }
+                    return Promise.resolve();
+            });
+    })
+    .catch(err=>{
+            logger.error("error when finding deck: " + err);
+            return Promise.reject(err);
+    })
+}
+
+function duplicateCard2User(userId, cardIdOld, deckId, callback){
+    var card;
+    var Doc;
+    deckService.validateOwnership(userId, deckId)
+    .then(()=>{
+            return Card.findById(cardIdOld, "name description imgs").exec();
+    })
+    .then(doc=>{
+            if(!doc){
+                logger.error("no card found for cardId: " + cardIdOld + "(trying to duplicate card)");
+                return Promise.reject("This card does not exist anymore");
+            }
+            Doc = doc;
+            return userService.findByIdLeanPromise(userId, "name");
+    })
+    .then(user=>{
+            if(!user)
+                return Promise.reject("User not found");
+                card = {
+                    name: Doc.name,
+                    description: Doc.description,
+                    imgs: Doc.imgs,
+                    ownerId: userId,
+                    ownerName: user.name,
+                    deckId: deckId,
+                    isDuplicated: true                
+                };
+            return userService.userCardLimitsOk(userId);
+    })  
+    .then(()=>{
+                var cardModel = new Card(card);
+                return saveCardUser(cardModel, userId, deckId, callback);
+    })
+    .then(()=>{
+                 return imgService.increaseImgsCounter(card.imgs);
+    })
+    .then(()=>{
+                return callback({success:true});
+    })
+    .catch(err=>{
+                logger.error("duplicateCard2User: " + err);
+                return callback({success:false, msg:err});
+    });
+}
+
+module.exports.getCards = getCards;
+module.exports.deleteCard = deleteCard;
+module.exports.deleteCardClassInsecure = deleteCardClassInsecure;
+module.exports.returnCards = returnCards;
+module.exports.getClassCardsUnsafe = getClassCardsUnsafe;
+module.exports.findByIdLean = findByIdLean;
+module.exports.findInDeck = findInDeck;
+module.exports.findInDeckLean = findInDeckLean;
 module.exports.createClassCard = createClassCard;
+module.exports.duplicateCardUCUnsafe = duplicateCardUCUnsafe;
+module.exports.createUserCard = createUserCard;
+module.exports.updateCard = updateCard;
+module.exports.updateCardClassUnsafe = updateCardClassUnsafe;
+module.exports.duplicateCard2User = duplicateCard2User;
+
+const classService = require("./class/classService");
+const deckService = require("./deckService");

@@ -1,15 +1,18 @@
 var appRoot = require("app-root-path");
 const Deck = require(appRoot + "/models/deckModel").deck;
+const deckModel = require(appRoot + "/models/deckModel").DEFAULT_RECURSIVE_ORDER;
 const cardService = require(appRoot + "/service/cardService");
 const classService = require(appRoot + "/service/class/classService");
 const imgService = require(appRoot + "/service/imgService");
 const userService = require(appRoot + "/service/userService");
+const deckService = require(appRoot + "/service/deckService");
+const notificationService = require(appRoot + "/service/notificationService");
 const config = require(appRoot + "/config");
 const mongoose = require("mongoose");
 mongoose.Promise = global.Promise;
 const logger = config.getLogger(__filename);
 
-console.log("duplicate Deck child process ready!");
+logger.info("duplicate Deck child process ready!");
 mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
 
 mongoose.connection.on('disconnected', function () {  
@@ -19,7 +22,7 @@ mongoose.connection.on('disconnected', function () {
 
 process.on('message', msg=>{
   switch (msg.mode) {
-      case "2u": duplicate("u", msg.userId, msg.srcId, msg.destId);
+      case "2u": duplicate("u", msg.userId, msg.srcId, msg.destId, msg.userId);
                 break;
       case "2c": duplicate("c", msg.classId, msg.srcId, msg.destId, msg.userId);
                 break;
@@ -39,7 +42,7 @@ function duplicate(ownerType, ownerId, srcId, destId, userId){
         if(!deck)
             return Promise.reject("deck not found");
         deckBackup = deck;
-        return makeDeck(deck, ownerType, ownerId, destId);
+        return makeDeck(deck, ownerType, ownerId, destId, userId);
    }) 
     .then(d=>{
         newDeckModel = new Deck(d);
@@ -48,15 +51,18 @@ function duplicate(ownerType, ownerId, srcId, destId, userId){
     .then(()=>{
             newDeckModel.save(err=>{
                 if(err)
-                    return logger.fatal("Could not save new deck when duplicating, therebefore duplication cant continue, err: " + err);
-                if(destId)
-                    return Deck.update({_id:destId}, {$push:{"decks":newDeckModel._id}});
+                    return Promise.reject("Could not save new deck when duplicating, therebefore duplication cant continue, err: " + err);
+                if(destId){
+                    return Deck.update({_id:destId}, {"$push":{"decks":newDeckModel._id}})
+                    .exec();
+                }
                 else
                     return Promise.resolve();
         })
-    .then(()=>{
+    .then(r=>{
+                if(r && r.nModified == 0)
+                    return Promise.reject("could not push:" + newDeckModel._id + " to deck: " + destId);
                 deckBackup.decks.forEach(d=>{
-                    logger.error("d: " + d);
                     duplicate(ownerType, ownerId, d, newDeckModel._id);
                 })
                 if(ownerType =="u")
@@ -66,7 +72,7 @@ function duplicate(ownerType, ownerId, srcId, destId, userId){
             });
     })
     .catch(err=>{
-          logger.fatal("deleteDeck child process failed, deckId: " + srcId +", err: " + err)
+          logger.fatal("duplicateDeck child process failed, deckId: " + srcId +", err: " + err)
     })
 }
 
@@ -74,7 +80,7 @@ function duplicateCards2User(userId, srcDeckId, destDeckId){
     cardService.findInDeckLean(srcDeckId, "_id")
     .then(cards=>{
             cards.forEach(c=>{
-                    cardService.duplicateCardUU(userId, c._id, destDeckId, r=>{
+                    cardService.duplicateCard2User(userId, c._id, destDeckId, r=>{
                         if(r.success == false)
                             logger.fatal("error when duplicating card to user"+ r.msg);
                     });
@@ -94,8 +100,9 @@ function duplicateCards2Class(userId, ownerId, srcDeckId, destDeckId){
                             return logger.fatal("class not found when duplicating cards to class");
                         else
                             userService.findByIdLean(userId, "name", r=>{
-                                if(r.success == false)
-                                    return logger.fatal("error when getting user name for duplicating deck to class: " + err);
+                                if(r.success == false){
+                                    return Promise.reject(r.msg);
+                                }
                                 const username = r.msg.name;
                                   cards.forEach(c=>{
                                         cardService.duplicateCardUCUnsafe(Class, c._id, username, destDeckId, r=>{
@@ -114,19 +121,20 @@ function duplicateCards2Class(userId, ownerId, srcDeckId, destDeckId){
     })
 }
 
-function makeDeck(deck, ownerType, ownerId, destId){
-    logger.error("deck: " + JSON.stringify(deck));
+function makeDeck(deck, ownerType, ownerId, destId, userId){
     return new Promise((resolve, reject)=>{
         if(!destId){
-            var r = parseDeck(deck, ownerType, ownerId, 0);
+            var r = parseDeck(deck, ownerType, ownerId, deckModel.DEFAULT_RECURSIVE_ORDER);
             return resolve(r);
         } 
         deckService.findByIdLean(destId, "recursiveOrder")
         .then(r=>{
             if(!r)
-                return reject("deck not found");
-            if(r.recursiveOrder == 0)
-                return reject("Destiny deck recusive order <= 0");
+                return Promise.reject("deck not found");
+            if(r.recursiveOrder <= 0){
+                notificationService.notifyUser("Could not finish deck duplication, deck too deep(to manny decks inside each other)", userId);
+                return Promise.reject("Destiny deck recusive order <= 0");
+            }
             return Promise.resolve(r.recursiveOrder);
         })
         .then(recursiveOrder=>{

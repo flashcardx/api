@@ -149,6 +149,10 @@ function deliverMesaggeLP2(msg, users, notSend, notSend2){
         });
 }
 
+function notifyUser(msg, userId){
+    deliverMesaggeHP(msg, [userId]);
+}
+
 function deliverMesaggeHP(msg, users, notSend){
        var n = {
             text: msg
@@ -246,5 +250,6 @@ module.exports = {
     newThumbnail: newThumbnail,
     removedThumbnail: removedThumbnail,
     notifyClassUserJoined: notifyClassUserJoined,
-    notifyPostComment: notifyPostComment
+    notifyPostComment: notifyPostComment,
+    notifyUser: notifyUser
 }

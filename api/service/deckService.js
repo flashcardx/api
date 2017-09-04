@@ -616,30 +616,27 @@ function saveDeck(deckModel, callback) {
     })
 }
 
+module.exports.create4User= create4User;
+module.exports.create4Class= create4Class;
+module.exports.setImgUserDeckFromUrl= setImgUserDeckFromUrl;
+module.exports.setImgClassDeckFromUrl= setImgClassDeckFromUrl;
+module.exports.deleteImgUserDeck= deleteImgUserDeck;
+module.exports.deleteImgClassDeck= deleteImgClassDeck;
+module.exports.setImgUserDeckFromBuffer= setImgUserDeckFromBuffer;
+module.exports.setImgClassDeckFromBuffer= setImgClassDeckFromBuffer;
+module.exports.update4User= update4User;
+module.exports.update4Class= update4Class;
+module.exports.delete4User= delete4User;
+module.exports.delete4Class= delete4Class;
+module.exports.initChild= initChild;
+module.exports.findByIdLean= findByIdLean;
+module.exports.validateOwnership= validateOwnership;
+module.exports.allUserDecks= allUserDecks;
+module.exports.allClassDecks= allClassDecks;
+module.exports.childUserDecks= childUserDecks;
+module.exports.childClassDecks= childClassDecks;
+module.exports.duplicate2User= duplicate2User;
+module.exports.duplicate2Class= duplicate2Class;
 
-
-module.exports = {
-    create4User: create4User,
-    create4Class: create4Class,
-    setImgUserDeckFromUrl: setImgUserDeckFromUrl,
-    setImgClassDeckFromUrl: setImgClassDeckFromUrl,
-    deleteImgUserDeck: deleteImgUserDeck,
-    deleteImgClassDeck: deleteImgClassDeck,
-    setImgUserDeckFromBuffer: setImgUserDeckFromBuffer,
-    setImgClassDeckFromBuffer: setImgClassDeckFromBuffer,
-    update4User: update4User,
-    update4Class: update4Class,
-    delete4User: delete4User,
-    delete4Class: delete4Class,
-    initChild: initChild,
-    findByIdLean: findByIdLean,
-    validateOwnership: validateOwnership,
-    allUserDecks: allUserDecks,
-    allClassDecks: allClassDecks,
-    childUserDecks: childUserDecks,
-    childClassDecks: childClassDecks,
-    duplicate2User: duplicate2User,
-    duplicate2Class: duplicate2Class
-}
 
 const classService = require("./class/classService");

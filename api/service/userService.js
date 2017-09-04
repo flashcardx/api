@@ -78,10 +78,14 @@ function findById(id, fields, callback){
     });
 }
 
-function findByIdLean(id, fields, callback){
-    User.findById(id, fields)
+function findByIdLeanPromise(id, fields){
+    return User.findById(id, fields)
         .lean()
-        .exec()
+        .exec();
+}
+
+function findByIdLean(id, fields, callback){
+    findByIdLeanPromise(id, fields)
         .then(user=>{
                 if(!user){
                     logger.error("User with the given id not found");
@@ -319,7 +323,8 @@ module.exports = {
     findByIdLean: findByIdLean,
     getFeed: getFeed,
     changeProfilePicture: changeProfilePicture,
-    deleteProfilePicture: deleteProfilePicture
+    deleteProfilePicture: deleteProfilePicture,
+    findByIdLeanPromise: findByIdLeanPromise
 };
 
 const emailVerification = require("./emailVerificationService");

@@ -1,4 +1,3 @@
-require("../../app");
 const appRoot = require('app-root-path');
 const assert = require("chai").assert;
 const cardService = require("../../service/cardService");
@@ -8,20 +7,7 @@ const User = require(appRoot + "/models/userModel");
 const Card = require(appRoot + "/models/cardModel");
 const Class = require(appRoot + "/models/classModel");
 var fs = require("fs");
-
-/*
-WARNING: THIS TEST IS READY TO BE THE ONLY ONE TO BE RUN, IF YOU WANT TO RUN THIS TEST IN CONBINATION WITH OTHERS
-ALTER THE DROPDATABASE FUNCTION. IF CONNECTION IS ALREADY OPENED THIS FUNCTION WILL NEVER RESOLVE
-*/
-
-function dropDatabase(){
-    return new Promise((resolve, reject)=>{
-        mongoose.connection.once('connected', () => {
-            mongoose.connection.db.dropDatabase();
-            return resolve();
-        });
-    });
-};
+const setup = require("./setup");
 
 describe("cardService", ()=>{
         var userId,
@@ -33,7 +19,7 @@ describe("cardService", ()=>{
             cardIdClass;
     
         before(done=>{
-            dropDatabase()
+            setup.dropDatabase()
             .then(()=>{
                 var user = {"name":"tester", password:"1234", "plan.cardsLeft":200};
                 var userModel = new User(user);
@@ -78,10 +64,6 @@ describe("cardService", ()=>{
             });
         });
 
-        after(done=>{
-            //mongoose.connection.db.dropDatabase();
-            done();
-        });
 
     it("create user card", done=>{
         var card = {name:"test"};
@@ -123,7 +105,7 @@ describe("cardService", ()=>{
     });
 
     it("duplicate card user to user" ,done=>{
-        cardService.duplicateCardUU(userId, cardIdUser, userDeckId, r=>{
+        cardService.duplicateCard2User(userId, cardIdUser, userDeckId, r=>{
                 assert.equal(r.success, true);
                 done();
         });
@@ -133,7 +115,7 @@ describe("cardService", ()=>{
         var parameters = {deckId: userDeckId};
         cardService.getCards(userId, parameters, r=>{
                 assert.equal(r.success, true);
-                assert.equal(r.msg.length, 3);
+                assert.equal(r.msg.length, 4);
                 done();
         });
     });
@@ -155,7 +137,7 @@ describe("cardService", ()=>{
         });
     });
 
-     it("update user card, change deck" ,done=>{
+    it("update user card, change deck" ,done=>{
         var card = {name:"updated card", deckId: classDeckId};
         cardService.updateCard(cardIdUser, userId, card, r=>{
                 assert.equal(r.success, false);

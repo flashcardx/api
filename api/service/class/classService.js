@@ -7,7 +7,6 @@ const Img = require(appRoot + "/models/imgModel");
 const classModel = require(appRoot + "/models/classModel");
 const logger = config.getLogger(__filename);
 const userService = require(appRoot + "/service/userService");
-const cardService = require(appRoot + "/service/cardService");
 const cacheService = require(appRoot + "/service/cacheService");
 const imgService = require(appRoot + "/service/imgService");
 const AWSService = require(appRoot + "/service/AWSService");
@@ -673,7 +672,7 @@ function updateCard(classname, userId, cardId, card, callback){
     .then(Class=>{
         if(!Class)
             return Promise.reject("Either class does not exist or user is not in the class");
-        return cardService.updateCardClass(cardId, Class._id, card);
+        return cardService.updateCardClassUnsafe(cardId, Class._id, card);
     })
     .then(()=>{
         return callback({success:true});
@@ -767,8 +766,6 @@ function changeProfilePicture(classname, userId, buffer, callback){
         });
 }
 
-
-
 function deleteProfilePicture(classname, userId, callback){
         findClassLean(classname, userId, "thumbnail owner integrants name")
         .then(Class=>{
@@ -822,8 +819,6 @@ module.exports = {
     findByIdLeanUnsafe: findByIdLeanUnsafe
 }
 
-const deckService = require(appRoot + "/service/deckService");
-
 function duplicateCardUC(userId, cardId, deckId, callback){
     var cardId;
     var classId;
@@ -866,7 +861,7 @@ function duplicateCardCU(userId, classname, cardId, deckId, callback){
     .then(r=>{
         if(!r)
             return Promise.reject("Class not found");
-        return cardService.duplicateCardUU(userId, cardId, deckId, callback);
+        return cardService.duplicateCard2User(userId, cardId, deckId, callback);
     })
     .catch(err=>{
         logger.error("error in duplicateclasscu: " + err);
@@ -876,3 +871,6 @@ function duplicateCardCU(userId, classname, cardId, deckId, callback){
 
 module.exports.duplicateCardUC = duplicateCardUC;
 module.exports.duplicateCardCU = duplicateCardCU;
+
+const deckService = require(appRoot + "/service/deckService");
+const cardService = require(appRoot + "/service/cardService");

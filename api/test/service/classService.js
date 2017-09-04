@@ -1,4 +1,3 @@
-require("../../app");
 const appRoot = require('app-root-path');
 const assert = require("chai").assert;
 const classService = require("../../service/class/classService");
@@ -7,21 +6,9 @@ const Deck = require(appRoot + "/models/deckModel").deck;
 const User = require(appRoot + "/models/userModel");
 const Card = require(appRoot + "/models/cardModel");
 const Class = require(appRoot + "/models/classModel");
+const setup = require("./setup");
 var fs = require("fs");
 
-/*
-WARNING: THIS TEST IS READY TO BE THE ONLY ONE TO BE RUN, IF YOU WANT TO RUN THIS TEST IN CONBINATION WITH OTHERS
-ALTER THE DROPDATABASE FUNCTION. IF CONNECTION IS ALREADY OPENED THIS FUNCTION WILL NEVER RESOLVE
-*/
-
-function dropDatabase(){
-    return new Promise((resolve, reject)=>{
-        mongoose.connection.once('connected', () => {
-            mongoose.connection.db.dropDatabase();
-            return resolve();
-        });
-    });
-};
 
 describe("classService", ()=>{
         var userId,
@@ -33,7 +20,7 @@ describe("classService", ()=>{
             cardIdClass;
     
         before(done=>{
-            dropDatabase()
+            setup.dropDatabase()
             .then(()=>{
                 var user = {"name":"tester", password:"1234"};
                 var userModel = new User(user);
@@ -77,12 +64,6 @@ describe("classService", ()=>{
                 console.error("error in before method(cardService): " + err);
             });
         });
-
-        after(done=>{
-            //mongoose.connection.db.dropDatabase();
-            done();
-        });
-
         describe("duplication uc and cu", ()=>{
 
             it("duplicate card user to class", done=>{

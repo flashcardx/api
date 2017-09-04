@@ -1,4 +1,3 @@
-require("../../app"); // opens db connection
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
@@ -11,9 +10,8 @@ const User = require(appRoot + "/models/userModel");
 const Card = require(appRoot + "/models/cardModel");
 const Class = require(appRoot + "/models/classModel");
 var fs = require("fs");
-const { exec } = require('child_process');
-
-describe.only("deckService", ()=>{
+const setup = require("./setup");
+describe("deckService", ()=>{
     describe("create update, duplicate and delete", ()=>{
        var userId;
        var parentUserDeckId;
@@ -26,11 +24,13 @@ describe.only("deckService", ()=>{
        var newClassDeckId;
 
         before(done=>{
-            mongoose.connection.db.dropDatabase();
-            var user = {"name":"tester", password:"1234", "plan.cardsLeft":200};
-            var userModel = new User(user);
-            userId = userModel._id;
-            userModel.save()
+            setup.dropDatabase()
+            .then(()=>{
+                var user = {"name":"tester", password:"1234", "plan.cardsLeft":200};
+                var userModel = new User(user);
+                userId = userModel._id;
+                return userModel.save();
+            })
             .then(()=>{
                 var c = {name:classname, descripcion:"abc", owner:userId};
                 var classModel = new Class(c);
@@ -38,7 +38,7 @@ describe.only("deckService", ()=>{
                 return classModel.save();
             })
             .then(()=>{
-                var deck = {name:"testdeck", description:"abc", ownerId: userId};
+                var deck = {name:"parent user deck", description:"abc", ownerId: userId};
                 var deckModel = new Deck(deck);
                 parentUserDeckId = deckModel._id;
                 return deckModel.save();
@@ -81,13 +81,7 @@ describe.only("deckService", ()=>{
             })
         });
 
-        after(done=>{
-            //mongoose.connection.db.dropDatabase();
-            console.log("killing child processes");
-            exec("killall node"); //kills child processes
-            done();
-        });
-
+    
         it("should create user deck", done=>{
             var deck = {name:"deck1"};
             deckService.create4User(userId, deck, r=>{
@@ -141,7 +135,8 @@ describe.only("deckService", ()=>{
         })
 
         it("should duplicate user deck", done=>{
-            deckService.duplicate2User(userId, parentUserDeckId, newUserDeckId,r=>{
+            logger.error("src deck: " + parentUserDeckId + ", dest deck: " + newUserDeckId);
+            deckService.duplicate2User(userId, parentUserDeckId, newUserDeckId, r=>{
                 setTimeout(()=>{
                     assert.equal(r.success, true);
                     done();
@@ -156,7 +151,7 @@ describe.only("deckService", ()=>{
             });
         })
         
-        it.only("should duplicate class deck", done=>{
+        it("should duplicate class deck", done=>{
             setTimeout(()=>{
                 deckService.duplicate2Class(userId, classname, parentUserDeckId, undefined, r=>{
                     assert.equal(r.success, true);
@@ -202,11 +197,13 @@ describe.only("deckService", ()=>{
             var classname = "testclass";
             var classId;
             before(done=>{
-                mongoose.connection.db.dropDatabase();
-                var user = {"name":"tester", password:"1234"};
-                var userModel = new User(user);
-                userId = userModel._id;
-                userModel.save()
+                setup.dropDatabase()
+                .then(()=>{
+                    var user = {"name":"tester", password:"1234", "plan.cardsLeft":200};
+                    var userModel = new User(user);
+                    userId = userModel._id;
+                    return userModel.save();
+                })
                 .then(()=>{
                     var c = {name:classname, descripcion:"abc", owner:userId};
                     var classModel = new Class(c);
@@ -231,11 +228,6 @@ describe.only("deckService", ()=>{
                 .catch(err=>{
                     logger.error("error in before method: " + err);
                 })
-            });
-
-            after(done=>{
-                mongoose.connection.db.dropDatabase();
-                done();
             });
 
             it("should set thumbnail from url", done=>{
@@ -300,11 +292,13 @@ describe.only("deckService", ()=>{
             var classname = "testclass";
             var classId;
             before(done=>{
-                mongoose.connection.db.dropDatabase();
-                var user = {"name":"tester", password:"1234"};
-                var userModel = new User(user);
-                userId = userModel._id;
-                userModel.save()
+                setup.dropDatabase()
+                .then(()=>{
+                    var user = {"name":"tester", password:"1234", "plan.cardsLeft":200};
+                    var userModel = new User(user);
+                    userId = userModel._id;
+                    return userModel.save();
+                })
                 .then(()=>{
                     var c = {name:classname, descripcion:"abc", owner:userId};
                     var classModel = new Class(c);
@@ -343,10 +337,6 @@ describe.only("deckService", ()=>{
                 })
             });
 
-            after(done=>{
-               // mongoose.connection.db.dropDatabase();
-                done();
-            });
         
         it("get all user decks, should get 2 decks", done=>{
             deckService.allUserDecks(userId, r=>{
