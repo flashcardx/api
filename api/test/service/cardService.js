@@ -137,7 +137,7 @@ describe("cardService", ()=>{
         });
     });
 
-    it("update user card, change deck" ,done=>{
+    it("update user card, change deck should fail" ,done=>{
         var card = {name:"updated card", deckId: classDeckId};
         cardService.updateCard(cardIdUser, userId, card, r=>{
                 assert.equal(r.success, false);

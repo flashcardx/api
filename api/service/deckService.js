@@ -27,7 +27,7 @@ function create4User(userId, deck, callback) {
     if (deck.parentId)
         createChildDeck(deckModel, deck.parentId, callback);
     else
-        saveDeck(deckModel, callback);
+        saveDeck(deckModel, callback, undefined, userId);
 }
 
 function update4User(userId, deckId, deck, callback) {
@@ -397,7 +397,7 @@ function duplicate2Class(userId, classname, srcId, destId, callback){
             if(destId)
                 return Deck.findOne({_id:destId, ownerId:classId, ownerType:"c", active:true})
                   .lean();
-            else return Promise.resolve(true);
+             else return Promise.resolve(true);
     })
     .then(r=>{
          if(!r)
@@ -607,15 +607,39 @@ function createChildDeck(deckModel, parentId, callback, classId, userId) {
 }
 
 function saveDeck(deckModel, callback, classId, userId) {
-    deckModel.save(err => {
-        if (err) {
-            logger.error("error when  creating deck: " + err);
-            return callback({ success: false, msg: err });
+    var forClass = false;
+    var user;
+    deckModel.save()
+    .then(()=>{
+        if(classId){//when adding user followers this if will no longer be required
+            forClass =true;
+            return userService.findByIdLeanPromise(userId, "name")
         }
-        if(classId)
-            feedService.publishDeckClassFeed(classId, deckModel._id, userId);  
-        return callback({ success: true, id: deckModel._id });
-    })
+        else
+            return Promise.resolve();
+     })
+    .then(u=>{
+            user = u;
+            if(forClass == true){
+                if(!u)
+                    return Promise.reject("user not found");
+                return classService.findByIdLeanUnsafe(classId, "name");
+            }
+            else
+                return Promise.resolve();
+        })
+        .then(Class=>{
+            if(forClass == true){
+                if(!Class)
+                    return Promise.reject("class not found");
+                feedService.publishDeckClassFeed(deckModel._id, classId, Class.name, userId, user.name);  
+            }
+            return callback({ success: true, id: deckModel._id });
+        })
+        .catch(err=>{
+            logger.error("error when saving deck: " + err);
+            return callback({success:false, msg:err});
+        })
 }
 
 module.exports.create4User= create4User;

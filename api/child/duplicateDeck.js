@@ -61,11 +61,12 @@ function duplicate(ownerType, ownerId, srcId, destId, userId){
                     return Promise.resolve();
         })
     .then(r=>{
-                publish2feed(ownerType, newDeckModel._id, userId, ownerId);
+                if(ownerType =="c")
+                     publish2feed(ownerType, newDeckModel._id, userId, ownerId);
                 if(r && r.nModified == 0)
                     return Promise.reject("could not push:" + newDeckModel._id + " to deck: " + destId);
                 deckBackup.decks.forEach(d=>{
-                    duplicate(ownerType, ownerId, d, newDeckModel._id);
+                    duplicate(ownerType, ownerId, d, newDeckModel._id, userId);
                 })
                 if(ownerType =="u")
                     duplicateCards2User(ownerId, srcId, newDeckModel._id);
@@ -162,7 +163,7 @@ function parseDeck(deck, ownerType, ownerId, recursiveOrder){
 }
 
 function publish2feed(ownerType, deckId, userId, classId){
-    userService.findByIdLeanPromise("userId", "name")
+    userService.findByIdLeanPromise(userId, "name")
     .then(user=>{
         if(!user)
             return Promise.reject("user not found");

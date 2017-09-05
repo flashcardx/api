@@ -81,8 +81,8 @@ describe("classService", ()=>{
             });
         })
 
-        describe("class cards, should not succeed", ()=>{
-            it("update class card" ,done=>{
+        describe("class cards", ()=>{
+            it("update class card should fail" ,done=>{
                 var card = {name:"updated class card", deckId: userDeckId};
                 classService.updateCard(classname, userId, cardIdClass, card, r=>{
                         assert.equal(r.success, false);

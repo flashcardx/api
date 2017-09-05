@@ -308,26 +308,24 @@ function deleteProfilePicture(userId, callback){
 }
 
 
-module.exports = {
-    loginUser : loginUser,
-    findById: findById,
-    userCardLimitsOk: userCardLimitsOk,
-    saveUser: saveUser,
-    decreaseCardCounter: decreaseCardCounter,
-    increaseCardCounter: increaseCardCounter,
-    getPlan: getPlan,
-    getUserLang: getUserLang,
-    updateLang: updateLang,
-    loginFbUser: loginFbUser,
-    registerNewFbUser: registerNewFbUser,
-    findByEmail: findByEmail,
-    increaseNotificationCounter: increaseNotificationCounter,
-    findByIdLean: findByIdLean,
-    getFeed: getFeed,
-    changeProfilePicture: changeProfilePicture,
-    deleteProfilePicture: deleteProfilePicture,
-    findByIdLeanPromise: findByIdLeanPromise
-};
+module.exports.loginUser = loginUser;
+module.exports.findById= findById;
+module.exports.userCardLimitsOk= userCardLimitsOk;
+module.exports.saveUser= saveUser;
+module.exports.decreaseCardCounter= decreaseCardCounter;
+module.exports.increaseCardCounter= increaseCardCounter;
+module.exports.getPlan= getPlan;
+module.exports.getUserLang= getUserLang;
+module.exports.updateLang= updateLang;
+module.exports.loginFbUser= loginFbUser;
+module.exports.registerNewFbUser= registerNewFbUser;
+module.exports.findByEmail= findByEmail;
+module.exports.increaseNotificationCounter= increaseNotificationCounter;
+module.exports.findByIdLean= findByIdLean;
+module.exports.getFeed= getFeed;
+module.exports.changeProfilePicture= changeProfilePicture;
+module.exports.deleteProfilePicture= deleteProfilePicture;
+module.exports.findByIdLeanPromise= findByIdLeanPromise;
 
 const emailVerification = require("./emailVerificationService");
 

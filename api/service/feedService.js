@@ -26,7 +26,7 @@ function publishDeckClassFeed(deckId, classId, classname, userId, username){
     classFeed.addActivity(activity);
 }
 
-function publishPost(postId, classId, classname, username, userId){
+function publishPost(postId, classId, classname, userId, username){
     classFeed = client.feed('class', classId);
     var activity = {
         actor: "Class:"+classId,

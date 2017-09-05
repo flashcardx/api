@@ -135,7 +135,6 @@ describe("deckService", ()=>{
         })
 
         it("should duplicate user deck", done=>{
-            logger.error("src deck: " + parentUserDeckId + ", dest deck: " + newUserDeckId);
             deckService.duplicate2User(userId, parentUserDeckId, newUserDeckId, r=>{
                 setTimeout(()=>{
                     assert.equal(r.success, true);
@@ -145,25 +144,29 @@ describe("deckService", ()=>{
         })
 
         it("should duplicate class deck", done=>{
-            deckService.duplicate2Class(userId, classname, parentUserDeckId, newUserDeckId,r=>{
-                assert.equal(r.success, false);
-                done();
+            deckService.duplicate2Class(userId, classname, parentClassDeckId, newClassDeckId,r=>{
+                setTimeout(()=>{
+                     assert.equal(r.success, true);
+                     done();
+                }, 3000);
             });
         })
         
         it("should duplicate class deck", done=>{
-            setTimeout(()=>{
-                deckService.duplicate2Class(userId, classname, parentUserDeckId, undefined, r=>{
-                    assert.equal(r.success, true);
-                    done();
+            deckService.duplicate2Class(userId, classname, parentUserDeckId, undefined, r=>{
+                setTimeout(()=>{
+                     assert.equal(r.success, true);
+                     done();
+                }, 3000);
                 });
-            }, 3000);
         })
 
         it("should duplicate class deck", done=>{
             deckService.duplicate2Class(userId, classname, parentUserDeckId, newClassDeckId, r=>{
-                assert.equal(r.success, true);
-                done();
+                setTimeout(()=>{
+                     assert.equal(r.success, true);
+                     done();
+                }, 3000);
             });
         })
 

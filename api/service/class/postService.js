@@ -14,39 +14,34 @@ const notificationService = require(appRoot + "/service/notificationService");
 const classService = require(appRoot + "/service/class/classService");
 
 function post(classname, userId, text, callback){
+    var post;
+    var Class;
     classService.findClassLean(classname, userId, "_id")
-    .then(Class=>{
-        if(!Class){
+    .then(c=>{
+        if(!c){
             logger.error("class not found");
             return callback({success:false, msg:"Class not found(user must be in the class)"});
         }
-        var post = new Post;
+        Class = c;
+        post = new Post;
         post.text = text;
         post.classId = Class._id;
         post.userId = userId;
-        post.save()
-        .then(()=>{
-            Post.findOne({_id:post._id},
-                        "userId comments commentsSize text created_at likes.count loves.count hahas.count "+
-                        "wows.count sads.count angrys.count")
-                        .populate("userId", "name thumbnail")
-                        .lean()
-                        .exec()
-                    .then(r=>{
-                            feedService.publishPost(Class._id, classname, r._id, r.userId.name);
-                            if(r.userId.thumbnail)
-                                r.userId.thumbnail = AWSService.getImgUrl(r.userId.thumbnail);
-                            return callback({success:true, msg:r});
-                    })
-                    .catch(err=>{
-                            logger.error("error when trying to get new post: " + err);
-                            return callback({success:false, msg:err});
-                    });
-        })
-        .catch(err=>{
-                logger.error("error when trying to post: " + err);
-                return callback({success:false, msg:err});
-        });    
+        return post.save();
+    })
+    .then(()=>{
+         return Post.findOne({_id:post._id},
+                    "userId comments commentsSize text created_at likes.count loves.count hahas.count "+
+                    "wows.count sads.count angrys.count")
+                    .populate("userId", "name thumbnail")
+                    .lean()
+                    .exec();
+    })
+    .then(r=>{
+            feedService.publishPost(r._id, Class._id, classname, userId, r.userId.name);
+                if(r.userId.thumbnail)
+                    r.userId.thumbnail = AWSService.getImgUrl(r.userId.thumbnail);
+            return callback({success:true, msg:r});
     })
     .catch(err=>{
         logger.error("error when trying to post: " + err);
