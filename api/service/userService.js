@@ -6,7 +6,9 @@ const config = require(appRoot + "/config");
 const User = require(appRoot + "/models/userModel");
 const Img = require(appRoot + "/models/imgModel");
 const imgService = require(appRoot + "/service/imgService");
+const deckService = require(appRoot + "/service/deckService");
 const feedService = require(appRoot + "/service/feedService");
+const classService = require(appRoot + "/service/class/classService");
 const AWSService = require(appRoot + "/service/AWSService");
 const LoginRegistryModel = require(appRoot + "/models/loginRegistryModel");
 const logger = config.getLogger(__filename);
@@ -368,70 +370,81 @@ function registerNewFbUser(user, callback){
 const postService = require(appRoot + "/service/class/postService");
 
 function getFeed(userId, lastId, callback){
-    var userLang;
-    findByIdLean(userId, "classes lang", r=>{
-            if(r.success == false){
-                logger.error("error when getting user: " + r.msg);
-                return callback({success:false, msg:r.msg});
-            }
-            if(r.msg.classes.length == 0)
-                return callback({success:true, msg:[]});
-            userLang = r.msg.lang;
-        feedService.getFeed(userId, userLang, lastId)
-        .then(r=>{
-                var feed = [];
-                var processed = 0;
-                if(r.results.length == 0)
+    feedService.getFeed(userId, lastId)
+    .then(r=>{
+            var feed = [];
+            var promises = [];
+            if(r.results.length == 0)
                     return callback({success:true, msg:[]});
-                r.results.forEach((obj, i)=>{
-                    if(obj.type == "card"){
-                        cardService.findByIdLean(obj.object, "name description imgs ownerName category updated_at classname")
-                        .then(card=>{
-                            if(!card){
-                                logger.error("no card found for activity(trying to fetch user feed): " + JSON.stringify(obj));
-                                return Promise.reject("no card found for activity(trying to fetch user feed): " + JSON.stringify(obj));
-                            }
-                            card.type="c";
-                            card.id = obj.id;
-                            feed.push(AWSService.replaceImgsUrl(card));
-                            processed++;
-                            if(processed == r.results.length)
-                                return callback({success:true, msg:feed});
-                        })
-                        .catch(err=>{
-                                logger.error("error when getting card (trying to fetch user feed): " + JSON.stringify(obj));                        
-                                Promise.reject(err);
-                                throw new Exception(err);    
-                        })
-                    }
-                    else if(obj.type == "post"){
-                        // enrich post and push it
-                        postService.findByIdLean(obj.object, "text text created_at likes.count loves.count hahas.count "+
-                                 "wows.count sads.count angrys.count comentsSize")
-                        .then(post=>{
-                            if(!post){
-                                logger.error("post id: " +obj.object+" not found when getting user feed");
-                                return Promise.reject("post id: " +obj.object+" not found when getting user feed");
-                            }
-                            post.type="p";
-                            post.username = obj.username;
-                            post.classname = obj.classname;
-                            feed.push(post);    
-                            processed++;
-                            if(processed == r.results.length)
-                                return callback({success:true, msg:feed});
-                        })
-                        .catch(err=>{
-                                logger.error("error when getting post(trying to fetch user feed): " + JSON.stringify(obj));                        
-                                Promise.reject(err);
-                                throw new Exception(err);    
-                        })
-                    }
-                });
+            r.results.forEach((obj, i)=>{
+                switch (obj.type) {
+                    case "deck1":  promises.push(enrichDeckTypeOne4Feed(obj, type));
+                                    break;
+                    case "post":   promises.push(enrichPost4Feed(obj, type));
+                                break;
+                    default: Promise.reject("invalid obj type when getting feed"); 
+                            break;
+                }
+            });
+            Promise.all(promises)
+            .then(r=>{
+                return callback({success:true, msg:r});
             })
             .catch(err=>{
-                logger.error("userfeed error: " + err);
-                return callback({success:false, msg:err});
+                return Promise.reject(err);
             })
+        })
+    .catch(err=>{
+        logger.error("userfeed error: " + err);
+        return callback({success:false, msg:err});
     })
+}
+
+function enrichDeckTypeOne4Feed(obj, feed){
+    return new Promise((resolve, reject)=>{
+        deckService.findByIdLean(obj.object, "name description thumbnail ownerId ownerType updated_at")
+        .then(deck=>{
+                        if(!deck){
+                                logger.error("no card found for activity(trying to fetch user feed): " + JSON.stringify(obj));
+                                return reject("no card found for activity(trying to fetch user feed): " + JSON.stringify(obj));
+                        }
+                        deck.type = obj.type;
+                        deck.id = obj.id;
+                        deck.thumbnail = AWSService.getImgUrl(deck.thumbnail);
+                        deck.username = obj.username;
+                        deck.userId = obj.userId;
+                        deck.classId = obj.classId
+                        deck.classname = obj.classname;
+                        feed.push(deck);
+                        return resolve();
+        })
+        .catch(err=>{
+                        logger.error("error when getting card (trying to fetch user feed): " + JSON.stringify(obj));                        
+                        return reject(err); 
+        });
+    });
+}
+
+function enrichPost4Feed(obj, feed){
+    return new Promise((resolve, reject)=>{
+        postService.findByIdLean(obj.object, "text text created_at likes.count loves.count hahas.count "+
+                                "wows.count sads.count angrys.count comentsSize")
+                                .then(post=>{
+                                    if(!post){
+                                        logger.error("post id: " +obj.object+" not found when getting user feed");
+                                        return reject("post id: " +obj.object+" not found when getting user feed");
+                                    }
+                                    post.type = obj.type;
+                                    post.username = obj.username;
+                                    post.userId = obj.userId;
+                                    post.classId = obj.classId
+                                    post.classname = obj.classname;
+                                    feed.push(post);
+                                    return resolve();
+                                })
+                                .catch(err=>{
+                                        logger.error("error when getting post(trying to fetch user feed): " + JSON.stringify(obj));                        
+                                        return reject(err);  
+                                })
+    });
 }

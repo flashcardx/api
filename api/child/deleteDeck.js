@@ -31,6 +31,7 @@ function deleteDeck(deckId){
             deleteDeck(d);
         })
         deleteCards(deck);
+        deleteFromFeed(deck.ownerType, deckId, deck.ownerId);
         deck.remove();
    })
 }
@@ -65,4 +66,9 @@ function deleteCards(deck){
         })
   else 
       logger.fatal("invalid deck owner type: " + deck.ownerType + " deckid: " + deck._id);  
+}
+
+function deleteFromFeed(ownerType, deckId, ownerId){
+    if(ownerType == "c")
+        feedService.removeDeckFromClass(ownerId, deckId);
 }

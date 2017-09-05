@@ -7,6 +7,7 @@ const imgService = require(appRoot + "/service/imgService");
 const userService = require(appRoot + "/service/userService");
 const deckService = require(appRoot + "/service/deckService");
 const notificationService = require(appRoot + "/service/notificationService");
+const feedService = require(appRoot + "/service/feedService");
 const config = require(appRoot + "/config");
 const mongoose = require("mongoose");
 mongoose.Promise = global.Promise;
@@ -60,6 +61,7 @@ function duplicate(ownerType, ownerId, srcId, destId, userId){
                     return Promise.resolve();
         })
     .then(r=>{
+                publish2feed(ownerType, newDeckModel._id, userId, ownerId);
                 if(r && r.nModified == 0)
                     return Promise.reject("could not push:" + newDeckModel._id + " to deck: " + destId);
                 deckBackup.decks.forEach(d=>{
@@ -157,4 +159,26 @@ function parseDeck(deck, ownerType, ownerId, recursiveOrder){
                         recursiveOrder: recursiveOrder,
                         lang: deck.lang
                     };
+}
+
+function publish2feed(ownerType, deckId, userId, classId){
+    userService.findByIdLeanPromise("userId", "name")
+    .then(user=>{
+        if(!user)
+            return Promise.reject("user not found");
+        if(ownerType == "c"){
+            classService.findByIdLeanUnsafe(classId, "name")
+            .then(Class=>{
+                if(!Class)
+                    return Promise.reject("class not found");
+                feedService.publishDeckClassFeed(deckId, classId, Class.name, userId, user.name);
+            })
+            .catch(err=>{
+                return Promise.reject(err);
+            })
+        }
+    })
+    .catch(err=>{
+        logger.fatal("Error when getting user for publishing to feed: " + err);
+    });
 }

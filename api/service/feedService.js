@@ -10,25 +10,31 @@ client = stream.connect(credentials.getStream.publicKey,
                         credentials.getStream.appId,
                         { location: credentials.getStream.location });
 
-function publishCardClassFeed(classId, cardId){
+function publishDeckClassFeed(deckId, classId, classname, userId, username){
     classFeed = client.feed('class', classId);
     var activity = {
         actor: "Class:"+classId,
         verb: "publish",
-        object: cardId,
-        type: "card",
-        foreign_id: "card" + cardId
+        userId: userId,
+        username: username, 
+        classname: classname,
+        classId: classId,
+        object: deckId,
+        type: "deck1",
+        foreign_id: "deck" + deckId
     };
     classFeed.addActivity(activity);
 }
 
-function publishPost(classId, classname, postId, username){
+function publishPost(postId, classId, classname, username, userId){
     classFeed = client.feed('class', classId);
     var activity = {
         actor: "Class:"+classId,
         verb: "publish",
-        username: username, 
         classname: classname,
+        classId: classId,
+        username: username,
+        userId: userId,
         object: postId,
         type: "post",
         foreign_id: "post" + postId
@@ -36,34 +42,34 @@ function publishPost(classId, classname, postId, username){
     classFeed.addActivity(activity);
 }
 
-function followClass(classId, userId, lang){
-    userFeed = client.feed('timeline', lang+userId);
+function followClass(classId, userId){
+    userFeed = client.feed('timeline', userId);
     userFeed.follow("class", classId);
 }
 
-function unfollowClass(classId, userId, lang){
-    userFeed = client.feed('timeline', lang+userId);
+function unfollowClass(classId, userId){
+    userFeed = client.feed('timeline', userId);
     userFeed.unfollow("class", classId);
 }
 
-function getFeed(userId, lang, lastId){
-    userFeed = client.feed('timeline', lang+userId);
-    var restrictions = {limit:10};
+function getFeed(userId, lastId){
+    userFeed = client.feed('timeline', userId);
+    var restrictions = {limit:12};
     if(lastId)
         restrictions.id_lt = lastId;
     return userFeed.get(restrictions); //returns promise
 }
 
-function removeCardFromClass(classId, cardId){
+function removeDeckFromClass(classId, deckId){
     classFeed = client.feed('class', classId);
-    classFeed.removeActivity({foreignId:"card"+cardId});
+    classFeed.removeActivity({foreignId:"deck"+deckId});
 }
 
 module.exports = {
-    publishCardClassFeed: publishCardClassFeed,
+    publishDeckClassFeed: publishDeckClassFeed,
     followClass: followClass,
     unfollowClass: unfollowClass,
     getFeed: getFeed,
-    removeCardFromClass: removeCardFromClass,
+    removeDeckFromClass: removeDeckFromClass,
     publishPost: publishPost
 };

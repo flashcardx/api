@@ -6,6 +6,7 @@ const DEFAULT_RECURSIVE_ORDER = require(appRoot + "/models/deckModel").DEFAULT_R
 const Deckduplication = require(appRoot + "/models/deckduplicationModel");
 const imgService = require("./imgService");
 const userService = require("./userService");
+const feedService = require("./feedService");
 const logger = config.getLogger(__filename);
 const mongoose = require("mongoose");
 const AWSService = require("./AWSService");
@@ -80,9 +81,10 @@ function create4Class(userId, data, callback) {
             data.ownerId = Class._id;
             var deckModel = new Deck(data);
             if (data.parentId)
-                createChildDeck(deckModel, data.parentId, callback);
-            else
-                saveDeck(deckModel, callback);
+                createChildDeck(deckModel, data.parentId, callback, Class._id, userId);
+            else{ 
+                saveDeck(deckModel, callback, Class._id, userId);
+            }
         })
         .catch(err => {
             logger.error("when creating deck4class: " + err);
@@ -227,7 +229,7 @@ function delete4User(userId, deckId, callback) {
             childProcess.deleteDeckSubP(deckId);
             return callback({ success: true });
         })
-        .catch(err => {
+        .catch(err=>{
             logger.error("error when trying to delete user deck: " + err);
             return callback({ success: false, msg: err });
         });
@@ -291,7 +293,7 @@ function childUserDecks(userId, parentId, skip, callback) {
         ownerType: "u",
         active: true
     };
-    if (!parentId) {
+    if(!parentId) {
         parameters.recursiveOrder = DEFAULT_RECURSIVE_ORDER;
         return findDecksByParams(parameters, 14, skip, "name _id thumbnail lang", callback);
     }
@@ -499,8 +501,6 @@ function getClassDeck(userId, deckId, fields) {
     });
 }
 
-
-
 function deleteImg(hash, deckId) {
     return new Promise((resolve, reject) => {
         if (!hash)
@@ -588,7 +588,7 @@ function setImageFromBuffer(deckId, buffer) {
     });
 }
 
-function createChildDeck(deckModel, parentId, callback) {
+function createChildDeck(deckModel, parentId, callback, classId, userId) {
     if (deckModel._id == parentId) {
         logger.error("Deck can not be its own parent ;)");
         return callback({ success: false, msg: "Deck can not be its own parent ;)" });
@@ -598,7 +598,7 @@ function createChildDeck(deckModel, parentId, callback) {
             if (!parent)
                 return callback({ success: false, msg: "could not find parent deck, or max deck recursive level reached" });
             deckModel.recursiveOrder = parent.recursiveOrder - 1;
-            saveDeck(deckModel, callback);
+            saveDeck(deckModel, callback, classId, userId);
         })
         .catch(err => {
             logger.error("trying to push deck id in parent: " + err);
@@ -606,12 +606,14 @@ function createChildDeck(deckModel, parentId, callback) {
         })
 }
 
-function saveDeck(deckModel, callback) {
+function saveDeck(deckModel, callback, classId, userId) {
     deckModel.save(err => {
         if (err) {
             logger.error("error when  creating deck: " + err);
             return callback({ success: false, msg: err });
         }
+        if(classId)
+            feedService.publishDeckClassFeed(classId, deckModel._id, userId);  
         return callback({ success: true, id: deckModel._id });
     })
 }

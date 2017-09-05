@@ -19,17 +19,17 @@ const ObjectId = require('mongoose').Types.ObjectId;
 function create(Class, callback){
     var userModel;
     var cId;
-    verifyOwnerLimits(Class.isPrivate, Class.owner, "plan.isPremium name classLimit classesLeft lang classes")
+    verifyOwnerLimits(Class.isPrivate, Class.owner, "plan.isPremium name classLimit classesLeft classes")
     .then((user)=>{
         userModel = user;
-        return saveClassDb(Class, user.lang)
+        return saveClassDb(Class)
     })
     .then((classId)=>{
         cId = classId;
         return linkOwnerClass(userModel, classId);
     })
     .then(()=>{
-        feedService.followClass(cId, userModel._id, userModel.lang);
+        feedService.followClass(cId, userModel._id);
         return callback({success:true});
     })
     .catch(err=>{
@@ -41,7 +41,6 @@ function create(Class, callback){
 function linkOwnerClass(userModel, classId){
     return new Promise((resolve, reject)=>{
         var c = {
-            lang: userModel.lang,
             id: classId,
             isAdmin: true 
         };
@@ -57,9 +56,8 @@ function linkOwnerClass(userModel, classId){
     });
 }
 
-function saveClassDb(Class, lang){
+function saveClassDb(Class){
     return new Promise((resolve, reject)=>{
-        Class.lang = lang;
         var newCard = new classModel(Class);
         newCard.save().then(()=>{
             resolve(newCard._id);
@@ -90,7 +88,7 @@ function verifyOwnerLimits(isPrivate, userId, fields){
 
 
 function listAll(userId, callback){
-    listAllByFieldsPopulateOwner(userId, "name thumbnail description isPrivate maxLimit cardsLeft owner maxUsers usersLeft updated_at lang", r=>{
+    listAllByFieldsPopulateOwner(userId, "name thumbnail description isPrivate maxLimit cardsLeft owner maxUsers usersLeft updated_at", r=>{
         if(r.success == false)
             return callback(r);
         var Classes = r.msg;
@@ -109,7 +107,7 @@ function listAllShort(userId, callback){
 
 
 /**
- * This method will return ALL classes the user have,
+ * This method will return ALL classes the user has,
  * most users will have less than 30 classes(ok), but if user
  * had a dangerous high number of classes example:1000
  * performance will blow up.
@@ -117,7 +115,7 @@ function listAllShort(userId, callback){
  * 
  */
 function listAllByFields(userId, fields, callback){
-    userService.findById(userId, "classes lang -_id", r=>{
+    userService.findById(userId, "classes -_id", r=>{
         if(r.success === false){
                 logger.error(r.msg);
                 return callback(r);
@@ -130,8 +128,7 @@ function listAllByFields(userId, fields, callback){
         var processed1 = 0,
             processed2 = 0;
         user.classes.forEach((value, index, a)=>{
-            if(value.lang === user.lang){
-                classModel.findOne({_id: value.id, lang:user.lang, isActive:true}, fields)
+                classModel.findOne({_id: value.id, isActive:true}, fields)
                 .lean()
                 .exec()
                 .then(doc=>{
@@ -150,9 +147,6 @@ function listAllByFields(userId, fields, callback){
                 logger.warn(err);
                 return callback({success:false, msg:String(err)});
             });
-            }//end if
-            else
-                processed2++;
             if(processed1 + processed2 === length)
                 return callback({success:true, msg:finalResults});
     }); //end foreach
@@ -160,7 +154,7 @@ function listAllByFields(userId, fields, callback){
 }
 
 function listAllByFieldsPopulateOwner(userId, fields, callback){
-    userService.findById(userId, "classes lang -_id", r=>{
+    userService.findById(userId, "classes -_id", r=>{
         if(r.success === false){
                 logger.error(r.msg);
                 return callback(r);
@@ -173,8 +167,7 @@ function listAllByFieldsPopulateOwner(userId, fields, callback){
         var processed1 = 0,
             processed2 = 0;
         user.classes.forEach((value, index, a)=>{
-            if(value.lang === user.lang){
-                classModel.findOne({_id: value.id, lang:user.lang, isActive:true}, fields)
+                classModel.findOne({_id: value.id, isActive:true}, fields)
                 .lean()
                 .populate("owner", "name")
                 .exec()
@@ -194,9 +187,6 @@ function listAllByFieldsPopulateOwner(userId, fields, callback){
                 logger.warn(err);
                 return callback({success:false, msg:String(err)});
             });
-            }//end if
-            else
-                processed2++;
             if(processed1 + processed2 === length)
                 return callback({success:true, msg:finalResults});
     }); //end foreach
@@ -205,13 +195,7 @@ function listAllByFieldsPopulateOwner(userId, fields, callback){
 
 // returns user id and integrants id so client can tell if is already joined to a class
 function search(name, userId, callback){
-    userService.getUserLang(userId, r=>{
-        if(r.success === false){
-                logger.error(r.msg);
-                return callback(r);
-            }
-        const lang = r.msg;
-        classModel.findOne({name:name, lang:lang, isActive:true}, "name thumbnail description cardsLeft integrants owner maxUsers usersLeft maxLimit")
+        classModel.findOne({name:name, isActive:true}, "name thumbnail description cardsLeft integrants owner maxUsers usersLeft maxLimit")
         .populate("owner", "name")
         .lean()
         .exec()
@@ -225,17 +209,10 @@ function search(name, userId, callback){
                 logger.warn(err);
                 return callback({success:false, msg:String(err)});
         });
-    });
 }
 
 function recommendClasses(userId, callback){
-    userService.getUserLang(userId, r=>{
-        if(r.success === false){
-                logger.error(r.msg);
-                return callback(r);
-            }
-        const lang = r.msg;
-        classModel.find({"owner":{$ne:userId}, "integrants":{$ne:userId}, lang:lang, isPrivate:false, usersLeft:{$gt:0}, isActive:true}, "name thumbnail description owner integrants updated_at maxLimit cardsLeft maxUsers usersLeft")
+        classModel.find({"owner":{$ne:userId}, "integrants":{$ne:userId}, isPrivate:false, usersLeft:{$gt:0}, isActive:true}, "name thumbnail description owner integrants updated_at maxLimit cardsLeft maxUsers usersLeft")
         .sort('-rank')
         .limit(8)
         .populate("owner", "name")
@@ -253,20 +230,19 @@ function recommendClasses(userId, callback){
                 logger.warn(err);
                 return callback({success:false, msg:String(err)});
         });
-    });
 }
 
 function joinClass(classname, userId, callback){
     var classId;
-    verifyUserIsNotInClass(userId, classname, "usersLeft owner integrants name lang isPrivate")
+    verifyUserIsNotInClass(userId, classname, "usersLeft owner integrants name isPrivate")
     .then(classModel=>{
         classId = classModel._id;
         if(classModel.isPrivate === false)
             return joinPublicClass(classModel, userId);
         return joinPrivateClass(classModel, userId);
     })
-    .then(lang=>{
-        feedService.followClass(classId, userId, lang);
+    .then(()=>{
+        feedService.followClass(classId, userId);
         return callback({success:true});
     })
      .catch(err=>{
@@ -277,7 +253,7 @@ function joinClass(classname, userId, callback){
 
 function joinPublicClass(classModel, userId){
     return new Promise((resolve, reject)=>{
-        userService.findById(userId, "name classes classesLeft lang", r=>{
+        userService.findById(userId, "name classes classesLeft", r=>{
             if(r.success === false){
                 logger.error(r.msg);
                 return reject(r);
@@ -290,7 +266,7 @@ function joinPublicClass(classModel, userId){
                     return notificationService.notifyClassUserJoined(allIntegrants, classModel.name, userModel.name, userId);
                 })
                 .then(()=>{
-                    return resolve(userModel.lang);
+                    return resolve();
                 })
                 .catch(err=>{
                     return reject(err);
@@ -310,7 +286,6 @@ function joinUserClass(userModel, classModel){
             classModel.integrants.push(new ObjectId(userModel._id));
             userModel.classes.push({
                 id: classModel._id,
-                lang: classModel.lang,
                 isAdmin: false
             });
             classModel.save()
@@ -349,7 +324,7 @@ function verifyUserIsNotInClass(userId, classname, fields){
 
 
 function addUser(classname, userJoinerEmail, userRequesterId, callback){
-    userService.findByEmail(userJoinerEmail, "name classesLeft classes lang", r=>{
+    userService.findByEmail(userJoinerEmail, "name classesLeft classes", r=>{
             if(r.success === false)
                 return callback(r);
             var user2Join = r.msg;
@@ -377,7 +352,7 @@ function addUser(classname, userJoinerEmail, userRequesterId, callback){
                         });
                 })
             .then(()=>{
-                feedService.followClass(classId, user2Join._id, user2Join.lang);
+                feedService.followClass(classId, user2Join._id);
                 callback({success:true});
             })
             .catch(err=>{
@@ -423,7 +398,7 @@ function removeUser(classname, leaverId, requesterId, callback){
                         {$or:[{"owner":{$eq:leaverId}}, {"integrants":{$eq:leaverId}}]},
                         {$or:[{"owner":{$eq:requesterId}}, {"integrants":{$eq:requesterId}}]}
                         ]},
-                        "owner isPrivate integrants lang")
+                        "owner isPrivate integrants")
         .populate("owner", "name")
         .lean()
         .exec()
@@ -441,7 +416,7 @@ function removeUser(classname, leaverId, requesterId, callback){
                 {$inc:{"classesLeft":1},
                     $pull: {"classes":{"id":new ObjectId(Class._id)}}
                 })
-                .select('name lang')
+                .select('name')
                 .lean()
                 .exec()
             .then(doc=>{
@@ -450,9 +425,7 @@ function removeUser(classname, leaverId, requesterId, callback){
                         return Promise.reject("could not find user");
                     }
                     userLeaver = doc;
-                    if(classBackup.lang != userLeaver.lang)
-                        return Promise.reject("User must have setted the same language than the class in order to leave it");
-                return classModel.findOneAndUpdate({_id:Class._id},
+               return classModel.findOneAndUpdate({_id:Class._id},
                     {$inc:{"usersLeft": 1},
                     $pull: {"integrants":new ObjectId(leaverId)}
                 },
@@ -485,7 +458,7 @@ function removeUser(classname, leaverId, requesterId, callback){
                             return Promise.resolve();
             })
             .then(()=>{
-                    feedService.unfollowClass(classBackup._id, leaverId, userLeaver.lang);
+                    feedService.unfollowClass(classBackup._id, leaverId);
                     return callback({success:true});
             })
             .catch(err=>{
@@ -498,14 +471,12 @@ function removeUser(classname, leaverId, requesterId, callback){
 function mark4delete(classname, userId, callback){
     var classModel;
     var allIntegrants;
-    findByNamePopulateOwner(classname, "owner lang isActive integrants", "name lang")
+    findByNamePopulateOwner(classname, "owner isActive integrants", "name")
     .then(Class=>{
         if(!Class)
             return Promise.reject("Could not find class");
         if(Class.owner._id != userId)
             return Promise.reject("only the admin can delete a class");
-        if(Class.lang != Class.owner.lang)
-                return Promise-reject("User must have setted the same lang than the class");
         classModel = Class;
         Class.isActive = false;
         Class.name = undefined;
@@ -578,13 +549,12 @@ function deleteCard(classname, userId, cardId, callback){
             return increaseCardsLeft(classModel._id);
     })
     .then(()=>{
-        feedService.removeCardFromClass(classModel._id, cardId);
         return callback({success:true});
     })
     .catch(err=>{
                 logger.error("err: " + err);
                 return callback({success:false, msg:err});
-        });
+    });
 }
 
 function getCards(classname, userId, params, callback){
@@ -845,7 +815,6 @@ function duplicateCardUC(userId, cardId, deckId, callback){
                     if(r.success == false)
                         return Promise.reject(r.msg);
                     cardId = r.msg._id;
-                    feedService.publishCardClassFeed(classId, cardId);
                     return callback({success:true});
                 })
             })
