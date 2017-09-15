@@ -74,7 +74,7 @@ function createTempUser(newUser, callback){
         // user already exists in temporary collection...
         } else {
         logger.debug("user already exists in temporary collection");
-        return callback({success:false, errorCode:1, msg:"User is already pending verification"});
+        return callback({success:true, email:newUser.email, errorCode:1, msg:"User is already pending verification"});
         }
     });
 }
@@ -118,7 +118,7 @@ function confirmUser(url, callback){
                     return callback({success:false, msg:String(err)});
                 }
                 logger.debug("user confirmed ok, confirmation email was sent, info: " + info);
-                return callback({success:true, msg:"User "+ user.name+ " registered ok, you can sign in now!"});
+                return callback({success:true, msg:"User "+ user.name+ " registered ok. Congratulations!, you can sign in now!"});
             });
         }
         else{
