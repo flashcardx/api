@@ -34,18 +34,29 @@ function loginUser(email, password, callback){
     }
 })};
 
-function loginFbUser(fbId, callback){
-    User.findOne({ 'facebook.id': fbId},"email _id", function (err, user) {
-        logger.debug("looking for user by fb id: " + fbId +" result: " + user);
-        if (err) throw err;
-        if(!user)
-            callback(user);
-        else{
-            callback({success:true, msg:user});
-            registerUserLogin(user, user.email);
-            }
-        });
-}
+ function upsertFbUser(accessToken, refreshToken, profile, cb) {
+    return User.findOne({
+          'facebook.id': profile.id
+    }, function(err, user) {
+      // no user was found, lets create a new one
+      if (!user) {
+            var user = {
+                            facebookId: profile.id,
+                            facebookToken: accessToken,
+                            name: profile.name.givenName + ' ' + profile.name.familyName,
+                            email: profile.emails[0].value,
+                            picture: profile.photos[0].value
+                        }
+               registerNewFbUser(user, r=>{
+                    if(r.success == false)  
+                        return cb(r.msg);
+                    return cb(null, r.user);
+               });
+      } else {
+            return cb(err, user);
+      }
+    });
+  };
 
 function registerUserLogin(userModel, userEmail){
     const date = new Date();
@@ -226,8 +237,8 @@ function findByEmail(email, fields, callback){
     )
 }
 
-function increaseNotificationCounter(userId){
-    return User.update({_id: userId}, {$inc:{"notificationCounter":1}}).exec();
+function increaseNotificationPriority(userId){
+    return User.update({_id: userId}, {$inc:{"notificationPriority":1}}).exec();
 }
 
 function setImage(user, buffer, callback){
@@ -317,10 +328,9 @@ module.exports.increaseCardCounter= increaseCardCounter;
 module.exports.getPlan= getPlan;
 module.exports.getUserLang= getUserLang;
 module.exports.updateLang= updateLang;
-module.exports.loginFbUser= loginFbUser;
-module.exports.registerNewFbUser= registerNewFbUser;
+module.exports.upsertFbUser= upsertFbUser;
 module.exports.findByEmail= findByEmail;
-module.exports.increaseNotificationCounter= increaseNotificationCounter;
+module.exports.increaseNotificationPriority = increaseNotificationPriority;
 module.exports.findByIdLean= findByIdLean;
 module.exports.getFeed= getFeed;
 module.exports.changeProfilePicture= changeProfilePicture;
@@ -356,7 +366,7 @@ function registerNewFbUser(user, callback){
                                 logger.error(err);
                                 return callback({success: false, msg:"could not register facebook user, " + String(err)});;
                             }
-                            return loginFbUser(user.facebookId, callback);
+                            return callback({success:true, user:newUser});
                     })
         })
     .catch(err=>{

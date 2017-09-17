@@ -78,7 +78,7 @@ const userSchema = new Schema({
         min: [0, 'class limit reached'],
         max: [30, 'class limit reached']
     },
-    notificationCounter:{
+    notificationPriority:{
         type: Number, 
         default: 0
     },

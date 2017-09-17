@@ -110,11 +110,11 @@ function deliverMesaggeLP(msg, users, notSend){
         users.forEach(i=>{
                 if(i == notSend)
                     return;
-                userService.findById(i, "-_id notificationCounter", r=>{
+                userService.findById(i, "-_id notificationPriority", r=>{
                 if(r.success === false){
                    return logger.error("error when saving notification for userid: " + i + ", could not find user " + r.msg);
                 }
-                n.priority = r.msg.notificationCounter;
+                n.priority = r.msg.notificationPriority;
                 n.ownerId = i;
                 var notification = new notificationModel(n);
                 notification.save().then(()=>{
@@ -134,11 +134,11 @@ function deliverMesaggeLP2(msg, users, notSend, notSend2){
         users.forEach(i=>{
                 if(i == notSend || i == notSend2)
                     return;
-                userService.findById(i, "-_id notificationCounter", r=>{
+                userService.findById(i, "-_id notificationPriority", r=>{
                 if(r.success === false){
                    return logger.error("error when saving notification for userid: " + i + ", could not find user " + r.msg);
                 }
-                n.priority = r.msg.notificationCounter;
+                n.priority = r.msg.notificationPriority;
                 n.ownerId = i;
                 var notification = new notificationModel(n);
                 notification.save().then(()=>{
@@ -162,11 +162,11 @@ function deliverMesaggeHP(msg, users, notSend){
         users.forEach(i=>{
                 if(i == notSend)
                     return;
-                userService.findById(i, "-_id notificationCounter", r=>{
+                userService.findById(i, "-_id notificationPriority", r=>{
                 if(r.success === false){
                    return logger.error("error when saving notification for userid: " + i +", could not find user " + r.msg);
                 }
-                n.priority = r.msg.notificationCounter + 1;
+                n.priority = r.msg.notificationPriority + 1;
                 n.ownerId = i;
                 var notification = new notificationModel(n);
                 notification.save().then(()=>{
@@ -202,7 +202,7 @@ function getNotifications(userId, page, callback){
                             {   multi: true })
         .exec()
         .then(r=>{
-            return userService.increaseNotificationCounter(userId);
+            return userService.increasenotificationPriority(userId);
         })
     },
     err=>{

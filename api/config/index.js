@@ -26,13 +26,13 @@ module.exports = {
     emailPassword: email.password,
     lang: lang,
     AWSCredentials: credentials.AWS,
-    apiCredentials: credentials.thisApi,
     dictionaries: dictionaries,
     BingKey: credentials.bing.key,
     BingUrl: credentials.bing.url,
     reCaptchaSecret: credentials.reCaptcha.secretKey,
     reCaptchaUrl: credentials.reCaptcha.url,
     gifApiUrl: credentials.tenorGifApi.url,
-    gifApiKey: credentials.tenorGifApi.secretKey
+    gifApiKey: credentials.tenorGifApi.secretKey,
+    facebookCredentials: credentials.facebook
 };
 

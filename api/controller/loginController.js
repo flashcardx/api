@@ -2,13 +2,28 @@ const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const userService = require(appRoot + "/service/userService");
-const AWSService = require(appRoot + "/service/AWSService");
 const emailVerification = require(appRoot + "/service/emailVerificationService");
 const logger = config.getLogger(__filename);
 const jwt = require('jsonwebtoken');
 const requestify = require('requestify'); 
 const querystring = require('querystring');
 const https = require('https');
+const passport = require("passport");
+var FacebookTokenStrategy = require('passport-facebook-token');
+const {facebookCredentials} = config;
+
+passport.use(new FacebookTokenStrategy({
+    clientID: facebookCredentials.appId,
+    clientSecret: facebookCredentials.secret,
+    profileFields: ['id', 'emails', 'name', "picture.type(large)"]
+  }, (accessToken, refreshToken, profile, done)=>{
+    userService.upsertFbUser(accessToken, refreshToken, profile, function(err, user) {
+        return done(err, user);
+      });
+  }
+));
+
+
 
 function verifyRecaptcha(ip, key, callback) {
         var post_data = querystring.stringify({
@@ -187,47 +202,34 @@ module.exports = function(app){
                     });
     });
 
-    app.post("/fbLogin", controllerUtils.requireSecret, (req, res)=>{
-        if(!req.body.facebookId){
-            return res.json({success:false, msg:"you must send user's facebookId in the request"});
+    /**
+ * @api {post} /fbAuth fbAuth
+ * @apiGroup login
+ * @apiName fbAuth
+ * @apiDescription receives facebook credentials and profile,
+ * if credentials are ok returns auth token for the user, if user doesnt exist it creates the user first and returns token.
+ * @apiParam (Request body) {string} action-token facebook access token
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true,
+ *     "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjU5OTczMDFkMTA5ZmNlMzVjOTM0YjBhZCIsImlhdCI6MTUwMzA4MTYzOSwiZXhwIjoxNTAzMDg1MjM5fQ.bqmogt0-pDLsUbVtSTvziTVcrA7_993WnFtaRQRAN-Q"
+ * }
+ * @apiVersion 1.0.0
+ *  */
+    app.post("/fbAuth", passport.authenticate('facebook-token', {session: false}), function(req, res){
+        if(req.error){
+            logger.error("error in fb auth, ", error);
+            return res.json({success:false, msg:error});
         }
-        userService.loginFbUser(req.body.facebookId, function(result){
-            if(result){
-                if(result.success == true){
-                     var user = {
-                        id: result.msg._id
-                    };
-                    return generateToken(user, r=>{
+        if(req.user){
+            var user = {id:req.user._id};
+            return generateToken(user, r=>{
                         return res.json(r);
-                    });
-                }
-                else{
-                    res.json(result);
-                }
+            });
+        }
+        else{
+            return res.json({success:false, msg:"Facebook authentication failed"});
             }
-            else
-                res.json({success:false, msg:"user does not exist"});
-        });
-    });
-
-    app.post("/fbSignup",function(req, res){
-        var user = {
-            email: req.body.email,
-            name: req.body.name,
-            picture: req.body.picture,
-            facebookId: req.body.facebookId,
-            facebookToken: req.body.facebookToken
-        };
-        userService.registerNewFbUser(user, function(result){
-            if(result.success === false)
-                return res.json(result);
-             var user = {
-                        id: result.msg._id
-                    };
-            return generateToken(user, (r)=>{
-                        return res.json(r);
-                    });
-                });
         });
 
     function generateToken(object, callback){
