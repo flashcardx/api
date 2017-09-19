@@ -177,9 +177,9 @@ function deliverMesaggeHP(msg, users, notSend){
         });
 }
 
-function getNotifications(userId, page, callback){
+function getNotifications(userId, page=0, callback){
     var allNotifications = [];
-    const elementsPerPage = 10;
+    const elementsPerPage = 12;
     var restrictions = [{
              'ownerId': {$eq: userId}
         }]
@@ -202,7 +202,7 @@ function getNotifications(userId, page, callback){
                             {   multi: true })
         .exec()
         .then(r=>{
-            return userService.increasenotificationPriority(userId);
+            return userService.increaseNotificationPriority(userId);
         })
     },
     err=>{

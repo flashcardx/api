@@ -100,7 +100,7 @@ module.exports = function(app){
         const userId = req.userId;
         const page = req.query.page;
         notificationService.getNotifications(userId, page, r=>{
-            return res.json(r);
+                return res.json(r);
         });
     });
 
