@@ -216,20 +216,20 @@ module.exports = function(app){
  * }
  * @apiVersion 1.0.0
  *  */
-    app.post("/fbAuth", passport.authenticate('facebook-token', {session: false}), function(req, res){
-        if(req.error){
-            logger.error("error in fb auth, ", error);
-            return res.json({success:false, msg:error});
-        }
-        if(req.user){
-            var user = {id:req.user._id};
-            return generateToken(user, r=>{
-                        return res.json(r);
-            });
-        }
-        else{
-            return res.json({success:false, msg:"Facebook authentication failed"});
+    app.post("/fbAuth", function(req, res, next){
+        passport.authenticate('facebook-token', (error, user, info)=>{
+            if(error)
+                return res.json({success:false, msg:error});
+            if(user){
+                var user = {id:user._id};
+                return generateToken(user, r=>{
+                            return res.json(r);
+                });
             }
+            else{
+                return res.json({success:false, msg:"Facebook authentication failed"});
+                }
+            })(req, res, next);
         });
 
     function generateToken(object, callback){
