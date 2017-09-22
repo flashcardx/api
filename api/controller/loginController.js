@@ -206,7 +206,7 @@ module.exports = function(app){
  * @api {post} /fbAuth fbAuth
  * @apiGroup login
  * @apiName fbAuth
- * @apiDescription receives facebook credentials and profile,
+ * @apiDescription receives facebook access token,
  * if credentials are ok returns auth token for the user, if user doesnt exist it creates the user first and returns token.
  * @apiParam (Request body) {string} action-token facebook access token
  * @apiSuccessExample {json} Success-Response:

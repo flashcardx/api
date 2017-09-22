@@ -9,7 +9,7 @@ const Class = require(appRoot + "/models/classModel");
 const setup = require("./setup");
 var fs = require("fs");
 
-describe.only("Notification service",()=>{
+describe("Notification service",()=>{
     var userId;
 
     before(done=>{
@@ -29,10 +29,9 @@ describe.only("Notification service",()=>{
         });
     });
 
-    it.only("send low prioriy notif", done=>{
+    it("send low prioriy notif", done=>{
         for(var i=0; i<10; i++)
-            notificationService.notifyUser("testing msg"+i, userId);
-        
+            notificationService.notifyUser("testing msg"+i, userId);        
         setTimeout(function() {
             //we need this to delay end of test, so give the function time to finish
             assert.equal(true, true);

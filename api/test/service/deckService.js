@@ -11,7 +11,7 @@ const Card = require(appRoot + "/models/cardModel");
 const Class = require(appRoot + "/models/classModel");
 var fs = require("fs");
 const setup = require("./setup");
-describe("deckService", ()=>{
+describe.only("deckService", ()=>{
     describe("create update, duplicate and delete", ()=>{
        var userId;
        var parentUserDeckId;

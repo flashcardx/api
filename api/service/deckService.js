@@ -285,9 +285,7 @@ function allUserDecks(userId, callback) {
         })
 }
 
-function childUserDecks(userId, parentId, skip, callback) {
-    if(!skip)
-        skip = 0;
+function childUserDecks(userId, parentId, skip=0, callback) {
     var parameters = {
         ownerId: userId,
         ownerType: "u",
@@ -295,10 +293,10 @@ function childUserDecks(userId, parentId, skip, callback) {
     };
     if(!parentId) {
         parameters.recursiveOrder = DEFAULT_RECURSIVE_ORDER;
-        return findDecksByParams(parameters, 14, skip, "name _id thumbnail lang", callback);
+        return findDecksByParams(parameters, 14, skip, "name _id thumbnail description lang", callback);
     }
     parameters._id = parentId;
-    return findDeckChildren(parameters, 14, skip, "name _id thumbnail lang", callback);
+    return findDeckChildren(parameters, 14, skip, "name _id thumbnail description lang", callback);
 }
 
 function childClassDecks(userId, parentId, classname, skip, callback) {

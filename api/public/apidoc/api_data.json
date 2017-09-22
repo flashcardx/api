@@ -120,7 +120,7 @@
           {
             "group": "Query",
             "type": "string",
-            "optional": false,
+            "optional": true,
             "field": "classname",
             "description": "<p>needed when type=c.</p>"
           }
@@ -228,7 +228,198 @@
     "groupTitle": "card"
   },
   {
+    "type": "get",
+    "url": "/cards/:type/:deckId",
+    "title": "get cards",
+    "group": "card",
+    "name": "get_cards",
+    "description": "<p>returns cards inside deck.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u: deck in user. c: deck in class.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": true,
+            "field": "deckId",
+            "description": "<p>id for the deck where the cards are. if undefined will return/search cards in all decks!</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>needed when type=c</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "limit",
+            "defaultValue": "12",
+            "description": "<p>limit how manny cards will be returned</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "sort",
+            "defaultValue": "asc",
+            "description": "<p>sort asc or deck, sorts cards by last update date</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "last",
+            "description": "<p>last for pagination needs 'updated_at' parameter of the last card listed</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "name",
+            "description": "<p>name send this parameter for searching by card name(reg expressions accepted)</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /cards/u/59991371065a2544f7c90288?limit=10",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"msg\": [{\"_id\":\"59a5c98fb2ec6536aa422456\",\"updated_at\":\"2017-08-29T20:07:43.325Z\",\"name\":\"card class\",\"description\":\"I can fly in a class\",\"imgs\":[]}]\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/cardController.js",
+    "groupTitle": "card"
+  },
+  {
     "type": "post",
+    "url": "/updateCard/:type/:cardId",
+    "title": "update card",
+    "group": "card",
+    "name": "update_card",
+    "description": "<p>updates card's name and description, *undefined values wont be updated.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u:user, c:class.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "cardId",
+            "description": "<p>id of the card to be updated.</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>needed when type=c.</p>"
+          }
+        ],
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "name",
+            "description": "<p>name for the card.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "description",
+            "description": "<p>description for the card.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "deckId",
+            "description": "<p>if defined card will be moved to this deck, the deck of destiny must be in the same user or class that the source deck.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /updateCard/u/59991371065a2544f7c90288\nbody: { \"name\":\"car\",\n         \"description\": \"a ferrari updated\"\n     }",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/cardController.js",
+    "groupTitle": "card"
+  },
+  {
+    "type": "get",
     "url": "/alldecks/:type",
     "title": "Get all decks",
     "group": "deck",
@@ -299,12 +490,12 @@
     "groupTitle": "deck"
   },
   {
-    "type": "post",
+    "type": "get",
     "url": "/deckschildren/:type",
     "title": "Get decks inside deck",
     "group": "deck",
     "name": "Get_decks_inside_deck",
-    "description": "<p>Returns all decks(name, id and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the imgBaseUrl parameter that this endpoint will return.</p>",
+    "description": "<p>Returns all decks(name, id, lang and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the imgBaseUrl parameter that this endpoint will return.</p>",
     "parameter": {
       "fields": {
         "Parameters": [
@@ -366,7 +557,7 @@
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"decks\": [{\"name\": \"deck1\", id:\"59991371065a2544f7c90288\", \"thumbnail\":\"18428b0dd352776131a209bd24785b8f\"},\n           {\"name\": \"math\", id:\"59991371065a2544fasd8888\", \"thumbnail\":\"18428b0dd352776131a209bd24785b8f\"}],\n \"imgBaseUrl\": \"https://d32suzxs6u0rur.cloudfront.net\"\n }",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"decks\": [{\"name\": \"deck1\", id:\"59991371065a2544f7c90288\", \"thumbnail\":\"18428b0dd352776131a209bd24785b8f\", \"lang\": \"es\"},\n           {\"name\": \"math\", id:\"59991371065a2544fasd8888\", \"thumbnail\":\"18428b0dd352776131a209bd24785b8f\", \"lang\": \"en\"}],\n \"imgBaseUrl\": \"https://d32suzxs6u0rur.cloudfront.net\"\n }",
           "type": "json"
         }
       ]
@@ -471,6 +662,82 @@
             "optional": false,
             "field": "x-access-token",
             "description": "<p>user session token.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "get",
+    "url": "/duplicateDeck/:type/:deckIdSrc",
+    "title": "duplicate deck",
+    "group": "deck",
+    "name": "duplicate_deck",
+    "description": "<p>duplicates deck to other deck, or root path of user/class.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>2u: duplicates to user(from class or other user), 2c: to class(from user or other class where user has access).</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "deckIdSrc",
+            "description": "<p>id of deck to be duplicated</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "dest",
+            "description": "<p>id for the deck of destiny, if not specified deck will go to the root</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>needed if type=2c</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /duplicateDeck/2u/59991371065a2544f7c90288?dest=59991371065a2544f7c90288",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
           }
         ]
       }
@@ -771,7 +1038,7 @@
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "url: /updateDeck/u/59991371065a2544f7c90288\nbody:  {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\"\n   }",
+          "content": "url: /updateDeck/u/59991371065a2544f7c90288\nbody:  {\n        \"name\":\"people\",\n        \"description\": \"beautiful people in a deck\"\n   }",
           "type": "json"
         }
       ]
@@ -801,6 +1068,39 @@
     "version": "1.1.0",
     "filename": "controller/deckController.js",
     "groupTitle": "deck"
+  },
+  {
+    "type": "post",
+    "url": "/fbAuth",
+    "title": "fbAuth",
+    "group": "login",
+    "name": "fbAuth",
+    "description": "<p>receives facebook access token, if credentials are ok returns auth token for the user, if user doesnt exist it creates the user first and returns token.</p>",
+    "parameter": {
+      "fields": {
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": false,
+            "field": "action-token",
+            "description": "<p>facebook access token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "    HTTP/1.1 200 OK\n    {\"success\":true,\n    \"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjU5OTczMDFkMTA5ZmNlMzVjOTM0YjBhZCIsImlhdCI6MTUwMzA4MTYzOSwiZXhwIjoxNTAzMDg1MjM5fQ.bqmogt0-pDLsUbVtSTvziTVcrA7_993WnFtaRQRAN-Q\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.0.0",
+    "filename": "controller/loginController.js",
+    "groupTitle": "login"
   },
   {
     "type": "post",

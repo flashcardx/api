@@ -3,7 +3,6 @@ const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const deckService = require(appRoot + "/service/deckService");
-const credentials = config.AWSCredentials;
 
 module.exports = function(app){
     const controllerUtils = require(appRoot + "/middleware").utils(app);
@@ -321,24 +320,19 @@ app.get("/duplicateDeck/:type/:deckIdSrc", (req, res)=>{
  *     HTTP/1.1 200 OK
  *     {"success":true,
  *      "decks": [{"name": "deck1", id:"59991371065a2544f7c90288", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "es"},
- *                {"name": "math", id:"59991371065a2544fasd8888", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "en"}],
- *      "imgBaseUrl": "https://d32suzxs6u0rur.cloudfront.net"
+ *                {"name": "math", id:"59991371065a2544fasd8888", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "en"}]
  *      }
  * @apiVersion 1.1.0
  *  */
     app.get("/deckschildren/:type", controllerUtils.requireLogin, (req, res)=>{
         switch (req.params.type) {
             case "u":
-                    deckService.childUserDecks(req.userId, req.query.parentId, req.query.skip, r=>{
-                        if(r.success == true)
-                            r.imgBaseUrl = credentials.cloudfrontUrl;
+                    deckService.childUserDecks(req.userId, req.query.parentId, parseInt(req.query.skip), r=>{
                         return res.json(r);
                     })
                     break;
             case "c":
                     deckService.childClassDecks(req.userId, req.query.parentId, req.query.classname, req.query.skip, r=>{
-                        if(r.success == true)
-                            r.imgBaseUrl = credentials.cloudfrontUrl;  
                         return res.json(r);
                     })
                     break;
