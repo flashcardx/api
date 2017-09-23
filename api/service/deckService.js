@@ -632,7 +632,7 @@ function saveDeck(deckModel, callback, classId, userId) {
                     return Promise.reject("class not found");
                 feedService.publishDeckClassFeed(deckModel._id, classId, Class.name, userId, user.name);  
             }
-            return callback({ success: true, id: deckModel._id });
+            return callback({ success: true, deck: deckModel });
         })
         .catch(err=>{
             logger.error("error when saving deck: " + err);

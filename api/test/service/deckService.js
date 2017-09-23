@@ -11,7 +11,7 @@ const Card = require(appRoot + "/models/cardModel");
 const Class = require(appRoot + "/models/classModel");
 var fs = require("fs");
 const setup = require("./setup");
-describe.only("deckService", ()=>{
+describe("deckService", ()=>{
     describe("create update, duplicate and delete", ()=>{
        var userId;
        var parentUserDeckId;
@@ -86,7 +86,6 @@ describe.only("deckService", ()=>{
             var deck = {name:"deck1"};
             deckService.create4User(userId, deck, r=>{
                 assert.equal(r.success, true);
-                assert.exists(r.id, 'id is neither `null` nor `undefined`');
                 done();
             });
         })
@@ -95,7 +94,6 @@ describe.only("deckService", ()=>{
             var deck = {name:"deck1", parentId:parentUserDeckId};
             deckService.create4User(userId, deck, r=>{
                 assert.equal(r.success, true);
-                assert.exists(r.id, 'id is neither `null` nor `undefined`');
                 done();
             });
         })
@@ -120,7 +118,6 @@ describe.only("deckService", ()=>{
             var deck = {name:"deck1", classname:classname};
             deckService.create4Class(userId, deck, r=>{
                 assert.equal(r.success, true);
-                assert.exists(r.id, 'id is neither `null` nor `undefined`');
                 done();
             });
         })
@@ -129,7 +126,6 @@ describe.only("deckService", ()=>{
             var deck = {name:"deck1", parentId:parentClassDeckId, classname:classname};
             deckService.create4Class(userId, deck, r=>{
                 assert.equal(r.success, true);
-                assert.exists(r.id, 'id is neither `null` nor `undefined`');
                 done();
             });
         })

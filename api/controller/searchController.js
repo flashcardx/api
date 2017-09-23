@@ -13,12 +13,14 @@ const shutterstock = require('shutterstock');
 module.exports = function(app){
     const controllerUtils = require(appRoot + "/middleware").utils(app);
 
-        app.get("/searchBing/:q/:clientIp", controllerUtils.requireLogin, function(req,res){
-               //const criteria = S(req.params.criteria).replaceAll(" ", "+").s;
-               imgSearchService.searchBing(req.params.q, req.params.clientIp, result=>{
+        app.get("/searchBing/:q", controllerUtils.requireLogin,
+                                controllerUtils.getIp,
+                                (req,res)=>{
+               const clientIp = req.ip;
+               imgSearchService.searchBing(req.params.q, clientIp, result=>{
                     return res.json(result);
                });
-            });
+        });
         
 /**
  * @api {get} /searchGif/:q searchGif
@@ -35,7 +37,7 @@ module.exports = function(app){
         imgSearchService.searchGif(req.params.q, result=>{
             return res.json(result);
         });
-});
+    });
 
     app.get("/examples/:word", controllerUtils.requireLogin, (req, res)=>{
             const word = req.params.word;

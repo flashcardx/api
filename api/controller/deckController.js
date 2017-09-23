@@ -11,7 +11,7 @@ module.exports = function(app){
  * @api {post} /deck/:type new deck
  * @apiGroup deck
  * @apiName new deck
- * @apiDescription creates user or class deck depending on type param, returns id of new deck.
+ * @apiDescription creates user or class deck depending on type param, returns the new deck.
  * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
  * @apiParam (Request body) {string} name name for the deck.
  * @apiParam (Request body) {string} description description for deck.
@@ -30,7 +30,7 @@ module.exports = function(app){
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
  *     {"success":true,
- *      "id": "59991371065a2544f7c90288"
+ *      "deck": {"_id":xxxxx, "name":"name", lang:"xxse", etc}
  *      }
  * @apiErrorExample {json} Error-Response:
  *     HTTP/1.1 200 OK
@@ -308,7 +308,7 @@ app.get("/duplicateDeck/:type/:deckIdSrc", (req, res)=>{
  * @api {get} /deckschildren/:type Get decks inside deck
  * @apiGroup deck
  * @apiName Get decks inside deck
- * @apiDescription Returns all decks(name, id, lang and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the imgBaseUrl parameter that this endpoint will return.
+ * @apiDescription Returns all decks(name, id,description, lang and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. decks per page:14. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the CDN base url.
  * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
  * @apiParam (Query) {string} [parentId] id of the parent deck, if not specified returns all decks in root.
  * @apiParam (Query) {string} [classname] needed when type=c.
@@ -319,8 +319,8 @@ app.get("/duplicateDeck/:type/:deckIdSrc", (req, res)=>{
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
  *     {"success":true,
- *      "decks": [{"name": "deck1", id:"59991371065a2544f7c90288", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "es"},
- *                {"name": "math", id:"59991371065a2544fasd8888", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "en"}]
+ *      "decks": [{"description":"a very nice deck", "name": "deck1", id:"59991371065a2544f7c90288", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "es"},
+ *                {"description":"a nice deck","name": "math", id:"59991371065a2544fasd8888", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "en"}]
  *      }
  * @apiVersion 1.1.0
  *  */

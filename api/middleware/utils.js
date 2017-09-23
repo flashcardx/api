@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 module.exports = function(app){
 
      return {
-        requireLogin: function(req, res, next) {
+        requireLogin: (req, res, next)=>{
                       // check header or url parameters or post parameters for token
                       var token = req.body.token || req.query.token || req.headers['x-access-token'];
                       // decode token
@@ -23,11 +23,16 @@ module.exports = function(app){
                       } else {
                         // if there is no token
                         // return an error
-                          return res.json({ success: false, errorCode:1, msg: 'No token provided' });    
-                          
-                        
+                          return res.json({ success: false, errorCode:1, msg: 'No token provided' });            
                       }
-                    }
+                    },
+        getIp: (req, res, next)=>{
+          req.ip = req.headers['x-forwarded-for'] || 
+                   req.connection.remoteAddress || 
+                   req.socket.remoteAddress ||
+                   req.connection.socket.remoteAddress;
+          next();
+        }
      };
 }
        
