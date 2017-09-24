@@ -30,7 +30,7 @@ function searchBing(q, clientIp, callback){
     .then(r=>{
         if(!r)
             return Promise.resolve();
-        var url = config.BingUrl + "?q=" + q  + "&count=35" + "&size=Medium";
+        var url = config.BingUrl + "?q=" + q  + "&count=40";
         return requestify.get(url, { 
                     headers:{
                     "Ocp-Apim-Subscription-Key": config.BingKey,
@@ -52,7 +52,7 @@ function searchBing(q, clientIp, callback){
 
 function searchGif(q, callback){
     logger.error("key: " + config.gifApiKey);
-    var url = config.gifApiUrl + "?key=" + config.gifApiKey +"&q=" + q + "&safesearch=moderate&limit=35";
+    var url = config.gifApiUrl + "?key=" + config.gifApiKey +"&q=" + q + "&safesearch=moderate&limit=40";
     requestify.get(url)
     .then(r=>{
         var data = r.getBody();

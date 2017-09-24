@@ -25,7 +25,15 @@ const deckSchema = new Schema({
         validate: validators.descriptionValidator
     },
     thumbnail: {
-        type: String
+        hash:{
+            type: String
+        },
+        width:{
+            type:Number
+        },
+        height:{
+             type:Number
+        }
     },
     ownerType:{
         type: String,

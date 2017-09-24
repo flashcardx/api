@@ -12,6 +12,7 @@ const AWSService = require("./AWSService");
 const imagemin = require('imagemin');
 const imageminJpegtran = require('imagemin-jpegtran');
 const imageminPngquant = require('imagemin-pngquant');
+const md5 = require("md5");
 var thumb = require('node-thumbnail').thumb;
 var gm = require('gm').subClass({imageMagick: true});
 
@@ -65,36 +66,38 @@ var requestNoEncoding = request.defaults({ encoding: null });
 //should calculate md5 like card imgs
 function saveImgFromUrl(url){
     return new Promise((resolve, reject)=>{
-        var img = new Img;
-        img.hash = img._id;
-        requestNoEncoding.get(url, function (err, res, body) {
-            AWSService.saveToS3Buffer(img.hash, body, err=>{
-                if(err)
-                    return reject(err);
-                img.save(err=>{
-                    if(err)
-                        return reject(err);
-                    return resolve(img.hash);
-                });    
-            }); 
+        requestNoEncoding.get(url, (err, res, body)=>{
+            logger.error("err: ", err);
+            logger.error("res: ", res);
+            if(!body)
+                return reject("Could not download image");
+            logger.error("body: ", body);
+            saveImgFromBuffer(body)
+            .then(hash=>{
+                return resolve(hash);
+            }) 
+            .catch(err=>{
+                return reject(err);
+            });
         });
     });
 }
 
 function saveImgFromBuffer(buffer){
     return new Promise((resolve, reject)=>{
-        var img = new Img;
-        img.hash = img._id;
-       AWSService.saveToS3Buffer(img.hash, buffer, err=>{
-            if(err)
+            const hash = md5(buffer);
+            AWSService.saveToS3Buffer(hash, buffer, err=>{
+                if(err)
                     return reject(err);
+                var img = new Img;
+                img.hash = hash;
                 img.save(err=>{
-                    if(err)
+                    if(err && err.code != 11000)
                         return reject(err);
-                    return resolve(img.hash);
+                    return resolve(hash);
                 });    
-            }); 
-        });
+            });
+    })
 }
 
 const downloader = require('image-downloader');
@@ -355,6 +358,28 @@ function deleteImgsOnce(imgs){
     });
 }
 
+function proxyFromUrl(url, callback){
+    saveImgFromUrl(url)
+    .then(hash=>{
+        return callback({success:true, hash: hash});
+    })
+    .catch(err=>{
+        logger.error("error in proxyfromurl: ", err);
+        return callback({success:false, msg: err});
+    });
+}
+
+function proxyFromBuffer(buffer, callback){
+    saveImgFromBuffer(buffer)
+    .then(hash=>{
+        return callback({success:true, hash: hash});
+    })
+    .catch(err=>{
+        logger.error("error in proxyfromurl: ", err);
+        return callback({success:false, msg: err});
+    });
+}
+
 module.exports = {
     downloadArray: downloadArray,
     getImg: AWSService.getImgFromS3,
@@ -362,6 +387,7 @@ module.exports = {
     increaseImgsCounter: increaseImgsCounter,
     deleteImgOnce: deleteImgOnce,
     genSmallThumbnailAndSaveToS3: genSmallThumbnailAndSaveToS3,
-    saveImgFromUrl: saveImgFromUrl,
-    saveImgFromBuffer: saveImgFromBuffer
+    proxyFromUrl: proxyFromUrl,
+    proxyFromBuffer:proxyFromBuffer,
+    saveImgFromUrl: saveImgFromUrl
 }
