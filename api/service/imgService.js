@@ -16,6 +16,15 @@ const md5 = require("md5");
 var thumb = require('node-thumbnail').thumb;
 var gm = require('gm').subClass({imageMagick: true});
 
+function isFileFormatValid(format){
+    switch (format) {
+        case "image/jpeg": return true;
+        case "image/gif": return true;
+        case "image/png": return true;
+    }
+    return false;
+}
+
 function genSmallThumbnailAndSaveToS3(name, buffer, callback){
    generateThumbnailAndSaveToS3(name, buffer, 150, 150, callback);
 }
@@ -63,16 +72,42 @@ function getImgName(url, text){
 
 var requestNoEncoding = request.defaults({ encoding: null });
 
+
+function downloadAndGetBuffer(url){
+    return new Promise((resolve, reject)=>{
+        const options = {
+                        url:url,
+                        headers:{"User-Agent": "NING/1.0"},
+                        timeout: 3000
+                    };
+        requestNoEncoding.head(url, (err, res, body)=>{
+                    if(err)
+                        return reject(err);
+                    logger.debug("headers: " + JSON.stringify(res.headers));
+                    logger.debug('content-length: ' + res.headers['content-length']);
+                    logger.error('content-type: ' + res.headers['content-type']);
+                    if(res.headers['content-length'] > config.APIMaxSizeUpFiles)
+                        return reject(new Error("Size of file too big, size: " + res.headers['content-length']));
+                    if(!isFileFormatValid(res.headers['content-type']))
+                            return reject("Invalid file format: " + res.headers['content-type']);
+                    requestNoEncoding.get(options, (err, res, body)=>{
+                        if(err)
+                            return reject(err);
+                        if(!body)
+                            return reject("Could not download image");
+                        return resolve(body);
+                    });
+        });
+    });
+}
+
 //should calculate md5 like card imgs
 function saveImgFromUrl(url){
     return new Promise((resolve, reject)=>{
-        requestNoEncoding.get(url, (err, res, body)=>{
-            logger.error("err: ", err);
-            logger.error("res: ", res);
-            if(!body)
-                return reject("Could not download image");
-            logger.error("body: ", body);
-            saveImgFromBuffer(body)
+            downloadAndGetBuffer(url)
+            .then(buffer=>{
+                return saveImgFromBuffer(buffer);
+            })        
             .then(hash=>{
                 return resolve(hash);
             }) 
@@ -80,7 +115,6 @@ function saveImgFromUrl(url){
                 return reject(err);
             });
         });
-    });
 }
 
 function saveImgFromBuffer(buffer){
