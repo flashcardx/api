@@ -33,6 +33,14 @@ const deckSchema = new Schema({
         },
         height:{
              type:Number
+        },
+        x:{
+            type:Number,
+            default: 0
+        },
+        y:{
+             type:Number,
+             default: 0
         }
     },
     ownerType:{

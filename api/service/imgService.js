@@ -21,6 +21,7 @@ function isFileFormatValid(format){
         case "image/jpeg": return true;
         case "image/gif": return true;
         case "image/png": return true;
+        case "text/html; charset=UTF-8": return true;
     }
     return false;
 }
@@ -78,13 +79,13 @@ function downloadAndGetBuffer(url){
         const options = {
                         url:url,
                         headers:{"User-Agent": "NING/1.0"},
-                        timeout: 3000
+                        timeout: 5000
                     };
-        requestNoEncoding.head(url, (err, res, body)=>{
+        requestNoEncoding.head(options, (err, res, body)=>{
                     if(err)
                         return reject(err);
-                    logger.debug("headers: " + JSON.stringify(res.headers));
-                    logger.debug('content-length: ' + res.headers['content-length']);
+                    options.url = res.request.uri.href;
+                    logger.error('content-length: ' + res.headers['content-length']);
                     logger.error('content-type: ' + res.headers['content-type']);
                     if(res.headers['content-length'] > config.APIMaxSizeUpFiles)
                         return reject(new Error("Size of file too big, size: " + res.headers['content-length']));
@@ -93,6 +94,8 @@ function downloadAndGetBuffer(url){
                     requestNoEncoding.get(options, (err, res, body)=>{
                         if(err)
                             return reject(err);
+                        if(res.headers['content-length'] > config.APIMaxSizeUpFiles)
+                            return reject(new Error("Size of file too big, size: " + res.headers['content-length']));
                         if(!body)
                             return reject("Could not download image");
                         return resolve(body);
@@ -209,6 +212,10 @@ function increaseImgsCounter(imgs){
                         })
             })
     })     
+}
+
+function increaseImgCounter(hash){
+    return Img.update({hash:hash}, {$inc:{"timesUsed":1}}).exec();
 }
 
 function saveImgDb(filename, hash, contentType){
@@ -423,5 +430,6 @@ module.exports = {
     genSmallThumbnailAndSaveToS3: genSmallThumbnailAndSaveToS3,
     proxyFromUrl: proxyFromUrl,
     proxyFromBuffer:proxyFromBuffer,
-    saveImgFromUrl: saveImgFromUrl
+    saveImgFromUrl: saveImgFromUrl,
+    increaseImgCounter: increaseImgCounter
 }

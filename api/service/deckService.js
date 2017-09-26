@@ -21,13 +21,14 @@ function initChild() {
 }
 
 function create4User(userId, deck, callback) {
+    logger.error("deck: ", deck);
     deck.ownerType = "u";
     deck.ownerId = userId;
     var deckModel = new Deck(deck);
     if (deck.parentId)
         createChildDeck(deckModel, deck.parentId, callback);
     else
-        saveDeck(deckModel, callback, undefined, userId);
+        saveNewDeck(deckModel, callback, undefined, userId);
 }
 
 function update4User(userId, deckId, deck, callback) {
@@ -83,7 +84,7 @@ function create4Class(userId, data, callback) {
             if (data.parentId)
                 createChildDeck(deckModel, data.parentId, callback, Class._id, userId);
             else{ 
-                saveDeck(deckModel, callback, Class._id, userId);
+                saveNewDeck(deckModel, callback, Class._id, userId);
             }
         })
         .catch(err => {
@@ -353,7 +354,7 @@ function duplicate2User(userId, srcId, destId, callback){
             return classService.findClassLeanById(r.ownerId, userId, "_id");
         else return Promise.resolve(true);
     })
-    .then((ok)=>{
+    .then(ok=>{
         if(!ok)
             return Promise.reject("User must have access to the class");
         if(destId)
@@ -596,7 +597,7 @@ function createChildDeck(deckModel, parentId, callback, classId, userId) {
             if (!parent)
                 return callback({ success: false, msg: "could not find parent deck, or max deck recursive level reached" });
             deckModel.recursiveOrder = parent.recursiveOrder - 1;
-            saveDeck(deckModel, callback, classId, userId);
+            saveNewDeck(deckModel, callback, classId, userId);
         })
         .catch(err => {
             logger.error("trying to push deck id in parent: " + err);
@@ -604,9 +605,10 @@ function createChildDeck(deckModel, parentId, callback, classId, userId) {
         })
 }
 
-function saveDeck(deckModel, callback, classId, userId) {
+function saveNewDeck(deckModel, callback, classId, userId) {
     var forClass = false;
     var user;
+    logger.error("deckModel: ", deckModel);
     deckModel.save()
     .then(()=>{
         if(classId){//when adding user followers this if will no longer be required
@@ -632,6 +634,13 @@ function saveDeck(deckModel, callback, classId, userId) {
                     return Promise.reject("class not found");
                 feedService.publishDeckClassFeed(deckModel._id, classId, Class.name, userId, user.name);  
             }
+        })
+        .then(()=>{
+            logger.error("hash: " + deckModel.thumbnail.hash);
+            return imgService.increaseImgCounter(deckModel.thumbnail.hash);
+        })
+        .then(r=>{
+            logger.error("r: ", r);
             return callback({ success: true, deck: deckModel });
         })
         .catch(err=>{

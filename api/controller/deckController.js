@@ -25,7 +25,14 @@ module.exports = function(app){
  *         "name":"people",
  *         "description": "beautiful people",
  *         "parentId": "5998f5ea23cbd123cf8becce",
- *         "lang": "es"
+ *         "lang": "es",
+ *          "thumbnail":{
+ *              "hash": "xsxedede",
+ *              "width": "200",
+ *              "height": "56",
+ *              "x": "0",
+ *              "y": "0"    
+ *              }
  *    }
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
