@@ -79,7 +79,7 @@ function downloadAndGetBuffer(url){
         const options = {
                         url:url,
                         headers:{"User-Agent": "NING/1.0"},
-                        timeout: 5000
+                        timeout: 6000
                     };
         requestNoEncoding.head(options, (err, res, body)=>{
                     if(err)
