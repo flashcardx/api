@@ -21,7 +21,6 @@ function initChild() {
 }
 
 function create4User(userId, deck, callback) {
-    logger.error("deck: ", deck);
     deck.ownerType = "u";
     deck.ownerId = userId;
     var deckModel = new Deck(deck);

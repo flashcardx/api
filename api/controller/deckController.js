@@ -84,7 +84,7 @@ module.exports = function(app){
  *      }
  * @apiVersion 1.1.0
  *  */
-app.post("/imageDeckFromUrl/:type", (req, res)=>{
+app.post("/imageDeckFromUrl/:type", controllerUtils.requireLogin, (req, res)=>{
     switch (req.params.type) {
             case "u":
                     deckService.setImgUserDeckFromUrl(req.userId, req.body, r=>{
@@ -121,7 +121,7 @@ app.post("/imageDeckFromUrl/:type", (req, res)=>{
  *      }
  * @apiVersion 1.1.0
  *  */
-app.post("/imageDeckFromBuffer/:type", (req, res)=>{
+app.post("/imageDeckFromBuffer/:type", controllerUtils.requireLogin, (req, res)=>{
     switch (req.params.type) {
             case "u":
                     deckService.setImgUserDeckFromBuffer(req.userId, req.body, r=>{
@@ -153,7 +153,7 @@ app.post("/imageDeckFromBuffer/:type", (req, res)=>{
  *      }
  * @apiVersion 1.1.0
  *  */
-app.delete("/deckImg/:type/:deckId", (req, res)=>{
+app.delete("/deckImg/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
     switch (req.params.type) {
             case "u":
                     deckService.deleteImgUserDeck(req.userId, req.params.deckId, r=>{
@@ -192,7 +192,7 @@ app.delete("/deckImg/:type/:deckId", (req, res)=>{
  *      }
  * @apiVersion 1.1.0
  *  */
-app.post("/updateDeck/:type/:deckId", (req, res)=>{
+app.post("/updateDeck/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
     switch (req.params.type) {
             case "u":
                     deckService.update4User(req.userId, req.params.deckId, req.body, r=>{
@@ -223,7 +223,7 @@ app.post("/updateDeck/:type/:deckId", (req, res)=>{
  *      }
  * @apiVersion 1.1.0
  *  */
-app.delete("/deck/:type/:deckId", (req, res)=>{
+app.delete("/deck/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
     switch (req.params.type) {
             case "u":
                     deckService.delete4User(req.userId, req.params.deckId, r=>{
@@ -257,7 +257,7 @@ app.delete("/deck/:type/:deckId", (req, res)=>{
  *      }
  * @apiVersion 1.1.0
  *  */
-app.get("/duplicateDeck/:type/:deckIdSrc", (req, res)=>{
+app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, res)=>{
     switch (req.params.type) {
             case "2c": deckService.duplicate2Class(req.userId, req.query.classname, req.params.deckIdSrc, req.query.dest, r=>{
                             return res.json(r);
