@@ -4,6 +4,17 @@ const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const Img = require(appRoot + "/models/imgModel");
 const imgService = require(appRoot + "/service/imgService");
+const multer = require("multer");
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage,
+                        limits: { fileSize: config.APIMaxSizeUpFiles } });
+
+function multerErrorHandler(err, req, res, next){
+    if(err && err.code === "LIMIT_FILE_SIZE"){
+        return res.json({success:false, msg:"File size is too large and can not be updated"});
+    }
+    next();
+}
 
 module.exports = function(app){
     const controllerUtils = require(appRoot + "/middleware").utils(app);
@@ -28,15 +39,16 @@ module.exports = function(app){
  *      }
  * @apiVersion 1.1.0
  *  */
-    app.post("/imageProxy", controllerUtils.requireLogin, (req, res)=>{
+    app.post("/imageProxy", controllerUtils.requireLogin, upload.single('data'), (req, res)=>{
         const img = req.body;
         logger.error("img: ", img);
+        logger.error("file: " , req.file);
         if(img.url)
             return imgService.proxyFromUrl(img.url, r=>{
                 res.json(r);
             });
-        else if(img.data)
-            return imgService.proxyFromBuffer(img.data, r=>{
+        else if(req.file)
+            return imgService.proxyFromBuffer(req.file.buffer, r=>{
                 res.json(r);
             });
         else res.json({success:false, msg:"Img must have either url or data"});
