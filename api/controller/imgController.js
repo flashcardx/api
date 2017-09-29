@@ -24,7 +24,7 @@ module.exports = function(app){
  * @apiGroup image
  * @apiName Image proxy
  * @apiDescription recives dimentions and url or buffer of the image, saves it and returns hash(if concatenated with CDN url you get the image url) you must either send data or url parameters in the body. but never both.
- * @apiParam (Request body) {string} [data] buffer with image data for saving.
+ * @apiParam (Request body) {string} [data] buffer with image data for saving URL FORM ENCODED!! CHECK HOW WEB DEALS WITH IT.
  * @apiParam (Request body) {string} [url] image url for downloading.
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
@@ -41,8 +41,6 @@ module.exports = function(app){
  *  */
     app.post("/imageProxy", controllerUtils.requireLogin, upload.single('data'), (req, res)=>{
         const img = req.body;
-        logger.error("img: ", img);
-        logger.error("file: " , req.file);
         if(img.url)
             return imgService.proxyFromUrl(img.url, r=>{
                 res.json(r);
