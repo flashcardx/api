@@ -495,7 +495,7 @@
     "title": "Get decks inside deck",
     "group": "deck",
     "name": "Get_decks_inside_deck",
-    "description": "<p>Returns all decks(name, id, lang and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the imgBaseUrl parameter that this endpoint will return.</p>",
+    "description": "<p>Returns all decks(name, id,description, lang and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. decks per page:14. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the CDN base url.</p>",
     "parameter": {
       "fields": {
         "Parameters": [
@@ -557,7 +557,7 @@
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"decks\": [{\"name\": \"deck1\", id:\"59991371065a2544f7c90288\", \"thumbnail\":\"18428b0dd352776131a209bd24785b8f\", \"lang\": \"es\"},\n           {\"name\": \"math\", id:\"59991371065a2544fasd8888\", \"thumbnail\":\"18428b0dd352776131a209bd24785b8f\", \"lang\": \"en\"}],\n \"imgBaseUrl\": \"https://d32suzxs6u0rur.cloudfront.net\"\n }",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"decks\": [{\"description\":\"a very nice deck\", \"name\": \"deck1\", id:\"59991371065a2544f7c90288\", \"thumbnail\":\"18428b0dd352776131a209bd24785b8f\", \"lang\": \"es\"},\n           {\"description\":\"a nice deck\",\"name\": \"math\", id:\"59991371065a2544fasd8888\", \"thumbnail\":\"18428b0dd352776131a209bd24785b8f\", \"lang\": \"en\"}]\n }",
           "type": "json"
         }
       ]
@@ -899,7 +899,7 @@
     "title": "new deck",
     "group": "deck",
     "name": "new_deck",
-    "description": "<p>creates user or class deck depending on type param, returns id of new deck.</p>",
+    "description": "<p>creates user or class deck depending on type param, returns the new deck.</p>",
     "parameter": {
       "fields": {
         "Parameters": [
@@ -947,13 +947,20 @@
             "field": "lang",
             "defaultValue": "en",
             "description": "<p>Language code for the deck.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "thumbnail",
+            "description": "<p>Image object containing: hash, width,height,x,y. Will be shown in the deck cover.</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "url: /deck/u\nbody: {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\",\n        \"parentId\": \"5998f5ea23cbd123cf8becce\",\n        \"lang\": \"es\"\n   }",
+          "content": "url: /deck/u\nbody: {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\",\n        \"parentId\": \"5998f5ea23cbd123cf8becce\",\n        \"lang\": \"es\",\n         \"thumbnail\":{\n             \"hash\": \"xsxedede\",\n             \"width\": \"200\",\n             \"height\": \"56\",\n             \"x\": \"0\",\n             \"y\": \"0\"    \n             }\n   }",
           "type": "json"
         }
       ]
@@ -975,7 +982,7 @@
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"id\": \"59991371065a2544f7c90288\"\n }",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"deck\": {\"_id\":xxxxx, \"name\":\"name\", lang:\"xxse\", etc}\n }",
           "type": "json"
         }
       ]
@@ -1068,6 +1075,66 @@
     "version": "1.1.0",
     "filename": "controller/deckController.js",
     "groupTitle": "deck"
+  },
+  {
+    "type": "post",
+    "url": "/imageProxy",
+    "title": "Image proxy",
+    "group": "image",
+    "name": "Image_proxy",
+    "description": "<p>recives dimentions and url or buffer of the image, saves it and returns hash(if concatenated with CDN url you get the image url) you must either send data or url parameters in the body. but never both.</p>",
+    "parameter": {
+      "fields": {
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "data",
+            "description": "<p>buffer with image data for saving URL FORM ENCODED!! CHECK HOW WEB DEALS WITH IT.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "url",
+            "description": "<p>image url for downloading.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /imageProxy\nbody: {\n        \"url\":\"www.example.com/img.jpg\"\n   }",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"hash\": \"599dae000df00e4588f5ea23cbd123cf8becce\"\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/imgController.js",
+    "groupTitle": "image"
   },
   {
     "type": "post",

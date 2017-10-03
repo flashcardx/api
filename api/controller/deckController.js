@@ -18,6 +18,7 @@ module.exports = function(app){
  * @apiParam (Request body) {string} [classname] needed if deck will be for a class.
  * @apiParam (Request body) {string} [parentId] required if new deck(child) is inside another deck(parent).
  * @apiParam (Request body) {string} [lang=en] Language code for the deck.
+ * @apiParam (Request body) {string} [thumbnail] Image object containing: hash, width,height,x,y. Will be shown in the deck cover.
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /deck/u
