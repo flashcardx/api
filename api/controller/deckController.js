@@ -282,7 +282,7 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
  * @apiParam (Query) {string} [classname] Needed for getting class decks.
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
- * url: /decks/u
+ * url: /alldecks/u
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
  *     {"success":true,
@@ -313,7 +313,7 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
 });
 
 /**
- * @api {get} /deckschildren/:type Get decks inside deck
+ * @api {get} /decks/:type Get decks inside deck
  * @apiGroup deck
  * @apiName Get decks inside deck
  * @apiDescription Returns all decks(name, id,description, lang and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. decks per page:14. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the CDN base url.
@@ -323,7 +323,7 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
  * @apiParam (Query) {string} [skip=0] Used for pagination, if every page has 14 items, when skip=14 you will get items from page 2.
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
- * url: /deckschildren/u?parentId=59991371065a2544f7c9028c&skip=14
+ * url: /decks/u?parentId=59991371065a2544f7c9028c&skip=14
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
  *     {"success":true,
@@ -332,7 +332,7 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
  *      }
  * @apiVersion 1.1.0
  *  */
-    app.get("/deckschildren/:type", controllerUtils.requireLogin, (req, res)=>{
+    app.get("/decks/:type", controllerUtils.requireLogin, (req, res)=>{
         switch (req.params.type) {
             case "u":
                     deckService.childUserDecks(req.userId, req.query.parentId, parseInt(req.query.skip), r=>{

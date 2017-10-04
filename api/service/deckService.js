@@ -418,6 +418,7 @@ function findDeckChildren(parameters, limit, skip, childrenFields, callback) {
         .populate({
             path:'decks',
             options: {
+                sort:{updated_at: "desc"},
                 limit:limit,
                 skip: skip,
                 select: childrenFields
@@ -437,6 +438,7 @@ function findDeckChildren(parameters, limit, skip, childrenFields, callback) {
 
 function findDecksByParams(parameters, limit, skip, fields, callback) {
     Deck.find(parameters, fields)
+        .sort({updated_at: "desc"})
         .skip(skip)
         .limit(limit)
         .lean()
