@@ -234,7 +234,7 @@ module.exports = function(app){
 
     function generateToken(object, callback){
         jwt.sign(object, app.get('jwtSecret'), {
-                                    expiresIn: config.APIJwtExpireTime 
+                                    expiresIn: config.JwtExpireTime 
                         }, (err, token)=>{
                             if(err){
                                 logger.error(err);

@@ -21,16 +21,29 @@ module.exports = function(app){
      * @apiParam (Query) {string} [classname] If deck is in class, classname is required.
      * @apiParam (Body) {string} name card name.
      * @apiParam (Body) {string} [description] description for card.
-     * @apiParam (Body) {Array} [imgs] Array with either image url or buffer, max 3 images supported.
+     * @apiParam (Body) {Array} [hashes] Array with image hashes(Up to 3), you need to call the image proxy method first for getting the hash.
      * @apiHeader (Headers) {string} x-access-token user session token
      * @apiParamExample {json} Request-Example:
      * url: /card/c/59991371065a2544f7c90288?classname=unlam1
      * body: { "name":"car",
-     *          "description": "a ferrari"
+     *          "description": "a ferrari",
+     *          "hashes":["dcc6456deddddr", "4f5f8dddrfoklh4"]
      *      }
      * @apiSuccessExample {json} Success-Response:
      *     HTTP/1.1 200 OK
-     *     {"success":true
+     *     {"success":true,
+     *      "card": {   
+     *                  "_id":"ASY54RFRF5TOJB1XW"
+     *                  "name": "car",
+     *                  "description": "hello world",
+     *                  "imgs": [{"hash":"4f5f8dddrfoklh4",
+     *                            "width":"200",
+     *                            "height": 100},
+     *                             {"hash":"dcc6456deddddr",
+     *                            "width":"250",
+     *                            "height": 150}
+     *                          ]
+     *              }
      *      }
      * @apiVersion 1.1.0
      *  */

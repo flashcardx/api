@@ -3,7 +3,6 @@ const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const requestify = require('requestify'); 
-const cache = require("memory-cache");
 const S = require("string");
 const userService = require(appRoot + "/service/userService");
 const dictionaryService = require(appRoot + "/service/dictionaryService");
@@ -38,13 +37,6 @@ module.exports = function(app){
             return res.json(result);
         });
     });
-
-    app.get("/examples/:word", controllerUtils.requireLogin, (req, res)=>{
-            const word = req.params.word;
-            dictionaryService.examples(req.userId, word, r=>{
-                res.json(r);
-            });
-        });
 
     app.get("/define/:word", controllerUtils.requireLogin, (req, res)=>{
             const word = req.params.word;

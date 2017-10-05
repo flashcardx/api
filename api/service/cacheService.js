@@ -6,25 +6,38 @@ const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 
-/*
-if(env == "development")
-    client.flushdb( function (err, succeeded) {
-        if(err){
-            logger.error("error when trying to flush redis db: " + err);
-            return;
-        }
-        logger.warn("redis cache flushed result: " + succeeded); // will be true if successfull
-});
-*/
-
-//message already is a string, so does not need parsing
 function putBingResults(q, msg){ 
     var cacheKey = genKeyBingResults(q);
-    client.set(cacheKey, JSON.stringify(msg), "EX", 604800); // value in seconds = 7 days
+    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeImageSearch);//cache time in seconds
+}
+
+function putGifResults(q, msg){ 
+    var cacheKey = genKeyGifResults(q);
+    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeImageSearch); //cache time in seconds
+}
+
+function putDictionaryResults(lang, q, msg){ 
+    var cacheKey = genKeyDictionaryResults(lang, q);
+    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
 }
 
 function getBingResults(q){
     var cacheKey = genKeyBingResults(q);
+    return getResults(cacheKey);
+}
+
+function getGifResults(q){
+    var cacheKey = genKeyGifResults(q);
+    return getResults(cacheKey);
+}
+
+function getDictionaryResults(lang, q){
+    var cacheKey = genKeyDictionaryResults(lang, q);
+    return getResults(cacheKey);
+}
+
+
+function getResults(cacheKey){
     return new Promise((resolve, reject)=>{
           client.get(cacheKey, function (err, data) {
             if (err){
@@ -37,7 +50,15 @@ function getBingResults(q){
 }
 
 function genKeyBingResults(q){
-    return "BingResults" + q;
+    return "BingCache" + q;
+}
+
+function genKeyGifResults(q){
+    return "GifCache" + q;
+}
+
+function genKeyDictionaryResults(lang, q){
+    return "DictionaryCache" + lang+ "-" + q;
 }
 
 
@@ -45,6 +66,9 @@ function genKeyBingResults(q){
 
 module.exports = {
     putBingResults: putBingResults,
-    getBingResults: getBingResults
-
+    getBingResults: getBingResults,
+    putGifResults: putGifResults,
+    getGifResults: getGifResults,
+    putDictionaryResults: putDictionaryResults,
+    getDictionaryResults: getDictionaryResults
 };

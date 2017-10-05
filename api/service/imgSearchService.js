@@ -13,7 +13,6 @@ const shutterstockAPI = shutterstock.v2({
   clientSecret: '0d096f428d635dd82c83ed3b87116370c2825255',
 });
 
-
 function searchBing(q, clientIp, callback){
     if(!clientIp){
         logger.error("client ip undefined, will be replaced with empty string, if this continues Bing may think it is ddos attack");
@@ -40,9 +39,9 @@ function searchBing(q, clientIp, callback){
     .then(response=>{
         if(!response)
             return; 
-        var r = response.getBody();
-        cacheService.putBingResults(q, r);
-        return callback({success:true, msg:r});
+        var imgs = parseImgs(response.getBody().value);
+        cacheService.putBingResults(q, imgs);
+        return callback({success:true, msg:imgs});
     })
     .catch(err=>{
         logger.error('Encountered error making request:' + err);
@@ -51,12 +50,26 @@ function searchBing(q, clientIp, callback){
 }
 
 function searchGif(q, callback){
-    logger.error("key: " + config.gifApiKey);
     var url = config.gifApiUrl + "?key=" + config.gifApiKey +"&q=" + q + "&safesearch=moderate&limit=40";
-    requestify.get(url)
+    cacheService.getGifResults(q)
     .then(r=>{
-        var data = r.getBody();
-        return callback({success:true, msg:data});
+        if(r){
+                callback({success:true, msg:r});
+                return Promise.resolve(null);
+            }
+        else return Promise.resolve(1);
+    })
+    .then(r=>{
+        if(!r)
+            return Promise.resolve();
+        return requestify.get(url);
+    })
+    .then(r=>{
+        if(!r)
+            return;
+        var imgs = parseGifs(r.getBody().results);
+        cacheService.putGifResults(q, imgs);
+        return callback({success:true, msg:imgs});
     })
     .catch(err=>{
         logger.error('Encountered error making request:' + err);
@@ -64,9 +77,37 @@ function searchGif(q, callback){
     });
 }
 
+function parseImgs(data){
+    var r = [];
+    data.forEach(img=>{
+        r.push({
+                preview: img.thumbnailUrl,
+                real: {
+                    url: img.contentUrl,
+                    height: img.height,
+                    width: img.width
+                    }
+                });
+    });
+    return r;
+}
 
+function parseGifs(data){
+    var r = [];
+    data.forEach(img=>{
+        r.push({
+                preview: img.media[0].tinygif.url,
+                real: {
+                    url: img.media[0].mediumgif.url,
+                    height: img.media[0].mediumgif.dims[1],
+                    width: img.media[0].mediumgif.dims[0]
+                    }
+            });
+    });
+    return r;
+}
 
 module.exports = {
         searchBing: searchBing,
         searchGif: searchGif
-    }
+}

@@ -7,7 +7,7 @@ const imgService = require(appRoot + "/service/imgService");
 const multer = require("multer");
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage,
-                        limits: { fileSize: config.APIMaxSizeUpFiles } });
+                        limits: { fileSize: config.MaxSizeUpFiles } });
 
 function multerErrorHandler(err, req, res, next){
     if(err && err.code === "LIMIT_FILE_SIZE"){

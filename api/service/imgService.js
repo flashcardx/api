@@ -87,14 +87,14 @@ function downloadAndGetBuffer(url){
                     options.url = res.request.uri.href;
                     logger.error('content-length: ' + res.headers['content-length']);
                     logger.error('content-type: ' + res.headers['content-type']);
-                    if(res.headers['content-length'] > config.APIMaxSizeUpFiles)
+                    if(res.headers['content-length'] > config.MaxSizeUpFiles)
                         return reject(new Error("Size of file too big, size: " + res.headers['content-length']));
                     if(!isFileFormatValid(res.headers['content-type']))
                             return reject("Invalid file format: " + res.headers['content-type']);
                     requestNoEncoding.get(options, (err, res, body)=>{
                         if(err)
                             return reject(err);
-                        if(res.headers['content-length'] > config.APIMaxSizeUpFiles)
+                        if(res.headers['content-length'] > config.MaxSizeUpFiles)
                             return reject(new Error("Size of file too big, size: " + res.headers['content-length']));
                         if(!body)
                             return reject("Could not download image");
@@ -153,7 +153,7 @@ function download(uri, filename){
                         return reject(new Error("Content-type of uri is not supported, uri: " + uri +", content-type: " + res.headers['content-type']));
                     */
                 
-                    if(res.headers['content-length'] > config.APIMaxSizeUpFiles)
+                    if(res.headers['content-length'] > config.MaxSizeUpFiles)
                         return reject(new Error("size of file too big, size: " + res.headers['content-length']));
                     var rq = request(uri, {headers:{"User-Agent": "NING/1.0"}});
                     rq.on("error", err=>{
