@@ -11,9 +11,10 @@ var langCodes = lang.map((value)=>{
 const DEFAULT_RECURSIVE_ORDER = 4;
 
 const deckSchema = new Schema({
-    decks:{
-        type: [Schema.Types.ObjectId],
-        ref: "decks"
+    parentId:{
+        type: Schema.Types.ObjectId,
+        ref: "decks",
+        index:true
     },
     name:{
         type: String,

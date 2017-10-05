@@ -22,18 +22,26 @@ process.on('message', msg=>{
 });
 
 function deleteDeck(deckId){
-   Deck.findOne({_id:deckId, active:true}, "decks ownerType ownerId", (err, deck)=>{
-        if(err)
-            return console.error("deleteDeck child process failed, deckId: " + deckId +", err: " + err)
+   console.log("child process about to delete deck: ", deckId);
+   Deck.findOne({_id:deckId}, "decks ownerType ownerId")
+   .then(deck=>{
         if(!deck)
-            return console.error("deck not found");
-        deck.decks.forEach(d=>{
-            deleteDeck(d);
-        })
+            return Promise.reject("deck not found");
         deleteCards(deck);
         deleteFromFeed(deck.ownerType, deckId, deck.ownerId);
         deck.remove();
-   })
+        return  Deck.find({parentId:deckId}, "_id")
+                .lean()
+                .exec(); 
+    })
+    .then(decks=>{
+            decks.forEach(deck=>{
+                deleteDeck(deck._id);
+            })
+    })
+    .catch(err=>{
+        logger.fatal("Error in child process when trying to delete deck: ", err);
+    });
 }
 
 function deleteCards(deck){

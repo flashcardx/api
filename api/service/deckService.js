@@ -24,10 +24,7 @@ function create4User(userId, deck, callback) {
     deck.ownerType = "u";
     deck.ownerId = userId;
     var deckModel = new Deck(deck);
-    if (deck.parentId)
-        createChildDeck(deckModel, deck.parentId, callback);
-    else
-        saveNewDeck(deckModel, callback, undefined, userId);
+    saveNewDeck(deckModel, callback, undefined, userId);
 }
 
 function update4User(userId, deckId, deck, callback) {
@@ -80,114 +77,10 @@ function create4Class(userId, data, callback) {
             data.ownerType = "c";
             data.ownerId = Class._id;
             var deckModel = new Deck(data);
-            if (data.parentId)
-                createChildDeck(deckModel, data.parentId, callback, Class._id, userId);
-            else{ 
-                saveNewDeck(deckModel, callback, Class._id, userId);
-            }
+            saveNewDeck(deckModel, callback, Class._id, userId);
         })
         .catch(err => {
             logger.error("when creating deck4class: " + err);
-            return callback({ success: false, msg: err });
-        });
-}
-
-function setImgUserDeckFromUrl(userId, data, callback) {
-    var imgHash;
-    Deck.findOne({ _id: data.deckId, ownerId: userId, active: true }, "_id thumbnail")
-        .lean()
-        .exec()
-        .then(d => {
-            if (!d)
-                return callback({ success: false, msg: "deck not found or user is not the deck owner" });
-            imgHash = d.thumbnail;
-            return setImageFromUrl(d._id, data.url);
-        })
-        .then(() => {
-            if (!imgHash)
-                return callback({ success: true });
-            imgService.deleteImgOnce(imgHash, r => {
-                if (r.success == false)
-                    return callback(r);
-                return callback({ success: true });
-            });
-        })
-        .catch(err => {
-            logger.error("error when looking for deck: " + err);
-            return callback({ success: false, msg: err });
-        });
-}
-
-function setImgUserDeckFromBuffer(userId, data, callback) {
-    var imgHash;
-    Deck.findOne({ _id: data.deckId, ownerId: userId, active: true }, "_id thumbnail")
-        .lean()
-        .exec()
-        .then(d => {
-            if (!d)
-                return callback({ success: false, msg: "deck not found or user is not the deck owner" });
-            imgHash = d.thumbnail;
-            return setImageFromBuffer(d._id, data.img);
-        })
-        .then(() => {
-            if (!imgHash)
-                return callback({ success: true });
-            imgService.deleteImgOnce(imgHash, r => {
-                if (r.success == false)
-                    return Promise.reject(r.msg);
-                return callback({ success: true });
-            });
-        })
-        .catch(err => {
-            logger.error("error when looking for deck: " + err);
-            return callback({ success: false, msg: err });
-        });
-}
-
-function setImgClassDeckFromBuffer(userId, data, callback) {
-    var imgHash;
-    getClassDeckLean(userId, data.deckId, "thumbnail _id")
-        .then(d => {
-            if (!d)
-                return Promise.reject("deck not found or user is not the deck owner");
-            imgHash = d.thumbnail;
-            return setImageFromBuffer(d._id, data.img);
-        })
-        .then(() => {
-            if (!imgHash)
-                return callback({ success: true });
-            imgService.deleteImgOnce(imgHash, r => {
-                if (r.success == false)
-                    return callback(r);
-                return callback({ success: true });
-            });
-        })
-        .catch(err => {
-            logger.error("error when looking for deck: " + err);
-            return callback({ success: false, msg: err });
-        });
-}
-
-function setImgClassDeckFromUrl(userId, data, callback) {
-    var imgHash;
-    getClassDeckLean(userId, data.deckId, "thumbnail _id")
-        .then(d => {
-            if (!d)
-                return Promise.reject("deck not found or user is not the deck owner");
-            imgHash = d.thumbnail;
-            return setImageFromUrl(d._id, data.url);
-        })
-        .then(() => {
-            if (!imgHash)
-                return callback({ success: true });
-            imgService.deleteImgOnce(imgHash, r => {
-                if (r.success == false)
-                    return callback(r);
-                return callback({ success: true });
-            });
-        })
-        .catch(err => {
-            logger.error("error when looking for deck: " + err);
             return callback({ success: false, msg: err });
         });
 }
@@ -291,12 +184,11 @@ function childUserDecks(userId, parentId, skip=0, callback) {
         ownerType: "u",
         active: true
     };
-    if(!parentId) {
-        parameters.recursiveOrder = DEFAULT_RECURSIVE_ORDER;
-        return findDecksByParams(parameters, 14, skip, "name _id thumbnail description lang", callback);
-    }
-    parameters._id = parentId;
-    return findDeckChildren(parameters, 14, skip, "name _id thumbnail description lang", callback);
+    if(!parentId)
+        parameters.parentId = null;
+    else
+        parameters.parentId = parentId;
+    return findDecksByParams(parameters, 14, skip, "name _id thumbnail description lang", callback);    
 }
 
 function childClassDecks(userId, parentId, classname, skip, callback) {
@@ -311,12 +203,11 @@ function childClassDecks(userId, parentId, classname, skip, callback) {
                     ownerType: "c",
                     active: true
                 };
-                if (!parentId) {
+                if (!parentId)
                     parameters.recursiveOrder = DEFAULT_RECURSIVE_ORDER;
-                    return findDecksByParams(parameters, 14, skip, "name _id thumbnail lang", callback);
-                }
-                parameters._id = parentId;
-                return findDeckChildren(parameters, 14, skip, "name _id thumbnail lang", callback);
+                else
+                    parameters.parentId = parentId;
+                return findDecksByParams(parameters, 14, skip, "name _id thumbnail lang", callback);
             })
             .catch(err=>{
                 logger.error("error when getting class(for verification)childClassDecks: " + err);
@@ -412,29 +303,6 @@ function duplicate2Class(userId, classname, srcId, destId, callback){
 
 // HELPER FUNCTIONS:
 
-function findDeckChildren(parameters, limit, skip, childrenFields, callback) {
-    Deck.findOne(parameters, "decks")
-        .lean()
-        .populate({
-            path:'decks',
-            options: {
-                sort:{updated_at: "desc"},
-                limit:limit,
-                skip: skip,
-                select: childrenFields
-                }
-            })
-        .exec()
-        .then(docs => {
-            if (!docs)
-                return callback({ success: false, msg: "Parent deck not found" });
-            return callback({ success: true, msg: docs.decks });
-        })
-        .catch(err => {
-            logger.error("error when getting deck children: " + err);
-            return callback({ success: false, msg: err });
-        })
-}
 
 function findDecksByParams(parameters, limit, skip, fields, callback) {
     Deck.find(parameters, fields)
@@ -544,69 +412,9 @@ function verifyDeleteImg(ownerId, deckId) {
     });
 }
 
-
-
-function setImageFromUrl(deckId, url) {
-    return new Promise((resolve, reject) => {
-        imgService.saveImgFromUrl(url)
-            .then(hash => {
-                return Deck.update({ _id: deckId }, { $set: { thumbnail: hash } })
-                    .exec();
-            })
-            .then(r => {
-                if (r.nModified == 0) {
-                    return reject("nModifier=0 when unpdating thumbnail hash in deck document(database)");
-                }
-                return resolve();
-            })
-            .catch(err => {
-                logger.error("error when downloading img from url for deck: " + err);
-                return reject(err);
-            })
-    });
-}
-
-function setImageFromBuffer(deckId, buffer) {
-    var hash;
-    return new Promise((resolve, reject) => {
-        imgService.saveImgFromBuffer(buffer)
-            .then(h => {
-                hash = h;
-                return Deck.update({ _id: deckId }, { $set: { thumbnail: hash } })
-                    .exec();
-            })
-            .then(r => {
-                if (r.nModified == 0) {
-                    return Promise.reject("nModifier=0 when unpdating thumbnail hash in deck document(database)");
-                }
-                return resolve();
-            })
-            .catch(err => {
-                logger.error("error when downloading img from url for deck: " + err);
-                return reject(err);
-            })
-    });
-}
-
-function createChildDeck(deckModel, parentId, callback, classId, userId) {
-    if (deckModel._id == parentId) {
-        logger.error("Deck can not be its own parent ;)");
-        return callback({ success: false, msg: "Deck can not be its own parent ;)" });
-    }
-    Deck.findOneAndUpdate({ _id: parentId, recursiveOrder: { $gt: 0 }, ownerId: deckModel.ownerId, active: true }, { "$push": { "decks": deckModel._id } }, "recursiveOrder")
-        .then(parent => {
-            if (!parent)
-                return callback({ success: false, msg: "could not find parent deck, or max deck recursive level reached" });
-            deckModel.recursiveOrder = parent.recursiveOrder - 1;
-            saveNewDeck(deckModel, callback, classId, userId);
-        })
-        .catch(err => {
-            logger.error("trying to push deck id in parent: " + err);
-            return callback({ success: false, msg: err });
-        })
-}
-
 function saveNewDeck(deckModel, callback, classId, userId) {
+    if (deckModel._id == deckModel.parentId)
+        return Promise.reject("Deck can not be its own parent ;)");
     var forClass = false;
     var user;
     logger.error("deckModel: ", deckModel);
@@ -652,12 +460,8 @@ function saveNewDeck(deckModel, callback, classId, userId) {
 
 module.exports.create4User= create4User;
 module.exports.create4Class= create4Class;
-module.exports.setImgUserDeckFromUrl= setImgUserDeckFromUrl;
-module.exports.setImgClassDeckFromUrl= setImgClassDeckFromUrl;
 module.exports.deleteImgUserDeck= deleteImgUserDeck;
 module.exports.deleteImgClassDeck= deleteImgClassDeck;
-module.exports.setImgUserDeckFromBuffer= setImgUserDeckFromBuffer;
-module.exports.setImgClassDeckFromBuffer= setImgClassDeckFromBuffer;
 module.exports.update4User= update4User;
 module.exports.update4Class= update4Class;
 module.exports.delete4User= delete4User;
