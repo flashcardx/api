@@ -1,9 +1,10 @@
 const env = process.env.NODE_ENV || "development";
-const redis = require('redis');  
-const REDIS_PORT = process.env.REDIS_PORT || 6379;
-const client = redis.createClient(REDIS_PORT); 
 const appRoot = require('app-root-path');
+const redis = require('redis');  
 const config = require(appRoot + "/config");
+const client = redis.createClient({
+    url: config.getRedisConnectionString()
+});
 const logger = config.getLogger(__filename);
 
 function putBingResults(q, msg){ 

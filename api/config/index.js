@@ -1,5 +1,6 @@
 const env = process.env.NODE_ENV || "development";
-const db = require("./json/db")[env];
+const db = require("./json/db")[env].mongo;
+const redis = require("./json/db")[env].redis;
 const dbEvents= require("./dbEvents");
 const parameters = require("./json/parameters.json")[env];
 const logger = require("./logger");
@@ -13,6 +14,9 @@ module.exports = {
 
     getDbConnectionString: function() {
         return `mongodb://${db.user}:${db.pass}@${db.host}:${db.port}/${db.name}`;
+    },
+     getRedisConnectionString: function() {
+        return `redis://${redis.user}:${redis.pass}@${redis.host}:${redis.port}/${redis.name}`;
     },
     getLogger: logger.getLogger,
     getLoggerAccess: logger.getLoggerAccess,

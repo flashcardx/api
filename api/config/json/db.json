@@ -1,23 +1,50 @@
 {
     "development":{
-        "host": "localhost",
-        "port": "27017",
-        "name": "flashcards",
-        "user": "pablo",
-        "pass": "1234"
+        "redis":{
+            "host": "localhost",
+            "name": "",
+            "user": "",
+            "pass": "",
+            "port":"6379"
+        },
+        "mongo":{
+            "host": "localhost",
+            "port": "27017",
+            "name": "flashcards",
+            "user": "pablo",
+            "pass": "1234"
+        }
     },
     "pi":{
-        "host": "localhost",
-        "port": "27017",
-        "name": "flashcards",
-        "user": "pablo",
-        "pass": "0022884836"
+         "redis":{
+            "host": "localhost",
+            "name": "",
+            "user": "",
+            "pass": "",
+            "port":"6379"
+        },
+        "mongo":{
+            "host": "localhost",
+            "port": "27017",
+            "name": "flashcards",
+            "user": "pablo",
+            "pass": "0022884836"
+        }
     },
     "production":{
-        "host": "localhost",
-        "port": "27017",
-        "name": "flashcards",
-        "user": "pablo",
-        "pass": "0022884836"
+         "redis":{
+            "host": "localhost",
+            "name": "",
+            "user": "",
+            "pass": "",
+            "port":"6379"
+        },
+        "mongo":{    
+            "host": "localhost",
+            "port": "27017",
+            "name": "flashcards",
+            "user": "pablo",
+            "pass": "0022884836"
+        }
     }
 }
