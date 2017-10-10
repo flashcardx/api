@@ -88,14 +88,14 @@ function downloadAndGetBuffer(url){
                     logger.error('content-length: ' + res.headers['content-length']);
                     logger.error('content-type: ' + res.headers['content-type']);
                     if(res.headers['content-length'] > config.MaxSizeUpFiles)
-                        return reject(new Error("Size of file too big, size: " + res.headers['content-length']));
+                        return reject("Size of file too big, size: " + res.headers['content-length']);
                     if(!isFileFormatValid(res.headers['content-type']))
                             return reject("Invalid file format: " + res.headers['content-type']);
                     requestNoEncoding.get(options, (err, res, body)=>{
                         if(err)
                             return reject(err);
                         if(res.headers['content-length'] > config.MaxSizeUpFiles)
-                            return reject(new Error("Size of file too big, size: " + res.headers['content-length']));
+                            return reject("Size of file too big, size: " + res.headers['content-length']);
                         if(!body)
                             return reject("Could not download image");
                         return resolve(body);
