@@ -5,7 +5,6 @@ const mongoose = require("mongoose");
 const Deck = require(appRoot + "/models/deckModel").deck;
 const User = require(appRoot + "/models/userModel");
 const Card = require(appRoot + "/models/cardModel");
-const Class = require(appRoot + "/models/classModel");
 const setup = require("./setup");
 var fs = require("fs");
 

@@ -4,6 +4,7 @@ const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const credentials = config.AWSCredentials;
 var AWS = require('aws-sdk');
+const _ = require("lodash");
 AWS.config = new AWS.Config();
 AWS.config.accessKeyId = credentials.accessKeyId;
 AWS.config.secretAccessKey = credentials.secretAccessKey;
@@ -47,7 +48,7 @@ function addTemporaryUrl(cards, callback){
     cards.forEach((card, i)=>{
         cards[i] = replaceImgsUrl(cards[i]);
     });
-    return callback({success:true, msg: cards});
+    return callback({success:true, cards: cards});
 }
 
 
@@ -62,10 +63,11 @@ function removeFromS3(hash, callback){
         });
 };
 
-function replaceImgsUrl(card){
-    card.imgs.forEach((img, j)=>{
-                card.imgs[j].hash = getImgUrl(img.hash);
-        });
+function replaceImgsUrl(Kard){
+    var card = _.clone(Kard);
+    logger.error("card: " , card);// prints card: {imgs:[]}
+    card.imgs = "sex";
+    logger.error("new card: " , card); // prints new card: {imgs:[]}
     return card;
 }
 

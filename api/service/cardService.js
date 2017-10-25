@@ -48,30 +48,32 @@ function validateCard(cardModel){
 
 function getCards(userId, params, callback){
     //we don't verify user is the deck owner since other people have access to all users decks
-    params.limit = parseInt(params.limit);
-    if(!params.sort || (params.sort!=="asc" && params.sort!=="desc")){
-        logger.warn("sort argument invalid(should be asc or desc), got: " + params.sort);
-        params.sort= "asc";
-    }
+    if(!params.limit)
+        params.limit = 14;
+    else
+        params.limit = parseInt(params.limit);
     if(params.limit <= 0)
         return callback({success: false, msg: "limit must be > 0"});
     var query = [{'ownerId': userId}, {"ownerType": "u"}];
     if(params.deckId)
         query.push({"deckId": params.deckId});
-    if(params.last){
-        if(params.sort==="desc")
-            query.push({updated_at:{$lt: params.last}});
-        else
-            query.push({updated_at:{$gt: params.last}});
-    }
     if(params.name){
             query.push({name:{$regex : new RegExp(params.name, "i")}});
     }
-       Card.find({$and: query }).select("name description imgs ownerName updated_at").sort({updated_at: params.sort}).limit(params.limit).exec(
-                    (err, cards)=>{
-                         return returnCards(err, cards, callback);
-                    }
-        );
+    Card.find({$and: query })
+    .select("name description imgs ownerName updated_at")
+    .sort({updated_at: "desc"})
+    .skip(parseInt(params.skip))
+    .limit(params.limit)
+    .exec()
+    .lean()
+    .then(cards=>{
+            return returnCards(err, cards, callback);
+    })
+    .catch(err=>{
+        logger.error(err);
+        return callback({success:false, msg: err});
+    });
 }
 
 function getClassCardsUnsafe(classId, params, callback){
@@ -292,6 +294,9 @@ function createUserCard(parameters, callback){
                             .then((result)=>{
                                 user = result;
                                 return imgService.downloadArray(parameters.imgs, parameters.userId, callback);
+                                var promises = parameters.imgs.map(img=>{
+                                    return imgService.increaseImgCounter(img.hash);
+                                });
                             })
                            .then(r=>{
                                 warning = r.warning;
@@ -307,9 +312,9 @@ function createUserCard(parameters, callback){
                            })
                            .then(()=>{
                                     if(!warning)
-                                        return callback({success:true, msg:"card was created ok!"});
+                                        return callback({success:true, card: cardModel});
                                     else
-                                        return callback({success:"warning", msg:"card was created but: " + warning});        
+                                        Promise.reject({success:"warning", card: cardModel, msg:"card was created but: " + warning});        
                             })
                             .catch(msg=>{
                                  logger.error(msg);
