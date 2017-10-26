@@ -1,17 +1,17 @@
 {
     "development":{
-        "service": "Gmail",
-        "user": "pablonicolasm.pm@gmail.com",
-        "password": "38992628"
+        "service": "Zoho",
+        "user": "noreply@flashcardx.co",
+        "password": "x3L5x9L5"
     },
     "pi":{
-        "service": "Gmail",
-        "user": "pablonicolasm.pm@gmail.com",
-        "password": "38992628"
+        "service": "Zoho",
+        "user": "noreply@flashcardx.co",
+        "password": "x3L5x9L5"
     },
     "production":{
-        "service": "Gmail",
-        "user": "pablonicolasm.pm@gmail.com",
-        "password": "38992628"
+        "service": "Zoho",
+        "user": "noreply@flashcardx.co",
+        "password": "x3L5x9L5"
     }
 }

@@ -65,10 +65,10 @@ function getCards(userId, params, callback){
     .sort({updated_at: "desc"})
     .skip(parseInt(params.skip))
     .limit(params.limit)
-    .exec()
     .lean()
+    .exec()
     .then(cards=>{
-            return returnCards(err, cards, callback);
+        return AWSService.addTemporaryUrl(cards, callback);
     })
     .catch(err=>{
         logger.error(err);

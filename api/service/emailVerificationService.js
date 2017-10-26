@@ -21,13 +21,13 @@ nev.configure({
         }
     },
     verifyMailOptions: {
-        from: 'FlashCardX <pablonicolasm.pm@gmail.com>',
+        from: 'FlashcardX <' + config.emailUser + '>',
         subject: 'Please confirm account',
         html: 'Welcome to FlashCardX!<p/> Click the following link to confirm your account:</p><p>${URL}</p>',
         text: 'Welcome to FlashCardX!. Click the following link to confirm your account: ${URL}'
     },
     confirmMailOptions: {
-        from: 'FlashCardX <pablonicolasm.pm@gmail.com>',
+        from: 'FlashcardX <'+config.emailUser+'>',
         subject: 'Welcome on board!',
         html: 'Your account has been successfully verified.</p>We really hope you enjoy our app!, if you have any suggestions or comments just write us to contact@flashcardx.co, we will get back to you asap.</p>',
         text: 'Your account has been successfully verified. We really hope you enjoy our app!, if you have any suggestions or comments just write us to contact@flashcardx.co, we will get back to you asap.'
