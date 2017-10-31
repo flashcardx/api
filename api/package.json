@@ -40,6 +40,7 @@
     "fs-promise": "^2.0.1",
     "getstream": "^3.5.0",
     "gm": "^1.23.0",
+    "google-id-token-verifier": "^0.2.3",
     "helmet": "^3.4.0",
     "image-downloader": "^3.2.2",
     "imagemin": "^5.3.1",

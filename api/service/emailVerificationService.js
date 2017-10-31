@@ -1,4 +1,3 @@
-
 const appRoot = require('app-root-path');
 var User = require(appRoot + '/models/userModel'),
     mongoose = require('mongoose'),

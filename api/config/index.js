@@ -38,6 +38,7 @@ module.exports = {
     reCaptchaUrl: credentials.reCaptcha.url,
     gifApiUrl: credentials.tenorGifApi.url,
     gifApiKey: credentials.tenorGifApi.secretKey,
-    facebookCredentials: credentials.facebook
+    facebookCredentials: credentials.facebook,
+    googleCredentials: credentials.google
 };
 

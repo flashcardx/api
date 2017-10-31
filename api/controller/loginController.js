@@ -9,8 +9,9 @@ const requestify = require('requestify');
 const querystring = require('querystring');
 const https = require('https');
 const passport = require("passport");
-var FacebookTokenStrategy = require('passport-facebook-token');
-const {facebookCredentials} = config;
+const FacebookTokenStrategy = require('passport-facebook-token');
+const {facebookCredentials, googleCredentials} = config;
+const googleAuthVerifier = require('google-id-token-verifier');
 
 passport.use(new FacebookTokenStrategy({
     clientID: facebookCredentials.appId,
@@ -22,7 +23,6 @@ passport.use(new FacebookTokenStrategy({
       });
   }
 ));
-
 
 
 function verifyRecaptcha(ip, key, callback) {
@@ -110,7 +110,7 @@ module.exports = function(app){
                             password: req.body.password,
                             lang: req.body.lang
                         };
-                        userService.registerNewUser(user, result=>{
+                        userService.registerTemporaryUser(user, result=>{
                             return res.json(result);
                         });
             }
@@ -217,9 +217,9 @@ module.exports = function(app){
  * @apiVersion 1.0.0
  *  */
     app.post("/fbAuth", function(req, res, next){
-        passport.authenticate('facebook-token', (error, user, info)=>{
+        passport.authenticate('facebook-token', (error, user)=>{
             if(error)
-                return res.json({success:false, msg:error});
+                return res.json({success:false, msg: error});
             if(user){
                 var user = {id:user._id};
                 return generateToken(user, r=>{
@@ -230,7 +230,44 @@ module.exports = function(app){
                 return res.json({success:false, msg:"Facebook authentication failed"});
                 }
             })(req, res, next);
-        });
+    });
+
+/**
+ * @api {post} /googleAuth googleAuth
+ * @apiGroup login
+ * @apiName googleAuth
+ * @apiDescription receives Google access token,
+ * if credentials are ok returns auth token for the user, if user doesn't exist it creates the user first and returns token.
+ * @apiParam (Request body) {string} id_token google access token
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true,
+ *     "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjU5OTczMDFkMTA5ZmNlMzVjOTM0YjBhZCIsImlhdCI6MTUwMzA4MTYzOSwiZXhwIjoxNTAzMDg1MjM5fQ.bqmogt0-pDLsUbVtSTvziTVcrA7_993WnFtaRQRAN-Q"
+ * }
+ * @apiVersion 1.0.0
+ *  */
+    app.post("/googleAuth", (req, res)=>{
+        const IdToken = req.body.id_token;
+        const clientId = googleCredentials.clientId;
+        googleAuthVerifier.verify(IdToken, clientId, (err, tokenInfo)=>{
+            if (err) 
+                return res.json({success:false, msg:err});
+            tokenInfo.id = tokenInfo.sub;
+            userService.upsertGoogleUser(tokenInfo, (error, user)=>{
+                    if(error)
+                        return res.json({success:false, msg:error});
+                    if(user){
+                        var user = {id:user._id};
+                        return generateToken(user, r=>{
+                                    return res.json(r);
+                        });
+                    }
+                    else{
+                        return res.json({success:false, msg:"Google authentication failed"});
+                    }
+            });
+         });
+    });
 
     function generateToken(object, callback){
         jwt.sign(object, app.get('jwtSecret'), {

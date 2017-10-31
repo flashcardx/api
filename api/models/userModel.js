@@ -63,10 +63,16 @@ const userSchema = new Schema({
     facebook:{
         id: {
             type: String,
-            unique: [true, 'facebookId already in use'], 
+            unique: [true, 'facebook Id already in use'], 
             sparse: true
-        },
-        token: String
+        }
+    },
+    google:{
+        id: {
+            type: String,
+            unique: [true, 'google Id already in use'], 
+            sparse: true
+        }
     },
     classLimit:{
         type: Number,

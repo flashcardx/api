@@ -41,13 +41,39 @@ function loginUser(email, password, callback){
       // no user was found, lets create a new one
       if (!user) {
             var user = {
-                            facebookId: profile.id,
-                            facebookToken: accessToken,
+                            "facebook.id": profile.id,
                             name: profile.name.givenName + ' ' + profile.name.familyName,
                             email: profile.emails[0].value,
                             picture: profile.photos[0].value
                         }
-               registerNewFbUser(user, r=>{
+               registerNewUser(user, r=>{
+                    if(r.success == false)  
+                        return cb(r.msg);
+                    return cb(null, r.user);
+               });
+      } else {
+            return cb(err, user);
+      }
+    });
+  };
+
+   function upsertGoogleUser(profile, cb) {
+    return User.findOne({
+          'google.id': profile.id
+    }, function(err, user) {
+        if(err)
+            return callback(err);
+      // no user was found, lets create a new one
+      if (!user) {
+            var user = {
+                            "google.id": profile.id,
+                            name: profile.given_name + ' ' + profile.family_name,
+                            email: profile.email,
+                            picture: profile.picture
+                        }
+                logger.error("profile: " + JSON.stringify(profile))
+               logger.error("user: ", user);
+               registerNewUser(user, r=>{
                     if(r.success == false)  
                         return cb(r.msg);
                     return cb(null, r.user);
@@ -336,10 +362,11 @@ module.exports.getFeed= getFeed;
 module.exports.changeProfilePicture= changeProfilePicture;
 module.exports.deleteProfilePicture= deleteProfilePicture;
 module.exports.findByIdLeanPromise= findByIdLeanPromise;
+module.exports.upsertGoogleUser = upsertGoogleUser;
 
 const emailVerification = require("./emailVerificationService");
 
-function registerNewUser(user, callback){
+function registerTemporaryUser(user, callback){
      bcrypt.genSalt(10,  function(err, salt) {
             bcrypt.hash(user.password, salt, function(err, hash){
                 user.password = hash;
@@ -348,19 +375,15 @@ function registerNewUser(user, callback){
         });
 };
 
-module.exports.registerNewUser= registerNewUser;
+module.exports.registerTemporaryUser= registerTemporaryUser;
 
 const cardService = require("./cardService");
 
-function registerNewFbUser(user, callback){
+function registerNewUser(user, callback){
     imgService.saveImgFromUrl(user.picture)
         .then(hash=>{
-                var newUser = new User();
-                newUser.email = user.email;
+                var newUser = new User(user);
                 newUser.thumbnail = hash;
-                newUser.name = user.name;
-                newUser.facebook.id = user.facebookId;
-                newUser.facebook.token = user.facebookToken;
                 newUser.save(err=>{
                             if(err){
                                 logger.error(err);
@@ -370,7 +393,7 @@ function registerNewFbUser(user, callback){
                     })
         })
     .catch(err=>{
-        logger.error("error when registering user with facebook,  " + err);
+        logger.error("error when registering user,  " + err);
         return callback({success:false, msg:err.toString()});
     })
 };

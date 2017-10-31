@@ -106,6 +106,8 @@ function downloadAndGetBuffer(url){
 
 //should calculate md5 like card imgs
 function saveImgFromUrl(url){
+    if(!url)
+        return Promise.resolve();
     return new Promise((resolve, reject)=>{
             downloadAndGetBuffer(url)
             .then(buffer=>{
