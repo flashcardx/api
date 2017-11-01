@@ -37,7 +37,8 @@ function loginUser(email, password, callback){
  function upsertFbUser(accessToken, refreshToken, profile, cb) {
     return User.findOne({
           'facebook.id': profile.id
-    }, function(err, user) {
+    }).exec()
+    .then(user=>{
       // no user was found, lets create a new one
       if (!user) {
             var user = {
@@ -52,17 +53,20 @@ function loginUser(email, password, callback){
                     return cb(null, r.user);
                });
       } else {
-            return cb(err, user);
+            return cb(null, user);
       }
+    })
+    .catch(err=>{
+        logger.error("error when loging with facebook: ", err);
+        return cb(err);
     });
   };
 
    function upsertGoogleUser(profile, cb) {
     return User.findOne({
           'google.id': profile.id
-    }, function(err, user) {
-        if(err)
-            return callback(err);
+    }).exec()
+    .then(user=>{
       // no user was found, lets create a new one
       if (!user) {
             var user = {
@@ -71,16 +75,18 @@ function loginUser(email, password, callback){
                             email: profile.email,
                             picture: profile.picture
                         }
-                logger.error("profile: " + JSON.stringify(profile))
-               logger.error("user: ", user);
-               registerNewUser(user, r=>{
+            registerNewUser(user, r=>{
                     if(r.success == false)  
                         return cb(r.msg);
                     return cb(null, r.user);
                });
       } else {
-            return cb(err, user);
+            return cb(null, user);
       }
+    })
+    .catch(err=>{
+        logger.error("error when loging with Google: ", err);
+        return cb(err);
     });
   };
 
@@ -204,7 +210,6 @@ function increaseCardCounter(userId){
         });
     })
 }
-
 
 
 function getPlan(userId, callback){
