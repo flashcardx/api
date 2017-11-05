@@ -21,7 +21,7 @@ module.exports = function(app){
      * @apiParam (Query) {string} [classname] If deck is in class, classname is required.
      * @apiParam (Body) {string} name card name.
      * @apiParam (Body) {string} [description] description for card.
-     * @apiParam (Body) {Array} [hashes] Array with image hashes(Up to 3), you need to call the image proxy method first for getting the hash.
+     * @apiParam (Body) {Array} [imgs] Array with objects containing image hashes(Up to 3) and size(width and height), you need to call the image proxy method first for getting the hash.
      * @apiHeader (Headers) {string} x-access-token user session token
      * @apiParamExample {json} Request-Example:
      * url: /card/c/59991371065a2544f7c90288?classname=unlam1
@@ -36,25 +36,26 @@ module.exports = function(app){
      *                  "_id":"ASY54RFRF5TOJB1XW"
      *                  "name": "car",
      *                  "description": "hello world",
-     *                  "imgs": [{"hash":"4f5f8dddrfoklh4",
-     *                            "width":"200",
-     *                            "height": 100},
-     *                             {"hash":"dcc6456deddddr",
-     *                            "width":"250",
-     *                            "height": 150}
-     *                          ]
+     *                  "imgs": [{"hash":"sdeed653eded",
+     *                            "width": "",
+     *                             "height":""
+     *                              },
+     *                              {"hash":"defcrdef56r4f",
+     *                               "width": "",
+     *                                "height": ""}]
      *              }
      *      }
      * @apiVersion 1.1.0
      *  */
     app.post("/card/:type/:deckId", controllerUtils.requireLogin, function(req, res){
+            logger.error("imgs: ", req.body.imgs);
             var card = {
                 name: purifier.purify(req.body.name),
-                description: purifier.purify(req.body.description)
+                description: purifier.purify(req.body.description),
+                imgs: req.body.imgs
              };
             var parameters = {
                 card: card,
-                imgs: req.body.imgs,
                 userId: req.userId,
                 deckId: req.params.deckId
             };
@@ -82,8 +83,7 @@ module.exports = function(app){
      * @apiParam (Parameters) {string} [deckId] id for the deck where the cards are. if undefined will return/search cards in all decks!
      * @apiParam (Query) {string} [classname] needed when type=c
      * @apiParam (Query) {string} [limit=12] limit how manny cards will be returned
-     * @apiParam (Query) {string} [sort=asc] sort asc or deck, sorts cards by last update date 
-     * @apiParam (Query) {string} [last] last for pagination needs 'updated_at' parameter of the last card listed 
+     * @apiParam (Query) {string} [skip=0] used for pagination, how manny to skip? 
      * @apiParam (Query) {string} [name] name send this parameter for searching by card name(reg expressions accepted)
      * @apiHeader (Headers) {string} x-access-token user session token
      * @apiParamExample {json} Request-Example:
@@ -98,9 +98,8 @@ module.exports = function(app){
      *  */
     app.get("/cards/:type/:deckId", controllerUtils.requireLogin, function(req, res){
         var params = {
-            last: req.query.last,
+            skip: req.query.skip,
             limit: req.query.limit,
-            sort: req.query.sort,
             name: req.query.q,
             deckId: req.params.deckId
         };

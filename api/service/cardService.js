@@ -293,28 +293,25 @@ function createUserCard(parameters, callback){
                             })
                             .then((result)=>{
                                 user = result;
-                                return imgService.downloadArray(parameters.imgs, parameters.userId, callback);
-                                var promises = parameters.imgs.map(img=>{
-                                    return imgService.increaseImgCounter(img.hash);
-                                });
+                                var promises = [];
+                               if(parameters.card.imgs)
+                                    promises = parameters.card.imgs.map(img=>{
+                                        return imgService.increaseImgCounter(img.hash);
+                                    });
+                                return Promise.all(promises);
                             })
                            .then(r=>{
                                 warning = r.warning;
                                 cardModel.ownerId = user._id;
                                 cardModel.ownerName = user.name;
-                                if(r.imgHashes)
-                                    cardModel.imgs = r.imgHashes.filter(v=>{
-                                        if(objectIsNotEmpty(v))
-                                            return true;
-                                        return false;
-                                    });
                                 return saveCardUser(cardModel, parameters.userId,  parameters.deckId);
                            })
                            .then(()=>{
+                                    const Kard = AWSService.replaceImgsUrl(cardModel.toJSON());
                                     if(!warning)
-                                        return callback({success:true, card: cardModel});
+                                        return callback({success:true, card: Kard});
                                     else
-                                        Promise.reject({success:"warning", card: cardModel, msg:"card was created but: " + warning});        
+                                        Promise.reject({success:"warning", card: Kard, msg:"card was created but: " + warning});        
                             })
                             .catch(msg=>{
                                  logger.error(msg);
