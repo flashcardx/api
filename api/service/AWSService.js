@@ -65,16 +65,19 @@ function removeFromS3(hash, callback){
 
 function replaceImgsUrl(Kard){
     var card = _.clone(Kard);
-    logger.error("card: " , card);// prints card: {imgs:[]}
-    card.imgs = "sex";
-    logger.error("new card: " , card); // prints new card: {imgs:[]}
+    card.imgs = card.imgs.map(img=>{
+        return {width: img.width,
+                height: img.height,
+                url: getImgUrl(img.hash)
+            }
+    });
     return card;
 }
 
-function getImgUrl(id){
-    if(!id)
+function getImgUrl(hash){
+    if(!hash)
         return undefined;
-    return credentials.cloudfrontUrl + id;
+    return credentials.cloudfrontUrl + hash;
 }
 
 module.exports = {

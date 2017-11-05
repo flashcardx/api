@@ -445,7 +445,6 @@ function saveNewDeck(deckModel, callback, classId, userId) {
             }
         })
         .then(()=>{
-            logger.error("hash: " + deckModel.thumbnail.hash);
             return imgService.increaseImgCounter(deckModel.thumbnail.hash);
         })
         .then(r=>{

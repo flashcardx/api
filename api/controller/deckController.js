@@ -30,9 +30,7 @@ module.exports = function(app){
  *          "thumbnail":{
  *              "hash": "xsxedede",
  *              "width": "200",
- *              "height": "56",
- *              "x": "0",
- *              "y": "0"    
+ *              "height": "56"
  *              }
  *    }
  * @apiSuccessExample {json} Success-Response:
