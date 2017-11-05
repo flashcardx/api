@@ -412,13 +412,34 @@ function verifyDeleteImg(ownerId, deckId) {
     });
 }
 
+function verifyCanHaveChild(deckId){
+    if(!deckId)
+        return Promise.resolve(DEFAULT_RECURSIVE_ORDER+1);
+    return findByIdLean(deckId, "recursiveOrder")
+    .then(deck=>{
+        if(!deck)
+            return Promise.reject("deck not found");
+        if(deck.recursiveOrder <= 0 )
+            return Promise.reject("This deck can't have decks inside, Maximum depth level reached");
+        else
+            return Promise.resolve(deck.recursiveOrder);
+    })
+    .catch(err=>{
+        return Promise.reject(err);
+    });
+    
+}
+
 function saveNewDeck(deckModel, callback, classId, userId) {
-    if (deckModel._id == deckModel.parentId)
-        return Promise.reject("Deck can not be its own parent ;)");
     var forClass = false;
     var user;
-    logger.error("deckModel: ", deckModel);
-    deckModel.save()
+    if (deckModel._id == deckModel.parentId)
+        return Promise.reject("Deck can not be its own parent ;)");
+    verifyCanHaveChild(deckModel.parentId)
+    .then(recursiveOrderParent=>{
+        deckModel.recursiveOrder = recursiveOrderParent - 1;
+        return deckModel.save();
+    })
     .then(()=>{
         if(classId){//when adding user followers this if will no longer be required
             forClass =true;
@@ -437,23 +458,20 @@ function saveNewDeck(deckModel, callback, classId, userId) {
             else
                 return Promise.resolve();
         })
-        .then(Class=>{
+    .then(Class=>{
             if(forClass == true){
                 if(!Class)
                     return Promise.reject("class not found");
                 feedService.publishDeckClassFeed(deckModel._id, classId, Class.name, userId, user.name);  
             }
-        })
-        .then(()=>{
-            return imgService.increaseImgCounter(deckModel.thumbnail.hash);
-        })
-        .then(r=>{
+    })
+    .then(r=>{
             return callback({ success: true, deck: deckModel });
-        })
-        .catch(err=>{
+    })
+    .catch(err=>{
             logger.error("error when saving deck: " + err);
             return callback({success:false, msg:err});
-        })
+    })
 }
 
 module.exports.create4User= create4User;
