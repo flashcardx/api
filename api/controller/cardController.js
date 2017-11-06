@@ -140,9 +140,13 @@ module.exports = function(app){
         const userId = req.userId;
         const classname = req.query.classname;
         switch (type) {
-            case "u":  cardService.deleteCard(cardId, userId);
+            case "u":  cardService.deleteCard(cardId, userId, r=>{
+                            return res.json(r);               
+                        });
                        break;
-            case "c":  classService.deleteCard(classname, cardId, userId);
+            case "c":  classService.deleteCard(classname, cardId, userId, r=>{
+                            return res.json(r);
+                        });
                        break;
             default: res.json({success:false, msg:"invalid type"});
                     break;
