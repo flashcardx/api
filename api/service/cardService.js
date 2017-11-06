@@ -114,7 +114,7 @@ function returnCards(err, cards, callback){
 }
 
 function deleteCard(cardId, userId, callback){
-    Card.find({_id:cardId, ownerId: userId, ownerType:"u"}).exec()
+    Card.findOne({_id:cardId, ownerId: userId, ownerType:"u"}, "imgs").lean().exec()
                         .then(card=>{
                              if(!card)
                                 return Promise.reject("Card id does not exist");
@@ -125,9 +125,6 @@ function deleteCard(cardId, userId, callback){
                          })
                          .then(()=>{
                                 return userService.increaseCardCounter(userId);
-                         })
-                         .then(()=>{
-                             return Promise.resolve();
                          })
                          .then(()=>{
                              return callback({success:true, msg:"Card deleted ok"});
