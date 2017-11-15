@@ -17,27 +17,15 @@ if(env==="production"){
 var s3 = new AWS.S3();
 var bucketName = credentials.bucketName;
 
-function saveToS3(key, contentType, data, callback){
-    var params = {Bucket: bucketName, Key: key, Body: data, ContentType: contentType};
-    s3.putObject(params, callback);
-}
-
-function saveToS3Buffer(key, data, callback){
-    var params = {Bucket: bucketName, Key: key, Body: data};
-    s3.putObject(params, callback);
-}
-
-
-function getImgFromS3(id, callback){
-    var keyName = id;
-    var bucketParams = {Bucket: bucketName, Key:keyName};
-    s3.getObject(bucketParams, (err, data)=>{
-        if(err){
-            logger.error(err);
-            return callback(err, null, null);
-        }
-        callback(null, data.ContentType, data.Body);
-});
+function saveToS3(key, contentType, data, callback, type){
+    logger.error("contentype before s3 upload: ", contentType);
+    key = generateKey(key, type);
+    var params = {Bucket: bucketName,
+                  Key: key,
+                  Body: data,
+                  ContentType: contentType,
+                  CacheControl: 'public, max-age=5184000'};
+    s3.upload(params, callback);
 }
 
 //IMAGES FROM CLOUD FRONT
@@ -52,7 +40,8 @@ function addTemporaryUrl(cards, callback){
 }
 
 
-function removeFromS3(hash, callback){
+function removeFromS3(hash, callback, type){
+    key = generateKey(key, type);
     var bucketParams = {Bucket: bucketName, Key:hash};
     s3.deleteObject(bucketParams, function(err, data) {
         if (err){
@@ -74,16 +63,24 @@ function replaceImgsUrl(Kard){
     return card;
 }
 
-function getImgUrl(hash){
-    if(!hash)
+function getImgUrl(key, type){
+    if(!key)
         return undefined;
-    return credentials.cloudfrontUrl + hash;
+    key = generateKey(key, type);
+    return credentials.cloudfrontUrl + key;
+}
+
+function generateKey(hash, type){
+    switch (type) {
+        case "thumbnail":
+            return "thumbnail/"+hash;
+        default:
+            return "images/"+hash;
+    }
 }
 
 module.exports = {
     saveToS3: saveToS3,
-    saveToS3Buffer: saveToS3Buffer,
-    getImgFromS3: getImgFromS3,
     removeFromS3: removeFromS3,
     addTemporaryUrl: addTemporaryUrl,
     replaceImgsUrl: replaceImgsUrl,

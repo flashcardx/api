@@ -1,7 +1,7 @@
 {
     "development":{
         "urlWeb":"http://localhost:8081",
-        "maxSizeUploadFiles": "4000000",
+        "maxSizeUploadFiles": "5000000",
         "jwtExpireTime": "2h",
         "cacheTime":{
             "dictionary": 604800,
@@ -10,7 +10,7 @@
     },
     "pi":{
         "urlWeb":"http://pi.flashcardx.co",
-        "maxSizeUploadFiles": "4000000",
+        "maxSizeUploadFiles": "5000000",
         "jwtExpireTime": "2h",
         "cacheTime":{
             "dictionary": 604800,
@@ -19,7 +19,7 @@
     },
     "production":{
         "urlWeb":"https://www.flashcardx.co",
-        "maxSizeUploadFiles": "4000000",
+        "maxSizeUploadFiles": "5000000",
         "jwtExpireTime": "2h",
         "cacheTime": {
             "dictionary": 604800,

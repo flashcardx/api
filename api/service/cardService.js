@@ -247,9 +247,6 @@ function createClassCard(parameters, classname, callback){
                                 Class = result;
                                 return deckService.validateOwnership(Class._id, parameters.deckId);
                             })
-                            .then(result=>{
-                                return imgService.downloadArray(parameters.imgs, parameters.userId, callback);
-                            })
                            .then(r=>{
                                 warning = r.warning;
                                 cardModel.ownerId = Class._id;

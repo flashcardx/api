@@ -30,7 +30,7 @@ module.exports = function(app){
  * @apiParamExample {json} Request-Example:
  * url: /imageProxy
  * body: {
- *         "url":"www.example.com/img.jpg"
+ *         "src":"www.example.com/img.jpg"
  *    }
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
@@ -41,15 +41,15 @@ module.exports = function(app){
  *  */
     app.post("/imageProxy", controllerUtils.requireLogin, upload.single('data'), (req, res)=>{
         const img = req.body;
-        if(img.url)
-            return imgService.proxyFromUrl(img.url, r=>{
+        if(img.src)
+            return imgService.proxyFromUrl(img.src, r=>{
                 res.json(r);
             });
         else if(req.file)
             return imgService.proxyFromBuffer(req.file.buffer, r=>{
                 res.json(r);
             });
-        else res.json({success:false, msg:"Img must have either url or data"});
+        else res.json({success:false, msg:"Img must have either src or data"});
     });
 
 }

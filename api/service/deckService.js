@@ -188,7 +188,7 @@ function childUserDecks(userId, parentId, skip=0, callback) {
         parameters.parentId = null;
     else
         parameters.parentId = parentId;
-    return findDecksByParams(parameters, 14, skip, "name _id thumbnail description lang", callback);    
+    return findDecksByParams(parameters, 14, skip, "name _id img description lang", callback);    
 }
 
 function childClassDecks(userId, parentId, classname, skip, callback) {
@@ -312,6 +312,11 @@ function findDecksByParams(parameters, limit, skip, fields, callback) {
         .lean()
         .exec()
         .then(r => {
+            logger.error("r: ", r);
+            r.forEach(deck=>{
+                if(deck.img)
+                    deck.img.src = AWSService.getImgUrl(deck.img.hash);
+            });
             return callback({ success: true, msg: r });
         })
         .catch(err => {
@@ -465,7 +470,14 @@ function saveNewDeck(deckModel, callback, classId, userId) {
                 feedService.publishDeckClassFeed(deckModel._id, classId, Class.name, userId, user.name);  
             }
     })
-    .then(r=>{
+    .then(()=>{
+            return imgService.increaseImgCounter(deckModel.img.hash);                            
+    })
+    .then(()=>{
+            logger.error("deckModel: ", deckModel);
+            deckModel = deckModel.toJSON();//needed for editing the object props
+            if(deckModel.img.hash)
+                deckModel.img.src = AWSService.getImgUrl(deckModel.img.hash);
             return callback({ success: true, deck: deckModel });
     })
     .catch(err=>{

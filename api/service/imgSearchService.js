@@ -83,7 +83,7 @@ function parseImgs(data){
         r.push({
                 preview: img.thumbnailUrl,
                 real: {
-                    url: img.contentUrl,
+                    src: img.contentUrl,
                     height: img.height,
                     width: img.width
                     }
@@ -98,7 +98,7 @@ function parseGifs(data){
         r.push({
                 preview: img.media[0].tinygif.url,
                 real: {
-                    url: img.media[0].mediumgif.url,
+                    src: img.media[0].mediumgif.url,
                     height: img.media[0].mediumgif.dims[1],
                     width: img.media[0].mediumgif.dims[0]
                     }

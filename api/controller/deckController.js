@@ -18,7 +18,7 @@ module.exports = function(app){
  * @apiParam (Request body) {string} [classname] needed if deck will be for a class.
  * @apiParam (Request body) {string} [parentId] required if new deck(child) is inside another deck(parent).
  * @apiParam (Request body) {string} [lang=en] Language code for the deck.
- * @apiParam (Request body) {string} [thumbnail] Image object containing: hash, width,height,x,y. Will be shown in the deck cover.
+ * @apiParam (Request body) {string} [img] Image object containing: hash, width,height,x,y. Will be shown in the deck cover.
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /deck/u
@@ -27,7 +27,7 @@ module.exports = function(app){
  *         "description": "beautiful people",
  *         "parentId": "5998f5ea23cbd123cf8becce",
  *         "lang": "es",
- *          "thumbnail":{
+ *          "img":{
  *              "hash": "xsxedede",
  *              "width": "200",
  *              "height": "56"
@@ -46,9 +46,11 @@ module.exports = function(app){
  * @apiVersion 1.1.0
  *  */
     app.post("/deck/:type", controllerUtils.requireLogin, (req, res)=>{
+        logger.error("at first got: ", req.body);
         switch (req.params.type) {
             case "u":
                     deckService.create4User(req.userId, req.body, r=>{
+                        logger.error("result: ", r);
                         return res.json(r);
                     })
                     break;
