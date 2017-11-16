@@ -1,6 +1,7 @@
 var appRoot = require("app-root-path");
 const Deck = require(appRoot + "/models/deckModel").deck;
 const cardService = require(appRoot + "/service/cardService");
+const imgService = require(appRoot + "/service/imgService");
 const config = require(appRoot + "/config");
 const mongoose = require("mongoose");
 mongoose.Promise = global.Promise;
@@ -22,14 +23,18 @@ process.on('message', msg=>{
 });
 
 function deleteDeck(deckId){
-   console.log("child process about to delete deck: ", deckId);
-   Deck.findOne({_id:deckId}, "decks ownerType ownerId")
+   logger.info("child process about to delete deck: ", deckId);
+   Deck.findOne({_id:deckId}, "decks img ownerType ownerId")
    .then(deck=>{
         if(!deck)
             return Promise.reject("deck not found");
         deleteCards(deck);
         deleteFromFeed(deck.ownerType, deckId, deck.ownerId);
         deck.remove();
+        imgService.deleteImgOnce(deck.img.hash, r=>{
+            if(r.success == false)
+                logger.fatal("error in child delete deck when deleting img of deck: ", r.msg);
+        });
         return  Deck.find({parentId:deckId}, "_id")
                 .lean()
                 .exec(); 

@@ -18,7 +18,7 @@ module.exports = function(app){
  * @apiParam (Request body) {string} [classname] needed if deck will be for a class.
  * @apiParam (Request body) {string} [parentId] required if new deck(child) is inside another deck(parent).
  * @apiParam (Request body) {string} [lang=en] Language code for the deck.
- * @apiParam (Request body) {string} [img] Image object containing: hash, width,height,x,y. Will be shown in the deck cover.
+ * @apiParam (Request body) {string} [img] Image object containing: hash, width,height. Will be shown in the deck cover.
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /deck/u
@@ -97,14 +97,15 @@ app.delete("/deckImg/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
 
 
 /**
- * @api {post} /updateDeck/:type/:deckId update deck
+ * @api {post} /editDeck/:type/:deckId edit deck
  * @apiGroup deck
- * @apiName update deck
- * @apiDescription update name/description/language of the deck. *Only defined parameters will be updated.
+ * @apiName edit deck
+ * @apiDescription edit name/description/language/image of the deck. *Only defined parameters will be updated.
  * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
  * @apiParam (Request body) {string} [name] name for the deck.
  * @apiParam (Request body) {string} [description] description for deck.
  * @apiParam (Request body) {string} [lang] Language code for the deck.
+ * @apiParam (Request body) {string} [img] Image object containing: hash, width,height. Will be shown in the deck cover.
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
  * url: /updateDeck/u/59991371065a2544f7c90288
@@ -114,11 +115,12 @@ app.delete("/deckImg/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
  *    }
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
- *     {"success":true
- *      }
+ *     {"success":true,
+ *      "deck": {"_id":xxxxx, "name":"name", lang:"xxse", etc} 
+ *     }
  * @apiVersion 1.1.0
  *  */
-app.post("/updateDeck/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
+app.post("/editDeck/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
     switch (req.params.type) {
             case "u":
                     deckService.update4User(req.userId, req.params.deckId, req.body, r=>{

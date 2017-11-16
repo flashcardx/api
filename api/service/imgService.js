@@ -22,9 +22,29 @@ function isFileFormatValid(format){
         case "image/jpeg": return true;
         case "image/gif": return true;
         case "image/png": return true;
+        case "text/html": return true;
         case "text/html; charset=UTF-8": return true;
     }
     return false;
+}
+
+function genAndSaveThumbnail(hash, buffer){
+    var image = {
+        timesUsed: 1,
+        hash: hash
+    }; 
+    logger.error("old image: ", image);  
+    var newImg = new Img(image);
+    logger.error("about to save image: ", newImg);
+    return newImg.save()
+            .exec()
+            .then(r=>{
+                genSmallThumbnailAndSaveToS3(hash, buffer, r=>{
+                    if(r.success == true)
+                        return Promise.resolve();
+                    return Promise.reject(r.msg);
+                });
+            });
 }
 
 function genSmallThumbnailAndSaveToS3(name, buffer, callback){
@@ -105,14 +125,18 @@ function downloadAndGetBuffer(url){
     });
 }
 
+function saveThumbnailFromUrl(url){
+    return saveImgFromUrl(url, "thumbnail");
+}
+
 //should calculate md5 like card imgs
-function saveImgFromUrl(url){
+function saveImgFromUrl(url, type){
     if(!url)
         return Promise.resolve();
     return new Promise((resolve, reject)=>{
             downloadAndGetBuffer(url)
             .then(r=>{
-                return saveImgFromBuffer(r.buffer, r.contentType);
+                return saveImgFromBuffer(r.buffer, r.contentType, type);
             })        
             .then(hash=>{
                 return resolve(hash);
@@ -123,8 +147,7 @@ function saveImgFromUrl(url){
         });
 }
 
-function saveImgFromBuffer(buffer, contentType=fileType(buffer).mime){
-    console.log("time 2: ", new Date().getTime());
+function saveImgFromBuffer(buffer, contentType=fileType(buffer).mime, type){
     return new Promise((resolve, reject)=>{
             const hash = md5(buffer);
             AWSService.saveToS3(hash, contentType, buffer, err=>{
@@ -137,7 +160,7 @@ function saveImgFromBuffer(buffer, contentType=fileType(buffer).mime){
                         return reject(err);
                     return resolve(hash);
                 });    
-            });
+            }, type);
     })
 }
 
@@ -189,6 +212,7 @@ function increaseImgCounter(hash){
 }
 
 function deleteImgOnce(hash, callback){
+    logger.error("hash: ", hash);
     Img.findOne({'hash': hash})
                      .exec()
                      .then(img=>{
@@ -224,8 +248,6 @@ function deleteImgOnce(hash, callback){
                      });
 
 };
-
-
 
 function deleteImgsOnce(imgs){
     return new Promise((resolve, reject)=>{
@@ -273,7 +295,9 @@ module.exports = {
     deleteImgOnce: deleteImgOnce,
     genSmallThumbnailAndSaveToS3: genSmallThumbnailAndSaveToS3,
     proxyFromUrl: proxyFromUrl,
-    proxyFromBuffer:proxyFromBuffer,
+    proxyFromBuffer: proxyFromBuffer,
     saveImgFromUrl: saveImgFromUrl,
     increaseImgCounter: increaseImgCounter,
+    genAndSaveThumbnail: genAndSaveThumbnail,
+    saveThumbnailFromUrl: saveThumbnailFromUrl
 }

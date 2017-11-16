@@ -28,18 +28,51 @@ function create4User(userId, deck, callback) {
 }
 
 function update4User(userId, deckId, deck, callback) {
-    Deck.findOne({ _id: deckId, ownerId: userId, active: true }, "_id name description")
-        .then(d => {
-            if (!d)
+    var deckModelBackup,
+        oldHash,
+        newHash;
+    Deck.findOne({ _id: deckId, ownerId: userId, active: true }, "_id name description img")
+        .then(deckModel => {
+            if (!deckModel)
                 return callback({ success: false, msg: "Deck not found" });
-            d.name = deck.name;
-            d.description = deck.description;
-            d.lang = deck.lang;
-            d.update(d, err => {
-                if (err)
+            deckModel.name = deck.name;
+            deckModel.description = deck.description;
+            deckModel.lang = deck.lang;
+            deckModelBackup = deckModel;
+            if(deck.img && deckModel.img.hash != deck.img.hash){
+                oldHash = deckModel.img.hash;
+                deckModel.img = deck.img;
+                newHash = deckModel.img.hash;
+            }
+            return deckModel.update(deckModel)
+            .lean()
+            .exec();
+        })
+        .then(()=>{
+            if(oldHash){
+                logger.error("1");
+                return imgService.increaseImgCounter(newHash)
+                .then(()=>{
+                    logger.error(2);
+                    logger.error("old hash: ", oldHash);
+                    imgService.deleteImgOnce(oldHash, r=>{
+                        logger.error(3);
+                        if(r.success)
+                            return Promise.resolve();
+                        return Promise.reject(r.msg);
+                    });
+                })
+                .catch(err=>{
                     return Promise.reject(err);
-                return callback({ success: true });
-            });
+                })
+            }
+            return Promise.resolve();
+        })
+        .then(()=>{
+                var deckModel = deckModelBackup.toJSON();//needed for editing the object props
+                if(deckModel.img.hash)
+                    deckModel.img.src = AWSService.getImgUrl(deckModel.img.hash); 
+                return callback({ success: true, deck: deckModel});
         })
         .catch(err => {
             logger.error("when updating deck: " + err);
@@ -117,7 +150,7 @@ function delete4User(userId, deckId, callback) {
         .lean()
         .exec()
         .then(d => {
-            if (d.nModified == 0)
+            if(d.nModified == 0)
                 return callback({ success: false, msg: "deck not found or user is not the deck owner" });
             childProcess.deleteDeckSubP(deckId);
             return callback({ success: true });
@@ -432,7 +465,6 @@ function verifyCanHaveChild(deckId){
     .catch(err=>{
         return Promise.reject(err);
     });
-    
 }
 
 function saveNewDeck(deckModel, callback, classId, userId) {
@@ -447,7 +479,7 @@ function saveNewDeck(deckModel, callback, classId, userId) {
     })
     .then(()=>{
         if(classId){//when adding user followers this if will no longer be required
-            forClass =true;
+            forClass = true;
             return userService.findByIdLeanPromise(userId, "name")
         }
         else

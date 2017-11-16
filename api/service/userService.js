@@ -273,25 +273,17 @@ function increaseNotificationPriority(userId){
 }
 
 function setImage(user, buffer, callback){
-                newThumbnail = new Img;
-                newThumbnail.hash = newThumbnail._id;
-                newThumbnail.save(err=>{
-                        if (err){
-                                logger.error("error when saving thumbnail: "+err);
-                                return callback({success:false, msg:err});
-                        }
-                        User.update({_id:user._id}, {$set:{thumbnail: newThumbnail.hash}})
-                        .exec()
-                        .then(r=>{
-                            imgService.genSmallThumbnailAndSaveToS3(newThumbnail.hash, buffer, r=>{
-                                return callback({success:true});
-                            });
-                        })
-                        .catch(err=>{
-                            logger.error(err);
-                            return callback({success:false, msg: err});
-                        });
-                });
+            imgService.genAndSaveThumbnail(newThumbnail._id, buffer)
+            .then(r=>{
+                return User.update({_id:user._id}, {$set:{thumbnail: newThumbnail.hash}});
+            })
+            .then(()=>{
+                   return callback({success:true});   
+            })
+            .catch(err=>{
+                    logger.error(err);
+                    return callback({success:false, msg: err});
+            });      
 }
 
 function changeProfilePicture(userId, buffer, callback){
@@ -385,8 +377,13 @@ module.exports.registerTemporaryUser= registerTemporaryUser;
 const cardService = require("./cardService");
 
 function registerNewUser(user, callback){
-    imgService.saveImgFromUrl(user.picture)
-        .then(hash=>{
+    var hash;
+    imgService.saveThumbnailFromUrl(user.picture)
+        .then(h=>{
+            hash = h;
+            return imgService.increaseImgCounter(hash);
+        })
+        .then(()=>{
                 var newUser = new User(user);
                 newUser.thumbnail = hash;
                 newUser.save(err=>{

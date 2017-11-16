@@ -18,7 +18,6 @@ var s3 = new AWS.S3();
 var bucketName = credentials.bucketName;
 
 function saveToS3(key, contentType, data, callback, type){
-    logger.error("contentype before s3 upload: ", contentType);
     key = generateKey(key, type);
     var params = {Bucket: bucketName,
                   Key: key,
@@ -41,8 +40,8 @@ function addTemporaryUrl(cards, callback){
 
 
 function removeFromS3(hash, callback, type){
-    key = generateKey(key, type);
-    var bucketParams = {Bucket: bucketName, Key:hash};
+    const key = generateKey(hash, type);
+    var bucketParams = {Bucket: bucketName, Key: key};
     s3.deleteObject(bucketParams, function(err, data) {
         if (err){
             logger.error("error when removing image from s3: " + err);   
@@ -73,7 +72,7 @@ function getImgUrl(key, type){
 function generateKey(hash, type){
     switch (type) {
         case "thumbnail":
-            return "thumbnail/"+hash;
+            return "thumbnails/"+hash;
         default:
             return "images/"+hash;
     }
