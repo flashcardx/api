@@ -339,6 +339,7 @@ function replaceImgs(oldImgs, newImgs){
 
 
 function updateCard(id, userId, card, callback){
+    logger.error("card: ", card);
     var Doc;
     Card.findOne({ '_id': id, ownerId: userId, ownerType:"u"}, "name description _id imgs")
     .exec()
@@ -367,9 +368,10 @@ function updateCard(id, userId, card, callback){
             return Promise.resolve();
     })
     .then(()=>{
-       return replaceImgs(Doc.imgs, card.imgs);
+       return replaceImgs(Doc.imgs, card.imgs.slice());
     })
     .then(()=>{
+        logger.error("imgs: ", card.imgs);
         Doc.imgs = card.imgs;
         return Promise.resolve();
     })

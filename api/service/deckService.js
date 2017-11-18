@@ -345,7 +345,6 @@ function findDecksByParams(parameters, limit, skip, fields, callback) {
         .lean()
         .exec()
         .then(r => {
-            logger.error("r: ", r);
             r.forEach(deck=>{
                 if(deck.img)
                     deck.img.src = AWSService.getImgUrl(deck.img.hash);
