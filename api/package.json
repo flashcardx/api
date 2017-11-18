@@ -66,6 +66,7 @@
     "request": "^2.81.0",
     "requestify": "^0.2.5",
     "shutterstock": "^0.13.0",
+    "speaker": "^0.4.0",
     "string": "^3.3.3",
     "xss-filters": "^1.2.7"
   },
