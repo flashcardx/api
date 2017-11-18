@@ -56,7 +56,8 @@ function replaceImgsUrl(Kard){
     card.imgs = card.imgs.map(img=>{
         return {width: img.width,
                 height: img.height,
-                url: getImgUrl(img.hash)
+                hash: img.hash,
+                src: getImgUrl(img.hash)
             }
     });
     return card;

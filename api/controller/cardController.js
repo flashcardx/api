@@ -7,72 +7,11 @@ const Cards = require(appRoot + "/models/cardModel");
 const cardService = require(appRoot + "/service/cardService");
 const classService = require(appRoot + "/service/class/classService");
 const practiceCardsService = require(appRoot + "/service/practiceCardsService");
+const { check, body, validationResult } = require('express-validator/check');
+const { matchedData, sanitize } = require('express-validator/filter');
 
 module.exports = function(app){
     const controllerUtils = require(appRoot + "/middleware").utils(app);
-
-    /**
-     * @api {post} /card/:type/:deckId create card
-     * @apiGroup card
-     * @apiName create card
-     * @apiDescription create card inside deck.
-     * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
-     * @apiParam (Parameters) {string} deckId id for the deck where card will be created.
-     * @apiParam (Query) {string} [classname] If deck is in class, classname is required.
-     * @apiParam (Body) {string} name card name.
-     * @apiParam (Body) {string} [description] description for card.
-     * @apiParam (Body) {Array} [imgs] Array with objects containing image hashes(Up to 3) and size(width and height), you need to call the image proxy method first for getting the hash.
-     * @apiHeader (Headers) {string} x-access-token user session token
-     * @apiParamExample {json} Request-Example:
-     * url: /card/c/59991371065a2544f7c90288?classname=unlam1
-     * body: { "name":"car",
-     *          "description": "a ferrari",
-     *          "hashes":["dcc6456deddddr", "4f5f8dddrfoklh4"]
-     *      }
-     * @apiSuccessExample {json} Success-Response:
-     *     HTTP/1.1 200 OK
-     *     {"success":true,
-     *      "card": {   
-     *                  "_id":"ASY54RFRF5TOJB1XW"
-     *                  "name": "car",
-     *                  "description": "hello world",
-     *                  "imgs": [{"hash":"sdeed653eded",
-     *                            "width": "",
-     *                             "height":""
-     *                              },
-     *                              {"hash":"defcrdef56r4f",
-     *                               "width": "",
-     *                                "height": ""}]
-     *              }
-     *      }
-     * @apiVersion 1.1.0
-     *  */
-    app.post("/card/:type/:deckId", controllerUtils.requireLogin, function(req, res){
-            logger.error("imgs: ", req.body.imgs);
-            var card = {
-                name: purifier.purify(req.body.name),
-                description: purifier.purify(req.body.description),
-                imgs: req.body.imgs
-             };
-            var parameters = {
-                card: card,
-                userId: req.userId,
-                deckId: req.params.deckId
-            };
-            switch (req.params.type){
-                case "u": cardService.createUserCard(parameters, result=>{
-                            res.json(result);
-                        });
-                        break;
-                case "c": cardService.createClassCard(parameters, req.query.classname, result=>{
-                            res.json(result);
-                         });
-                         break;
-                default: return res.json({success:false, msg:"invalid type"}); 
-            }
-    });
-
-
 
     /**
      * @api {get} /cards/:type/:deckId get cards
@@ -191,11 +130,94 @@ module.exports = function(app){
                 }
     });
 
-     /**
-     * @api {post} /updateCard/:type/:cardId update card
+    /**
+     * @api {post} /card/:type/:deckId create card
      * @apiGroup card
-     * @apiName update card
-     * @apiDescription updates card's name and description, *undefined values wont be updated.
+     * @apiName create card
+     * @apiDescription create card inside deck.
+     * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
+     * @apiParam (Parameters) {string} deckId id for the deck where card will be created.
+     * @apiParam (Query) {string} [classname] If deck is in class, classname is required.
+     * @apiParam (Body) {string} name card name.
+     * @apiParam (Body) {string} [description] description for card.
+     * @apiParam (Body) {Array} [imgs] Array with objects containing image hashes(Up to 3) and size(width and height), you need to call the image proxy method first for getting the hash.
+     * @apiHeader (Headers) {string} x-access-token user session token
+     * @apiParamExample {json} Request-Example:
+     * url: /card/c/59991371065a2544f7c90288?classname=unlam1
+     * body: { "name":"car",
+     *          "description": "a ferrari",
+     *          "hashes":["dcc6456deddddr", "4f5f8dddrfoklh4"]
+     *      }
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {"success":true,
+     *      "card": {   
+     *                  "_id":"ASY54RFRF5TOJB1XW"
+     *                  "name": "car",
+     *                  "description": "hello world",
+     *                  "imgs": [{"hash":"sdeed653eded",
+     *                            "width": "",
+     *                             "height":""
+     *                              },
+     *                              {"hash":"defcrdef56r4f",
+     *                               "width": "",
+     *                                "height": ""}]
+     *              }
+     *      }
+     * @apiVersion 1.1.0
+     *  */
+    app.post("/card/:type/:deckId", controllerUtils.requireLogin, 
+    [
+        check('name', 'Flashcard name must be at least 1 character long and less than 40 characters')
+        .isLength({ min: 1, max:40}),
+        check('description', 'Flashcard description must be less than 850 characters')
+        .isLength({max:850}),
+         check('imgs')
+        .custom(imgs => {
+            if(!Array.isArray(imgs))
+                throw new Error("Imgs must be an array");
+            if(imgs.length > 3)
+                throw new Error("Card can not have more than 3 imgs");
+            imgs.forEach((img1, index1)=>{
+                imgs.forEach((img2, index2)=>{
+                    if(index1 != index2)
+                        if(img1.hash == img2.hash)
+                            throw new Error('Yo can not have the same image twice in a flashcard');
+                });
+            });
+        })
+    ],
+    function(req, res){
+        if(!req.body.description && req.body.imgs.length == 0)
+            return res.json({success:false, msg:"Card needs description or at least some multimedia content"});    
+        var card = {
+                name: purifier.purify(req.body.name),
+                description: purifier.purify(req.body.description),
+                imgs: req.body.imgs
+             };
+            var parameters = {
+                card: card,
+                userId: req.userId,
+                deckId: req.params.deckId
+            };
+            switch (req.params.type){
+                case "u": cardService.createUserCard(parameters, result=>{
+                            res.json(result);
+                        });
+                        break;
+                case "c": cardService.createClassCard(parameters, req.query.classname, result=>{
+                            res.json(result);
+                         });
+                         break;
+                default: return res.json({success:false, msg:"invalid type"}); 
+            }
+    });
+
+     /**
+     * @api {post} /editCard/:type/:cardId edit card
+     * @apiGroup card
+     * @apiName edit card
+     * @apiDescription edit card's data, *undefined values wont be updated.
      * @apiParam (Parameters) {string} type u:user, c:class.
      * @apiParam (Parameters) {string} cardId id of the card to be updated.
      * @apiParam (Query) {string} [classname] needed when type=c.
@@ -204,24 +226,58 @@ module.exports = function(app){
      * @apiParam (Request body) {string} [deckId] if defined card will be moved to this deck, the deck of destiny must be in the same user or class that the source deck.
      * @apiHeader (Headers) {string} x-access-token user session token
      * @apiParamExample {json} Request-Example:
-     * url: /updateCard/u/59991371065a2544f7c90288
+     * url: /editCard/u/59991371065a2544f7c90288
      * body: { "name":"car",
      *          "description": "a ferrari updated"
      *      }
      * @apiSuccessExample {json} Success-Response:
      *     HTTP/1.1 200 OK
-     *     {"success":true
+     *     {"success":true,
+     *       "card": {   
+     *                  "_id":"ASY54RFRF5TOJB1XW"
+     *                  "name": "car",
+     *                  "description": "hello world",
+     *                  "imgs": [{"hash":"sdeed653eded",
+     *                            "width": "",
+     *                             "height":""
+     *                              },
+     *                              {"hash":"defcrdef56r4f",
+     *                               "width": "",
+     *                                "height": ""}]
+     *              }
      *      }
      * @apiVersion 1.1.0
      *  */
-    app.post("/updateCard/:type/:cardId",  controllerUtils.requireLogin, (req, res)=>{
+    app.post("/editCard/:type/:cardId",  controllerUtils.requireLogin, [
+        check('name', 'Flashcard name must be at least 1 character long and less than 40 characters')
+        .isLength({ min: 1, max:40}),
+        check('description', 'Flashcard description must be less than 850 characters')
+        .isLength({max:850}),
+        check("imgs")
+        .custom(imgs=>{
+            if(!Array.isArray(imgs))
+                throw new Error("Imgs must be an array");
+            if(imgs.length > 3)
+                throw new Error("Card can not have more than 3 imgs");
+            imgs.forEach((img1, index1)=>{
+                imgs.forEach((img2, index2)=>{
+                    if(index1 != index2)
+                        if(img1.hash == img2.hash)
+                            throw new Error('Yo can not have the same image twice in a flashcard');
+                });
+            });
+        })
+    ], (req, res)=>{
+        if(!req.body.description && req.body.imgs.length == 0)
+            return res.json({success:false, msg:"Card needs description or at least some multimedia content"});
         const cardId = req.params.cardId;
         const classname = req.query.classname;
         const userId = req.userId;
         const card = {
             name : purifier.purify(req.body.name),
             description : purifier.purify(req.body.description),
-            deckId: deckId
+            deckId: req.body.deckId,
+            imgs: req.body.imgs
         }
         switch (req.params.type){
                 case "u": cardService.updateCard(cardId, userId, card, r=>{

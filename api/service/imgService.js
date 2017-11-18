@@ -212,7 +212,6 @@ function increaseImgCounter(hash){
 }
 
 function deleteImgOnce(hash, callback){
-    logger.error("hash: ", hash);
     Img.findOne({'hash': hash})
                      .exec()
                      .then(img=>{

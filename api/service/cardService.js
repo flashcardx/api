@@ -313,10 +313,34 @@ function createUserCard(parameters, callback){
                             });
 };
 
+function replaceImgs(oldImgs, newImgs){
+        var promises = [];
+        oldImgs.forEach((img1, index1)=>{
+            shouldStay = false;
+            newImgs.forEach((img2, index2)=>{
+                if(img1.hash == img2.hash){
+                    shouldStay = true;
+                    newImgs.splice(index2, 1);
+                }    
+            });
+            if(!shouldStay){
+                promises.push(imgService.deleteImgOnce(img1.hash, r=>{
+                    if(r.success)
+                        return Promise.resolve();
+                    return Promise.reject(r.msg);
+                }));
+            }
+        });
+        newImgs.forEach(img=>{
+                promises.push(imgService.increaseImgCounter(img.hash));
+        })
+        return Promise.all(promises);
+    }
+
 
 function updateCard(id, userId, card, callback){
     var Doc;
-    Card.findOne({ '_id': id, ownerId: userId, ownerType:"u"}, "name description _id")
+    Card.findOne({ '_id': id, ownerId: userId, ownerType:"u"}, "name description _id imgs")
     .exec()
     .then(doc=>{
             if(!doc){
@@ -342,13 +366,21 @@ function updateCard(id, userId, card, callback){
             }
             return Promise.resolve();
     })
+    .then(()=>{
+       return replaceImgs(Doc.imgs, card.imgs);
+    })
+    .then(()=>{
+        Doc.imgs = card.imgs;
+        return Promise.resolve();
+    })
     .then(()=>{ 
-            Doc.update(Doc, (err, updatedCard)=>{
+            Doc.update(Doc, (err, result)=>{
                     if(err){
                             logger.error(err);
                             return Promise.reject(err);
                         }
-                    return callback({success:true});
+                    const kard = AWSService.replaceImgsUrl(Doc.toJSON());
+                    return callback({success:true, card:kard});
             });
     })
     .catch(err=>{
