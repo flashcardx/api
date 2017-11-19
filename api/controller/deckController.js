@@ -254,8 +254,8 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
  *     {"success":true,
- *      "decks": [{"description":"a very nice deck", "name": "deck1", id:"59991371065a2544f7c90288", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "es"},
- *                {"description":"a nice deck","name": "math", id:"59991371065a2544fasd8888", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "en"}]
+ *      "decks": [{"description":"a very nice deck", "name": "deck1", "_id":"59991371065a2544f7c90288", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "es"},
+ *                {"description":"a nice deck","name": "math", "_id":"59991371065a2544fasd8888", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "en"}]
  *      }
  * @apiVersion 1.1.0
  *  */
@@ -275,6 +275,33 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
         }
 });
 
-
-
+/**
+ * @api {get} /decksName/:type/:deckId Get decks names and ids inside deck
+ * @apiGroup deck
+ * @apiName Get decks inside deck
+ * @apiDescription Returns all decks(name, id) inside a deck, it has a limit of 50 objects, TODO: add pagination for returning more objects.
+ * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
+ * @apiParam (Query) {string} [deckId] id of the parent deck, if not specified returns all decks in root.
+ * @apiParam (Query) {string} [classname] needed when type=c.
+ * @apiHeader (Headers) {string} x-access-token user session token
+ * @apiParamExample {json} Request-Example:
+ * url: /decks/u/59991371065a2544f7c9028c
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true,
+ *      "decks": [{"name": "deck1", "_id":"59991371065a2544f7c90288"},
+ *                {"name": "math", "_id":"59991371065a2544fasd8888"}]
+ *      }
+ * @apiVersion 1.1.0
+ *  */
+app.get("/decksName/:type", controllerUtils.requireLogin, (req, res)=>{
+        switch (req.params.type) {
+            case "u":
+                    deckService.listDeckName(req.userId, req.query.deckId, r=>{
+                        return res.json(r);
+                    })
+                    break;
+            default: return res.json({success:false, msg:"invalid type"}); 
+        }
+    });
 }

@@ -211,6 +211,20 @@ function allUserDecks(userId, callback) {
         })
 }
 
+function listDeckName(userId, deckId, callback){
+    var parameters = {
+        ownerId: userId,
+        ownerType: "u",
+        active: true
+    };
+    if(!deckId)
+        parameters.parentId = null;
+    else
+        parameters.parentId = deckId;
+    return findDecksByParams(parameters, 50, 0, "name _id", callback);    
+
+}
+
 function childUserDecks(userId, parentId, skip=0, callback) {
     var parameters = {
         ownerId: userId,
@@ -534,6 +548,7 @@ module.exports.childUserDecks= childUserDecks;
 module.exports.childClassDecks= childClassDecks;
 module.exports.duplicate2User= duplicate2User;
 module.exports.duplicate2Class= duplicate2Class;
+module.exports.listDeckName= listDeckName;
 
 
 const classService = require("./class/classService");
