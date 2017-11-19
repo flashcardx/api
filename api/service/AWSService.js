@@ -82,14 +82,91 @@ function generateKey(hash, type){
     }
 }
 
+function chooseLanguageActor(lang){
+    switch(lang){
+        //Danish
+        case "da-DK":
+            return "Naja";
+        //Dutch
+        case "nl-NL":
+            return "Lotte";
+        //English (Australian)
+        case "en-AU":
+            return "Nicole";
+        //English (British)
+        case "en-GB":
+            return "Amy";
+        //English (Indian)
+        case "en-IN":
+            return "Aditi";
+        //English (Welsh)
+        case "en-GB-WLS":
+            return "Geraint" 
+        //French
+        case "fr-FR":
+            return "Celine";  
+        //French (Canadian)
+        case "fr-CA":
+            return "Chantal"; 
+        //German
+        case "de-DE":
+            return "Marlene"; 
+        //Icelandic
+        case "is-IS":
+            return "Dora";     
+        //Italian
+        case "it-IT":
+            return "Carla";   
+        //Japanese
+        case "ja-JP":
+            return "Mizuki";   
+        //Korean
+        case "ko-KR":
+            return "Seoyeon";   
+        //Norwegian
+        case "nb-NO":
+            return "Liv";   
+        //Polish
+        case "pl-PL":
+            return "Ewa";  
+        //Portuguese (Brazilian)
+        case "pt-BR":
+            return "Vitoria"; 
+        //Romanian
+        case "ro-RO":
+            return "Carmen"; 
+        //Russian
+        case "ru-RU":
+            return "Tatyana"; 
+        //Spanish (Castilian)
+        case "es-ES":
+            return "Conchita";
+        //Spanish (Latin American)
+        case "es-US":
+            return "Penelope"; 
+        //Swedish
+        case "sv-SE":
+            return "Astrid"; 
+        //Turkish
+        case "tr-TR":
+            return "Filiz";
+        //Welsh
+        case "cy-GB":
+            return "Gwyneth"; 
+        //English
+        default:
+            return "Joanna";
+    }
+}
+
 function textToSpeech(lang, text){
     return new Promise((resolve, reject)=>{
         const ssml = "<speak><prosody volume='x-loud' rate='slow'><lang xml:lang='"+lang+"'>"+text+"</lang></prosody></speak>"
+        var voiceId = chooseLanguageActor(lang);
         let params = {
             OutputFormat: "ogg_vorbis",
             Text: ssml,
-            VoiceId: "Joanna",
-            VoiceId: "Salli",
+            VoiceId: voiceId,
             TextType: "ssml"
         }
         polly.synthesizeSpeech(params, (err, data) => {
