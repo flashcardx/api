@@ -267,7 +267,7 @@ function deleteImgsOnce(imgs){
 function proxyFromUrl(url, callback){
     saveImgFromUrl(url)
     .then(hash=>{
-        return callback({success:true, hash:hash, src: AWSService.getImgUrl(hash)});
+        return callback({success:true, hash:hash, src: AWSService.getUrl(hash)});
     })
     .catch(err=>{
         logger.error("error in proxyfromurl: ", err);
@@ -279,7 +279,7 @@ function proxyFromBuffer(buffer, callback){
     console.log("time 1: ", new Date().getTime());
     saveImgFromBuffer(buffer)
     .then(hash=>{
-        return callback({success:true, hash:hash, src: AWSService.getImgUrl(hash)});
+        return callback({success:true, hash:hash, src: AWSService.getUrl(hash)});
     })
     .catch(err=>{
         logger.error("error in proxyfromurl: ", err);

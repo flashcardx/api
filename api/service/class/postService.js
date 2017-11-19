@@ -40,7 +40,7 @@ function post(classname, userId, text, callback){
     .then(r=>{
             feedService.publishPost(r._id, Class._id, classname, userId, r.userId.name);
                 if(r.userId.thumbnail)
-                    r.userId.thumbnail = AWSService.getImgUrl(r.userId.thumbnail);
+                    r.userId.thumbnail = AWSService.getUrl(r.userId.thumbnail);
             return callback({success:true, msg:r});
     })
     .catch(err=>{

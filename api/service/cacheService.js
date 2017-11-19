@@ -22,6 +22,11 @@ function putDictionaryResults(lang, q, msg){
     client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
 }
 
+function putPollyResults(lang, q, msg){ 
+    var cacheKey = genKeyPollyResults(lang, q);
+    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
+}
+
 function getBingResults(q){
     var cacheKey = genKeyBingResults(q);
     return getResults(cacheKey);
@@ -34,6 +39,11 @@ function getGifResults(q){
 
 function getDictionaryResults(lang, q){
     var cacheKey = genKeyDictionaryResults(lang, q);
+    return getResults(cacheKey);
+}
+
+function getPollyResults(lang, q){
+    var cacheKey = genKeyPollyResults(lang, q);
     return getResults(cacheKey);
 }
 
@@ -62,6 +72,10 @@ function genKeyDictionaryResults(lang, q){
     return "DictionaryCache" + lang+ "-" + q;
 }
 
+function genKeyPollyResults(lang, q){
+    return "PollyCache" + lang+ "-" + q;
+}
+
 
 
 
@@ -71,5 +85,7 @@ module.exports = {
     putGifResults: putGifResults,
     getGifResults: getGifResults,
     putDictionaryResults: putDictionaryResults,
-    getDictionaryResults: getDictionaryResults
+    getDictionaryResults: getDictionaryResults,
+    putPollyResults: putPollyResults,
+    getPollyResults: getPollyResults
 };

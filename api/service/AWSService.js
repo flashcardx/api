@@ -3,8 +3,11 @@ const env = process.env.NODE_ENV || "development";
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const credentials = config.AWSCredentials;
+const Polly = require(appRoot + "/models/imgModel");
 var AWS = require('aws-sdk');
 const _ = require("lodash");
+const cacheService = require("./cacheService");
+const md5 = require("md5");
 AWS.config = new AWS.Config();
 AWS.config.accessKeyId = credentials.accessKeyId;
 AWS.config.secretAccessKey = credentials.secretAccessKey;
@@ -33,7 +36,7 @@ function addTemporaryUrl(cards, callback){
         return callback({success:true, msg:[]});
     var expireAfter = 600; //url expires after 600 seconds
     cards.forEach((card, i)=>{
-        cards[i] = replaceImgsUrl(cards[i]);
+        cards[i] = replaceUrl(cards[i]);
     });
     return callback({success:true, cards: cards});
 }
@@ -51,19 +54,19 @@ function removeFromS3(hash, callback, type){
         });
 };
 
-function replaceImgsUrl(Kard){
+function replaceUrl(Kard){
     var card = _.clone(Kard);
     card.imgs = card.imgs.map(img=>{
         return {width: img.width,
                 height: img.height,
                 hash: img.hash,
-                src: getImgUrl(img.hash)
+                src: getUrl(img.hash)
             }
     });
     return card;
 }
 
-function getImgUrl(key, type){
+function getUrl(key, type){
     if(!key)
         return undefined;
     key = generateKey(key, type);
@@ -71,19 +74,63 @@ function getImgUrl(key, type){
 }
 
 function generateKey(hash, type){
+    console.log(type);
     switch (type) {
         case "thumbnail":
             return "thumbnails/"+hash;
+        case "audio":
+            return "audios/"+hash;
         default:
             return "images/"+hash;
     }
+}
+
+//aws polly
+const AWSPolly = new AWS.Polly();
+
+function savePollyFromBuffer(hash,buffer,contentType,type,lang,words){
+        saveToS3(hash, contentType, buffer, err=>{
+            if(err)
+                return logger.error("cant save polly: " + err);
+            cacheService.putPollyResults(lang,words,hash);
+            return hash;
+        }, type);
+}
+
+
+function playSound(lang, words,callback){
+    let params = {
+        OutputFormat: "mp3",
+        Text: words, 
+        VoiceId: "Salli"
+    }
+    AWSPolly.synthesizeSpeech(params, (err, data) => {
+        if (err) {
+            logger.error("Failed to process text to speech: " + err.code);
+        } else {
+            if(data){
+                if (data.AudioStream instanceof Buffer) {
+                    var hash = md5(data.AudioStream);
+                    savePollyFromBuffer(hash,data.AudioStream,'mp3','audio',lang,words);
+                    return callback({success:true, hash:hash, src: getUrl(hash,'audio')});
+                }
+            }
+            // // Initiate the source
+            // var bufferStream = new Stream.PassThrough()
+            // // convert AudioStream into a readable stream
+            // bufferStream.end(data.AudioStream);
+            // // Pipe into Player
+            // bufferStream.pipe(getPlayer());
+        }
+    })
 }
 
 module.exports = {
     saveToS3: saveToS3,
     removeFromS3: removeFromS3,
     addTemporaryUrl: addTemporaryUrl,
-    replaceImgsUrl: replaceImgsUrl,
-    getImgUrl: getImgUrl
+    replaceUrl: replaceUrl,
+    getUrl: getUrl,
+    playSound: playSound
 }
 

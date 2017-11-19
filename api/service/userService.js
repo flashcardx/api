@@ -443,7 +443,7 @@ function enrichDeckTypeOne4Feed(obj, feed){
                         }
                         deck.type = obj.type;
                         deck.id = obj.id;
-                        deck.thumbnail = AWSService.getImgUrl(deck.thumbnail);
+                        deck.thumbnail = AWSService.getUrl(deck.thumbnail);
                         deck.username = obj.username;
                         deck.userId = obj.userId;
                         deck.classId = obj.classId
