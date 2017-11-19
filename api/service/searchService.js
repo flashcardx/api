@@ -4,14 +4,9 @@ const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const requestify = require('requestify'); 
 const cacheService = require("./cacheService");
-const shutterstock = require('shutterstock');
-const pixabayBaseUrl = `${config.APIPixabayUrl}/?key=${config.APIPixabayKey}`;
+const AWSService = require("./AWSService");
 const MAX_PER_PAGE = 20;
 const MINIMUM = 15;
-const shutterstockAPI = shutterstock.v2({
-  clientId: '2a32fb3e058e7de16156',
-  clientSecret: '0d096f428d635dd82c83ed3b87116370c2825255',
-});
 
 function searchBing(q, clientIp, callback){
     if(!clientIp){
@@ -77,6 +72,30 @@ function searchGif(q, callback){
     });
 }
 
+function textToSpeech(lang, text, callback){
+     cacheService.getTextToSpeechResults(lang, text)
+            .then(data=>{
+                if(data){
+                    return callback({success:true, msg:AWSService.getUrl(data,'audio')});
+                }else{
+                    return AWSService.textToSpeech(lang, text);
+                }
+            })
+            .then(data=>{
+                logger.error("data: ", data);
+                var key = lang+"-"+text;
+                AWSService.saveToS3(key, data.contentType, data.buffer, err=>{
+                    if(err)
+                        return Promise.reject("save to s3 error: ", err);
+                    return callback({success:true, msg:AWSService.getUrl(key,'audio')});
+                }, "audio");
+            })
+            .catch(err=>{
+                logger.error("cache text to speech error: ", err);
+                return callback({success:false, msg:err});
+            });
+}
+
 function parseImgs(data){
     var r = [];
     data.forEach(img=>{
@@ -109,5 +128,6 @@ function parseGifs(data){
 
 module.exports = {
         searchBing: searchBing,
-        searchGif: searchGif
+        searchGif: searchGif,
+        textToSpeech: textToSpeech
 }

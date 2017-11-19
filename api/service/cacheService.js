@@ -7,46 +7,45 @@ const client = redis.createClient({
 });
 const logger = config.getLogger(__filename);
 
-function putBingResults(q, msg){ 
-    var cacheKey = genKeyBingResults(q);
+function putImageResults(q, msg){ 
+    var cacheKey = genKeyImage(q);
     client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeImageSearch);//cache time in seconds
 }
 
 function putGifResults(q, msg){ 
-    var cacheKey = genKeyGifResults(q);
+    var cacheKey = genKeyGif(q);
     client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeImageSearch); //cache time in seconds
 }
 
 function putDictionaryResults(lang, q, msg){ 
-    var cacheKey = genKeyDictionaryResults(lang, q);
+    var cacheKey = genKeyDictionary(lang, q);
     client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
 }
 
-function putPollyResults(lang, q, msg){ 
-    var cacheKey = genKeyPollyResults(lang, q);
-    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
+function putTextToSpeechResults(lang, q, msg){ 
+    var cacheKey = genKeyTextToSpeech(lang, q);
+    client.hmset(cacheKey, ["result", JSON.stringify(msg), "date", new Date()]);
 }
 
-function getBingResults(q){
-    var cacheKey = genKeyBingResults(q);
+function getImageResults(q){
+    var cacheKey = genKeyImage(q);
     return getResults(cacheKey);
 }
 
 function getGifResults(q){
-    var cacheKey = genKeyGifResults(q);
+    var cacheKey = genKeyGif(q);
     return getResults(cacheKey);
 }
 
 function getDictionaryResults(lang, q){
-    var cacheKey = genKeyDictionaryResults(lang, q);
+    var cacheKey = genKeyDictionary(lang, q);
     return getResults(cacheKey);
 }
 
-function getPollyResults(lang, q){
-    var cacheKey = genKeyPollyResults(lang, q);
-    return getResults(cacheKey);
+function getTextToSpeechResults(lang, q){
+    var cacheKey = genKeyTextToSpeech(lang, q);
+    return getResults(cacheKey + " result");
 }
-
 
 function getResults(cacheKey){
     return new Promise((resolve, reject)=>{
@@ -60,32 +59,33 @@ function getResults(cacheKey){
     });
 }
 
-function genKeyBingResults(q){
-    return "BingCache" + q;
+function genKeyImage(q){
+    return "ImageCache" + q;
 }
 
-function genKeyGifResults(q){
+function genKeyGif(q){
     return "GifCache" + q;
 }
 
-function genKeyDictionaryResults(lang, q){
-    return "DictionaryCache" + lang+ "-" + q;
+function genKeyDictionary(lang, q){
+    return "DictionaryCache" + lang + "-" + q;
 }
 
-function genKeyPollyResults(lang, q){
-    return "PollyCache" + lang+ "-" + q;
+function genKeyTextToSpeech(lang, q){
+    // we add the date so we can track unused old records in the future
+    return "TextToSpeechCache" + lang + "-" + q;
 }
 
 
 
 
 module.exports = {
-    putBingResults: putBingResults,
-    getBingResults: getBingResults,
+    putImageResults: putImageResults,
+    getImageResults: getImageResults,
     putGifResults: putGifResults,
     getGifResults: getGifResults,
     putDictionaryResults: putDictionaryResults,
     getDictionaryResults: getDictionaryResults,
-    putPollyResults: putPollyResults,
-    getPollyResults: getPollyResults
+    putTextToSpeechResults: putTextToSpeechResults,
+    getTextToSpeechResults: getTextToSpeechResults
 };

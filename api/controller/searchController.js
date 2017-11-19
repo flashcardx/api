@@ -6,8 +6,9 @@ const requestify = require('requestify');
 const S = require("string");
 const userService = require(appRoot + "/service/userService");
 const dictionaryService = require(appRoot + "/service/dictionaryService");
-const imgSearchService = require(appRoot + "/service/imgSearchService");
-const shutterstock = require('shutterstock');
+const searchService = require(appRoot + "/service/searchService");
+const { param} = require('express-validator/check');
+const {validateLang} = require(appRoot +"/utils/validator");
 
 module.exports = function(app){
     const controllerUtils = require(appRoot + "/middleware").utils(app);
@@ -16,7 +17,7 @@ module.exports = function(app){
                                 controllerUtils.getIp,
                                 (req,res)=>{
                const clientIp = req.ip;
-               imgSearchService.searchBing(req.params.q, clientIp, result=>{
+               searchService.searchBing(req.params.q, clientIp, result=>{
                     return res.json(result);
                });
         });
@@ -33,7 +34,7 @@ module.exports = function(app){
  * @apiVersion 1.0.0
  *  */
     app.get("/searchGif/:q", controllerUtils.requireLogin, function(req,res){
-        imgSearchService.searchGif(req.params.q, result=>{
+        searchService.searchGif(req.params.q, result=>{
             return res.json(result);
         });
     });
@@ -52,4 +53,41 @@ module.exports = function(app){
             });
         });
 
+
+        /**
+     * @api {get} /textToSpeech/:lang/:text textToSPeech
+     * @apiGroup search
+     * @apiName textToSPeech
+     * @apiDescription receives lang and text and returns URL for downloading audio file.
+     * @apiParam (Parameters) {string} lang ISO 2 letter lang code.
+     * @apiParam (Parameters) {string} Text to make speech of, max 40 characters
+     * @apiHeader (Headers) {string} x-access-token user session token
+     * @apiParamExample {Parameter} Request-Example:
+     * curl localhost:3000/textToSpeech/es/holis
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {"success":true,
+     *       "msg": "https://d2pkpj1gudc0wt.cloudfront.net/audio/eddrr7f8f8f7d4fg"
+     *      }
+     * @apiVersion 1.0.0
+     *  */
+    app.get('/textToSpeech/:lang/:text', [
+         param('text', 'text character limit reached')
+        .isLength({ min: 1, max: 40 }),
+        
+         param("lang")
+        .custom(lang=>{
+                if(!validateLang(lang)){
+                    logger.error("lang not valid: ", lang);
+                    throw new Error("Lang is not valid");
+                }
+                return true;
+        })
+    ], 
+    controllerUtils.checkValidatorErrors,
+    (req,res) => {
+            searchService.textToSpeech(req.params.lang, req.params.text, r=>{
+                return res.json(r);
+            });
+    })
 };
