@@ -34,7 +34,7 @@ module.exports = function(app){
         const userId = req.userId;
         userService.findById(userId, "name email -_id thumbnail", r=>{
             if(r.success == true)
-                r.msg.thumbnail = AWSService.getImgUrl(r.msg.thumbnail);
+                r.msg.thumbnail = AWSService.getUrl(r.msg.thumbnail);
             return res.json(r);
         });
     });
@@ -42,7 +42,7 @@ module.exports = function(app){
     app.get("/getUserInfo/:email",  controllerUtils.requireLogin, (req, res)=>{
         userService.findByEmail(req.params.email, "name thumbnail", r=>{
             if(r.success == true)
-                r.msg.thumbnail = AWSService.getImgUrl(r.msg.thumbnail);
+                r.msg.thumbnail = AWSService.getUrl(r.msg.thumbnail);
             return res.json(r);
         });
     });

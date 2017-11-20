@@ -185,9 +185,10 @@ module.exports = function(app){
                             throw new Error('Yo can not have the same image twice in a flashcard');
                 });
             });
+            return true;
         })
-    ],
-    function(req, res){
+    ], controllerUtils.checkValidatorErrors,
+     (req, res)=>{
         if(!req.body.description && req.body.imgs.length == 0)
             return res.json({success:false, msg:"Card needs description or at least some multimedia content"});    
         var card = {
@@ -248,7 +249,7 @@ module.exports = function(app){
      *      }
      * @apiVersion 1.1.0
      *  */
-    app.post("/editCard/:type/:cardId",  controllerUtils.requireLogin, [
+    app.post("/editCard/:type/:cardId", controllerUtils.requireLogin, [
         check('name', 'Flashcard name must be at least 1 character long and less than 40 characters')
         .isLength({ min: 1, max:40}),
         check('description', 'Flashcard description must be less than 850 characters')
@@ -266,8 +267,9 @@ module.exports = function(app){
                             throw new Error('Yo can not have the same image twice in a flashcard');
                 });
             });
+            return true;
         })
-    ], (req, res)=>{
+    ], controllerUtils.checkValidatorErrors, (req, res)=>{
         if(!req.body.description && req.body.imgs.length == 0)
             return res.json({success:false, msg:"Card needs description or at least some multimedia content"});
         const cardId = req.params.cardId;

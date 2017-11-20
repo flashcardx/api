@@ -71,7 +71,7 @@ function update4User(userId, deckId, deck, callback) {
         .then(()=>{
                 var deckModel = deckModelBackup.toJSON();//needed for editing the object props
                 if(deckModel.img.hash)
-                    deckModel.img.src = AWSService.getImgUrl(deckModel.img.hash); 
+                    deckModel.img.src = AWSService.getUrl(deckModel.img.hash); 
                 return callback({ success: true, deck: deckModel});
         })
         .catch(err => {
@@ -361,7 +361,7 @@ function findDecksByParams(parameters, limit, skip, fields, callback) {
         .then(r => {
             r.forEach(deck=>{
                 if(deck.img)
-                    deck.img.src = AWSService.getImgUrl(deck.img.hash);
+                    deck.img.src = AWSService.getUrl(deck.img.hash);
             });
             return callback({ success: true, msg: r });
         })
@@ -522,7 +522,7 @@ function saveNewDeck(deckModel, callback, classId, userId) {
             logger.error("deckModel: ", deckModel);
             deckModel = deckModel.toJSON();//needed for editing the object props
             if(deckModel.img.hash)
-                deckModel.img.src = AWSService.getImgUrl(deckModel.img.hash);
+                deckModel.img.src = AWSService.getUrl(deckModel.img.hash);
             return callback({ success: true, deck: deckModel });
     })
     .catch(err=>{

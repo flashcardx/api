@@ -2,6 +2,8 @@ const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const jwt = require('jsonwebtoken');
+const { validationResult } = require('express-validator/check');
+
 module.exports = function(app){
 
      return {
@@ -26,6 +28,13 @@ module.exports = function(app){
                           return res.json({ success: false, errorCode:1, msg: 'No token provided' });            
                       }
                     },
+        checkValidatorErrors: (req, res, next)=>{
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(422).json({ errors: errors.mapped() });
+            }
+              next();
+        },
         getIp: (req, res, next)=>{
           req.ip = req.headers['x-forwarded-for'] || 
                    req.connection.remoteAddress || 

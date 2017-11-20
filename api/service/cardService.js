@@ -301,7 +301,7 @@ function createUserCard(parameters, callback){
                                 return saveCardUser(cardModel, parameters.userId,  parameters.deckId);
                            })
                            .then(()=>{
-                                    const Kard = AWSService.replaceImgsUrl(cardModel.toJSON());
+                                    const Kard = AWSService.replaceUrl(cardModel.toJSON());
                                     if(!warning)
                                         return callback({success:true, card: Kard});
                                     else
@@ -381,7 +381,7 @@ function updateCard(id, userId, card, callback){
                             logger.error(err);
                             return Promise.reject(err);
                         }
-                    const kard = AWSService.replaceImgsUrl(Doc.toJSON());
+                    const kard = AWSService.replaceUrl(Doc.toJSON());
                     return callback({success:true, card:kard});
             });
     })

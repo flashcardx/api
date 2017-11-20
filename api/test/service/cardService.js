@@ -12,11 +12,9 @@ const setup = require("./setup");
 describe("cardService", ()=>{
         var userId,
             userDeckId,
-            classname = "my class",
             classDeckId,
             classId,
-            cardIdUser,
-            cardIdClass;
+            cardIdUser;
     
         before(done=>{
             setup.dropDatabase()
@@ -33,12 +31,6 @@ describe("cardService", ()=>{
                 return deckModel.save();
             })
             .then(()=>{
-                var c = {name:classname, descripcion:"abc", owner:userId};
-                var classModel = new Class(c);
-                classId = classModel._id;
-                return classModel.save();
-            })
-            .then(()=>{
                 var deck = {name:"testdeckclass", description:"abc", ownerId: classId};
                 var deckModel = new Deck(deck);
                 classDeckId = deckModel._id;
@@ -48,12 +40,6 @@ describe("cardService", ()=>{
                 var card = {name: "test", description:"I can fly", ownerType:"u", ownerId: userId, deckId: userDeckId};
                 var cardModel = new Card(card);
                 cardIdUser = cardModel._id;
-                return cardModel.save();
-            })
-            .then(()=>{
-                var card = {name: "card class", description:"I can fly in a class", ownerType:"c", ownerId: classId, deckId: classDeckId};
-                var cardModel = new Card(card);
-                cardIdClass = cardModel._id;
                 return cardModel.save();
             })
             .then(()=>{
@@ -91,19 +77,6 @@ describe("cardService", ()=>{
         });
     });
 
-    it("create class card", done=>{
-        var card = {name:"test2"};
-        var parameters = {
-            card: card,
-            userId: userId,
-            deckId: classDeckId
-        };
-        cardService.createClassCard(parameters, classname, r=>{
-            assert.equal(r.success, true);
-            done();
-        });
-    });
-
     it("duplicate card user to user" ,done=>{
         cardService.duplicateCard2User(userId, cardIdUser, userDeckId, r=>{
                 assert.equal(r.success, true);
@@ -115,22 +88,14 @@ describe("cardService", ()=>{
         var parameters = {deckId: userDeckId};
         cardService.getCards(userId, parameters, r=>{
                 assert.equal(r.success, true);
-                assert.equal(r.msg.length, 4);
+                assert.equal(r.cards.length, 4);
                 done();
         });
     });
 
-    it("Get class cards" ,done=>{
-        var parameters = {deckId: classDeckId};
-        cardService.getClassCardsUnsafe(classId, parameters, r=>{
-                assert.equal(r.success, true);
-                assert.equal(r.msg.length, 2);
-                done();
-        });
-    });
 
     it("update user card" ,done=>{
-        var card = {name:"updated card"};
+        var card = {name:"updated card", imgs:[]};
         cardService.updateCard(cardIdUser, userId, card, r=>{
                 assert.equal(r.success, true);
                 done();
@@ -138,7 +103,7 @@ describe("cardService", ()=>{
     });
 
     it("update user card, change deck should fail" ,done=>{
-        var card = {name:"updated card", deckId: classDeckId};
+        var card = {name:"updated card", deckId: classDeckId, imgs:[]};
         cardService.updateCard(cardIdUser, userId, card, r=>{
                 assert.equal(r.success, false);
                 done();
@@ -146,7 +111,7 @@ describe("cardService", ()=>{
     });
 
     it("update user card, change deck" ,done=>{
-        var card = {name:"updated card", deckId: userDeckId};
+        var card = {name:"updated card", deckId: userDeckId, imgs:[]};
         cardService.updateCard(cardIdUser, userId, card, r=>{
                 assert.equal(r.success, true);
                 done();

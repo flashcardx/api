@@ -7,36 +7,53 @@ const client = redis.createClient({
 });
 const logger = config.getLogger(__filename);
 
-function putBingResults(q, msg){ 
-    var cacheKey = genKeyBingResults(q);
+function putImageResults(q, msg){ 
+    var cacheKey = genKeyImage(q);
     client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeImageSearch);//cache time in seconds
 }
 
 function putGifResults(q, msg){ 
-    var cacheKey = genKeyGifResults(q);
+    var cacheKey = genKeyGif(q);
     client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeImageSearch); //cache time in seconds
 }
 
 function putDictionaryResults(lang, q, msg){ 
-    var cacheKey = genKeyDictionaryResults(lang, q);
+    var cacheKey = genKeyDictionary(lang, q);
     client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
 }
 
-function getBingResults(q){
-    var cacheKey = genKeyBingResults(q);
+function putTextToSpeechResults(lang, q){ 
+    var cacheKey = genKeyTextToSpeech(lang, q);
+    // we save the date so we can track old files
+    client.set(cacheKey, new Date());
+}
+
+function getImageResults(q){
+    var cacheKey = genKeyImage(q);
     return getResults(cacheKey);
 }
 
 function getGifResults(q){
-    var cacheKey = genKeyGifResults(q);
+    var cacheKey = genKeyGif(q);
     return getResults(cacheKey);
 }
 
 function getDictionaryResults(lang, q){
-    var cacheKey = genKeyDictionaryResults(lang, q);
+    var cacheKey = genKeyDictionary(lang, q);
     return getResults(cacheKey);
 }
 
+function getTextToSpeechResults(lang, q){
+    var cacheKey = genKeyTextToSpeech(lang, q);
+    return getResults(cacheKey)
+    .then(r=>{
+        if(r){
+            putTextToSpeechResults(lang, q);
+            return Promise.resolve(r);
+        }
+        return Promise.resolve();
+    });
+}
 
 function getResults(cacheKey){
     return new Promise((resolve, reject)=>{
@@ -45,31 +62,49 @@ function getResults(cacheKey){
                     logger.error("error when getting data from redis: " + err);
                     return reject(err);
                 }
-            return resolve(JSON.parse(data));
+            var json;
+            try
+            {
+                json = JSON.parse(data);
+            }
+            catch(e)
+            {
+                //if gets here, objects is not json
+                json = data;
+            }
+            return resolve(data);
         });
     });
 }
 
-function genKeyBingResults(q){
-    return "BingCache" + q;
+function genKeyImage(q){
+    return "ImageCache" + q;
 }
 
-function genKeyGifResults(q){
+function genKeyGif(q){
     return "GifCache" + q;
 }
 
-function genKeyDictionaryResults(lang, q){
-    return "DictionaryCache" + lang+ "-" + q;
+function genKeyDictionary(lang, q){
+    return "DictionaryCache" + lang + "-" + q;
+}
+
+function genKeyTextToSpeech(lang, q){
+    // we add the date so we can track unused old records in the future
+    return "TextToSpeechCache" + lang + "-" + q;
 }
 
 
 
 
 module.exports = {
-    putBingResults: putBingResults,
-    getBingResults: getBingResults,
+    putImageResults: putImageResults,
+    getImageResults: getImageResults,
     putGifResults: putGifResults,
     getGifResults: getGifResults,
     putDictionaryResults: putDictionaryResults,
-    getDictionaryResults: getDictionaryResults
+    getDictionaryResults: getDictionaryResults,
+    putTextToSpeechResults: putTextToSpeechResults,
+    getTextToSpeechResults: getTextToSpeechResults,
+    genKeyTextToSpeech: genKeyTextToSpeech
 };

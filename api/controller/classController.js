@@ -187,7 +187,7 @@ module.exports = function(app){
                 if(!r)
                     return res.json({success:false, msg:"could not find class"});
                 if(r.thumbnail)
-                    r.thumbnail = AWSService.getImgUrl(r.thumbnail);
+                    r.thumbnail = AWSService.getUrl(r.thumbnail);
                 return res.json({success:true, msg:r});
         })
         .catch(err=>{
@@ -243,11 +243,11 @@ module.exports = function(app){
         postService.getPosts(classname, userId, lastId, r=>{
             r.msg.forEach((p, index)=>{ 
                 if(p.userId.thumbnail && p.userId.thumbnail.length < 28){
-                    r.msg[index].userId.thumbnail = AWSService.getImgUrl(p.userId.thumbnail);
+                    r.msg[index].userId.thumbnail = AWSService.getUrl(p.userId.thumbnail);
                 }
                 p.comments.forEach((c, commentIndex)=>{
                         if(c.userId.thumbnail && c.userId.thumbnail.length < 28)
-                            r.msg[index].comments[commentIndex].userId.thumbnail = AWSService.getImgUrl(c.userId.thumbnail);    
+                            r.msg[index].comments[commentIndex].userId.thumbnail = AWSService.getUrl(c.userId.thumbnail);    
                     })
             })
             return res.json(r);
@@ -289,7 +289,7 @@ module.exports = function(app){
             if(r.success == true)
                 r.msg[reaction].usersId.forEach((user, index)=>{
                     if(user.thumbnail)
-                        r.msg[reaction].usersId[index].thumbnail = AWSService.getImgUrl(user.thumbnail); 
+                        r.msg[reaction].usersId[index].thumbnail = AWSService.getUrl(user.thumbnail); 
                 })
             return res.json(r);
         })
@@ -304,7 +304,7 @@ module.exports = function(app){
             if(r.success == true)
                 r.msg.comments[0][reaction].usersId.forEach((user, index)=>{
                     if(user.thumbnail)
-                        r.msg.comments[0][reaction].usersId[index].thumbnail = AWSService.getImgUrl(user.thumbnail); 
+                        r.msg.comments[0][reaction].usersId[index].thumbnail = AWSService.getUrl(user.thumbnail); 
                 })
             return res.json(r);
         })

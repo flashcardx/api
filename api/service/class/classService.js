@@ -92,7 +92,7 @@ function listAll(userId, callback){
             return callback(r);
         var Classes = r.msg;
         Classes.forEach(c=>{
-            c.thumbnail = AWSService.getImgUrl(c.thumbnail);
+            c.thumbnail = AWSService.getUrl(c.thumbnail);
         })
         return callback({success:true, msg:Classes});
     });
@@ -201,7 +201,7 @@ function search(name, userId, callback){
         .then(doc=>{
             if(!doc)
                 return callback({success:true});
-            doc.thumbnail = AWSService.getImgUrl(doc.thumbnail);
+            doc.thumbnail = AWSService.getUrl(doc.thumbnail);
             return callback({success:true, msg:doc, userId:userId});
         })
         .catch(err=>{
@@ -220,7 +220,7 @@ function recommendClasses(userId, callback){
         .then(r=>{
             if(r){
                 r.forEach(c=>{
-                    c.thumbnail = AWSService.getImgUrl(c.thumbnail);
+                    c.thumbnail = AWSService.getUrl(c.thumbnail);
                 });
                 return callback({success:true, msg: r, userId: userId});
             }
@@ -657,7 +657,7 @@ function getStats(classname, userId, callback){
     .then(Class=>{
         if(!Class)
             return Promise.reject("Either class does not exist or user is not in the class");
-        Class.thumbnail = AWSService.getImgUrl(Class.thumbnail);
+        Class.thumbnail = AWSService.getUrl(Class.thumbnail);
         return callback({success:true, msg:Class});
     })
     .catch(err=>{
@@ -678,10 +678,10 @@ function getClassIntegrants(classname, userId, callback){
         .exec()
         .then(r=>{
                 if(r.owner.thumbnail)
-                    r.owner.thumbnail = AWSService.getImgUrl(r.owner.thumbnail);
+                    r.owner.thumbnail = AWSService.getUrl(r.owner.thumbnail);
                 r.integrants.forEach((v, i)=>{
                     if(r.integrants[i].thumbnail)
-                        r.integrants[i].thumbnail = AWSService.getImgUrl(v.thumbnail);
+                        r.integrants[i].thumbnail = AWSService.getUrl(v.thumbnail);
                 });
                 return callback({success:true, msg:r});
         })
