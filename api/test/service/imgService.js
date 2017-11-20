@@ -11,7 +11,7 @@ const Class = require(appRoot + "/models/classModel");
 var fs = require("fs");
 const setup = require("./setup");
 
-describe.only("img service", ()=>{
+describe("img service", ()=>{
 
         before(done=>{
             setup.dropDatabase()

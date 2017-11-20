@@ -73,22 +73,26 @@ function searchGif(q, callback){
 }
 
 function textToSpeech(lang, text, callback){
+     const key = cacheService.genKeyTextToSpeech(lang, text);
      cacheService.getTextToSpeechResults(lang, text)
             .then(data=>{
                 if(data){
-                    return callback({success:true, msg:AWSService.getUrl(data,'audio')});
+                    return Promise.resolve();
                 }else{
                     return AWSService.textToSpeech(lang, text);
                 }
             })
             .then(data=>{
-                logger.error("data: ", data);
-                var key = lang+"-"+text;
+                if(!data)
+                    return Promise.resolve();
                 AWSService.saveToS3(key, data.contentType, data.buffer, err=>{
                     if(err)
                         return Promise.reject("save to s3 error: ", err);
-                    return callback({success:true, msg:AWSService.getUrl(key,'audio')});
+                    return cacheService.putTextToSpeechResults(lang, text);
                 }, "audio");
+            })
+            .then(()=>{
+                return callback({success:true, msg:AWSService.getUrl(key,'audio')});
             })
             .catch(err=>{
                 logger.error("cache text to speech error: ", err);

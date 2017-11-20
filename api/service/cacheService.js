@@ -22,9 +22,10 @@ function putDictionaryResults(lang, q, msg){
     client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
 }
 
-function putTextToSpeechResults(lang, q, msg){ 
+function putTextToSpeechResults(lang, q){ 
     var cacheKey = genKeyTextToSpeech(lang, q);
-    client.hmset(cacheKey, ["result", JSON.stringify(msg), "date", new Date()]);
+    // we save the date so we can track old files
+    client.set(cacheKey, new Date());
 }
 
 function getImageResults(q){
@@ -44,7 +45,14 @@ function getDictionaryResults(lang, q){
 
 function getTextToSpeechResults(lang, q){
     var cacheKey = genKeyTextToSpeech(lang, q);
-    return getResults(cacheKey + " result");
+    return getResults(cacheKey)
+    .then(r=>{
+        if(r){
+            putTextToSpeechResults(lang, q);
+            return Promise.resolve(r);
+        }
+        return Promise.resolve();
+    });
 }
 
 function getResults(cacheKey){
@@ -54,7 +62,17 @@ function getResults(cacheKey){
                     logger.error("error when getting data from redis: " + err);
                     return reject(err);
                 }
-            return resolve(JSON.parse(data));
+            var json;
+            try
+            {
+                json = JSON.parse(data);
+            }
+            catch(e)
+            {
+                //if gets here, objects is not json
+                json = data;
+            }
+            return resolve(data);
         });
     });
 }
@@ -87,5 +105,6 @@ module.exports = {
     putDictionaryResults: putDictionaryResults,
     getDictionaryResults: getDictionaryResults,
     putTextToSpeechResults: putTextToSpeechResults,
-    getTextToSpeechResults: getTextToSpeechResults
+    getTextToSpeechResults: getTextToSpeechResults,
+    genKeyTextToSpeech: genKeyTextToSpeech
 };

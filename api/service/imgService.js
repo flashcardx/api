@@ -107,7 +107,6 @@ function downloadAndGetBuffer(url){
                         return reject(err);
                     options.url = res.request.uri.href;
                     const contentType = res.headers['content-type'];
-                    logger.error('content-type: ' + contentType);
                     if(res.headers['content-length'] > config.MaxSizeUpFiles)
                         return reject("Size of file too big, size: " + res.headers['content-length']);
                     if(!isFileFormatValid(contentType))

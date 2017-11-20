@@ -60,13 +60,13 @@ module.exports = function(app){
      * @apiName textToSPeech
      * @apiDescription receives lang and text and returns URL for downloading audio file.
      * @apiParam (Parameters) {string} lang ISO 2 letter lang code.
-     * @apiParam (Parameters) {string} Text to make speech of, max 40 characters
+     * @apiParam (Parameters) {string} Text to make speech of, max 40 characters NOTE: YOU MUST ENCODE THIS FIELD, CAUSE THIS IS PART OF THE URL, OTHERWISE CHARACERS LIKE '?' WILL GET LOOSE
      * @apiHeader (Headers) {string} x-access-token user session token
      * @apiParamExample {Parameter} Request-Example:
      * curl localhost:3000/textToSpeech/es/holis
      * @apiSuccessExample {json} Success-Response:
      *     HTTP/1.1 200 OK
-     *     {"success":true,
+     *     {"success":"true",
      *       "msg": "https://d2pkpj1gudc0wt.cloudfront.net/audio/eddrr7f8f8f7d4fg"
      *      }
      * @apiVersion 1.0.0
@@ -83,7 +83,8 @@ module.exports = function(app){
                 }
                 return true;
         })
-    ], 
+    ],
+    controllerUtils.requireLogin,
     controllerUtils.checkValidatorErrors,
     (req,res) => {
             searchService.textToSpeech(req.params.lang, req.params.text, r=>{

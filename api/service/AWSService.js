@@ -76,85 +76,72 @@ function generateKey(hash, type){
         case "thumbnail":
             return "thumbnail/"+hash;
         case "audio":
-            return "audio/"+hash;
+            return "audio/"+encodeURIComponent(hash);
         default:
             return "image/"+hash;
     }
 }
 
 function chooseLanguageActor(lang){
+    logger.error("lang: ", lang);
     switch(lang){
+        //Spanish (Latin American)
+        case "es":
+            return "Penelope"; 
+        //English
+        case "en":
+            return "Joanna";
         //Danish
-        case "da-DK":
+        case "da":
             return "Naja";
         //Dutch
-        case "nl-NL":
+        case "nl":
             return "Lotte";
-        //English (Australian)
-        case "en-AU":
-            return "Nicole";
-        //English (British)
-        case "en-GB":
-            return "Amy";
-        //English (Indian)
-        case "en-IN":
-            return "Aditi";
-        //English (Welsh)
-        case "en-GB-WLS":
-            return "Geraint" 
         //French
-        case "fr-FR":
+        case "fr":
             return "Celine";  
-        //French (Canadian)
-        case "fr-CA":
-            return "Chantal"; 
         //German
-        case "de-DE":
+        case "de":
             return "Marlene"; 
         //Icelandic
-        case "is-IS":
+        case "is":
             return "Dora";     
         //Italian
-        case "it-IT":
+        case "it":
             return "Carla";   
         //Japanese
-        case "ja-JP":
+        case "ja":
             return "Mizuki";   
         //Korean
-        case "ko-KR":
+        case "ko":
             return "Seoyeon";   
         //Norwegian
-        case "nb-NO":
+        case "nb":
             return "Liv";   
         //Polish
-        case "pl-PL":
+        case "pl":
             return "Ewa";  
         //Portuguese (Brazilian)
-        case "pt-BR":
+        case "pt":
             return "Vitoria"; 
         //Romanian
-        case "ro-RO":
+        case "ro":
             return "Carmen"; 
         //Russian
-        case "ru-RU":
+        case "ru":
             return "Tatyana"; 
-        //Spanish (Castilian)
-        case "es-ES":
-            return "Conchita";
-        //Spanish (Latin American)
-        case "es-US":
-            return "Penelope"; 
         //Swedish
-        case "sv-SE":
+        case "sv":
             return "Astrid"; 
         //Turkish
-        case "tr-TR":
+        case "tr":
             return "Filiz";
         //Welsh
-        case "cy-GB":
+        case "cy":
             return "Gwyneth"; 
         //English
         default:
+            logger.warn("Got Language not ready for text to speech, treating it as english(default): ", lang);
             return "Joanna";
     }
 }
