@@ -50,10 +50,8 @@ function deleteDeck(deckId){
 }
 
 function deleteCards(deck){
-    logger.error("deletecards, deck: " + JSON.stringify(deck));
   if(deck.ownerType == "u")
         cardService.findInDeck(deck._id, "_id", r=>{
-            logger.error("delete cards got: " + JSON.stringify(r));
             if(r.success == true)
                 r.cards.forEach(c=>{
                     cardService.deleteCard(c, deck.ownerId,r=>{
