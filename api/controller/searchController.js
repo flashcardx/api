@@ -71,7 +71,8 @@ module.exports = function(app){
      *      }
      * @apiVersion 1.0.0
      *  */
-    app.get('/textToSpeech/:lang/:text', [
+    app.get('/textToSpeech/:lang/:text',
+         controllerUtils.requireLogin,[
          param('text', 'text character limit reached')
         .isLength({ min: 1, max: 40 }),
         
@@ -84,10 +85,9 @@ module.exports = function(app){
                 return true;
         })
     ],
-    controllerUtils.requireLogin,
     controllerUtils.checkValidatorErrors,
     (req,res) => {
-            searchService.textToSpeech(req.params.lang, req.params.text, r=>{
+            searchService.textToSpeech(req.params.lang, decodeURIComponent(req.params.text), r=>{
                 return res.json(r);
             });
     })

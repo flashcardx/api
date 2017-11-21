@@ -68,7 +68,7 @@ function getUrl(key, type){
     if(!key)
         return undefined;
     key = generateKey(key, type);
-    return credentials.cloudfrontUrl + key;
+    return credentials.cloudfrontUrl + encodeURIComponent(key);
 }
 
 function generateKey(hash, type){
@@ -76,21 +76,20 @@ function generateKey(hash, type){
         case "thumbnail":
             return "thumbnail/"+hash;
         case "audio":
-            return "audio/"+encodeURIComponent(hash);
+            return "audio/"+ hash;
         default:
             return "image/"+hash;
     }
 }
 
 function chooseLanguageActor(lang){
-    logger.error("lang: ", lang);
     switch(lang){
         //Spanish (Latin American)
         case "es":
-            return "Penelope"; 
+            return "Enrique"; 
         //English
         case "en":
-            return "Joanna";
+            return "Brian";
         //Danish
         case "da":
             return "Naja";

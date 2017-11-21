@@ -13,7 +13,7 @@ function searchBing(q, clientIp, callback){
         logger.error("client ip undefined, will be replaced with empty string, if this continues Bing may think it is ddos attack");
         clientIp = clientIp;
     }
-    cacheService.getBingResults(q)
+    cacheService.getImageResults(q)
     .then(r=>{
             if(r){
                 callback({success:true, msg:r});
@@ -35,7 +35,7 @@ function searchBing(q, clientIp, callback){
         if(!response)
             return; 
         var imgs = parseImgs(response.getBody().value);
-        cacheService.putBingResults(q, imgs);
+        cacheService.putImageResults(q, imgs);
         return callback({success:true, msg:imgs});
     })
     .catch(err=>{
@@ -83,13 +83,16 @@ function textToSpeech(lang, text, callback){
                 }
             })
             .then(data=>{
-                if(!data)
-                    return Promise.resolve();
-                AWSService.saveToS3(key, data.contentType, data.buffer, err=>{
-                    if(err)
-                        return Promise.reject("save to s3 error: ", err);
-                    return cacheService.putTextToSpeechResults(lang, text);
-                }, "audio");
+                return new Promise((resolve, reject)=>{
+                    if(!data)
+                        return resolve();
+                    return AWSService.saveToS3(key, data.contentType, data.buffer, err=>{
+                        if(err)
+                            return reject("save to s3 error: ", err);
+                        cacheService.putTextToSpeechResults(lang, text)
+                        resolve();
+                    }, "audio");
+                });
             })
             .then(()=>{
                 return callback({success:true, msg:AWSService.getUrl(key,'audio')});
