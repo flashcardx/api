@@ -224,7 +224,6 @@ module.exports = function(app){
      * @apiParam (Query) {string} [classname] needed when type=c.
      * @apiParam (Request body) {string} [name] name for the card.
      * @apiParam (Request body) {string} [description] description for the card.
-     * @apiParam (Request body) {string} [deckId] if defined card will be moved to this deck, the deck of destiny must be in the same user or class that the source deck.
      * @apiHeader (Headers) {string} x-access-token user session token
      * @apiParamExample {json} Request-Example:
      * url: /editCard/u/59991371065a2544f7c90288
@@ -278,7 +277,6 @@ module.exports = function(app){
         const card = {
             name : purifier.purify(req.body.name),
             description : purifier.purify(req.body.description),
-            deckId: req.body.deckId,
             imgs: req.body.imgs
         }
         switch (req.params.type){
@@ -294,7 +292,30 @@ module.exports = function(app){
             }
     });
 
-    app.get("/practiceCards",  controllerUtils.requireLogin, (req, res)=>{
+     /**
+     * @api {post} /moveCard/:cardId/:deckId move card
+     * @apiGroup card
+     * @apiName move card
+     * @apiDescription move card to another deck, the same user must own both decks.
+     * @apiParam (Parameters) {string} cardId: id of the card to be moved
+     * @apiParam (Parameters) {string} deckId: id of the deck where the card will be moved.
+     * @apiHeader (Headers) {string} x-access-token user session token
+     * @apiParamExample {json} Request-Example:
+     * url: /moveCard/59991371065a2544f7c90288/599sd37ds65a2df7c9dcdc8
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {"success":true
+     *      }
+     * @apiVersion 1.1.0
+     *  */
+    app.get("/moveCard/:cardId/:deckId", controllerUtils.requireLogin, (req, res)=>{
+        const userId = req.userId;
+        cardService.moveCard(userId, req.params.cardId, req.params.deckId, r=>{
+                return res.json(r);
+        });
+    });
+
+    app.get("/practiceCards", controllerUtils.requireLogin, (req, res)=>{
         const userId = req.userId;
         practiceCardsService.listCards(userId, result=>{
             return res.json(result);

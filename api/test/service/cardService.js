@@ -12,6 +12,7 @@ const setup = require("./setup");
 describe("cardService", ()=>{
         var userId,
             userDeckId,
+            userDeckId2,
             classDeckId,
             classId,
             cardIdUser;
@@ -28,6 +29,12 @@ describe("cardService", ()=>{
                 var deck = {name:"testdeck", description:"abc", ownerId: userId};
                 var deckModel = new Deck(deck);
                 userDeckId = deckModel._id;
+                return deckModel.save();
+            })
+             .then(()=>{
+                var deck = {name:"testdeck2", description:"abc2", ownerId: userId};
+                var deckModel = new Deck(deck);
+                userDeckId2 = deckModel._id;
                 return deckModel.save();
             })
             .then(()=>{
@@ -102,17 +109,16 @@ describe("cardService", ()=>{
         });
     });
 
-    it("update user card, change deck should fail" ,done=>{
-        var card = {name:"updated card", deckId: classDeckId, imgs:[]};
-        cardService.updateCard(cardIdUser, userId, card, r=>{
-                assert.equal(r.success, false);
-                done();
-        });
-    });
-
     it("update user card, change deck" ,done=>{
         var card = {name:"updated card", deckId: userDeckId, imgs:[]};
         cardService.updateCard(cardIdUser, userId, card, r=>{
+                assert.equal(r.success, true);
+                done();
+        });
+    });
+    
+    it("move card", done=>{
+        cardService.moveCard(userId, cardIdUser, userDeckId2, r=>{
                 assert.equal(r.success, true);
                 done();
         });
@@ -124,6 +130,7 @@ describe("cardService", ()=>{
                 done();
         });
     });
+
 
 
 });

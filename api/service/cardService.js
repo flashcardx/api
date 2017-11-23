@@ -272,6 +272,38 @@ function createClassCard(parameters, classname, callback){
                             });
 };
 
+function moveCard(userId, cardId, deckId, callback){
+    var kard;
+    Card.findOne({ '_id': cardId, ownerId: userId, ownerType:"u"}, "deckId imgs")
+    .exec()
+    .then(card=>{
+        kard = card;    
+        if(!card){
+                logger.error("no card found for cardId: " + cardId + ", with a userId: " + userId + "(trying to move card)");
+                return callback({success:false, msg:"This card does not exist in the user collection"});
+            }
+        return deckService.findByIdLean(deckId, "ownerId ownerType");
+    })
+    .then(r=>{
+            if(!r)
+                return Promise.reject("This deck doesn't exist");
+            if(r.ownerType !="u" || r.ownerId.toString() != userId.toString() )
+                    return Promise.reject("This user is not the deck owner");
+            kard.deckId = deckId;
+            kard.update(kard, (err, result)=>{
+                    if(err){
+                            logger.error(err);
+                            return Promise.reject(err);
+                        }
+                    return callback({success:true});
+            });
+    })
+    .catch(err=>{
+                logger.error("error when finding deck: " + err);
+                return callback({success:false, msg:err});
+    })
+}
+
 
 function createUserCard(parameters, callback){
     parameters.card.deckId = parameters.deckId;
@@ -339,7 +371,6 @@ function replaceImgs(oldImgs, newImgs){
 
 
 function updateCard(id, userId, card, callback){
-    logger.error("card: ", card);
     var Doc;
     Card.findOne({ '_id': id, ownerId: userId, ownerType:"u"}, "name description _id imgs")
     .exec()
@@ -354,24 +385,9 @@ function updateCard(id, userId, card, callback){
             return Promise.resolve();
     })
     .then(()=>{
-            if(card.deckId){
-                    return deckService.findByIdLean(card.deckId, "ownerId ownerType");
-            }
-            else return Promise.resolve();
-    })
-    .then(r=>{
-            if(r){
-                if(r.ownerType !="u" || r.ownerId.toString()  != userId.toString() )
-                        return Promise.reject("This deck is not in the class");
-                Doc.deckId = card.deckId;
-            }
-            return Promise.resolve();
-    })
-    .then(()=>{
        return replaceImgs(Doc.imgs, card.imgs.slice());
     })
     .then(()=>{
-        logger.error("imgs: ", card.imgs);
         Doc.imgs = card.imgs;
         return Promise.resolve();
     })
@@ -493,6 +509,7 @@ module.exports.createUserCard = createUserCard;
 module.exports.updateCard = updateCard;
 module.exports.updateCardClassUnsafe = updateCardClassUnsafe;
 module.exports.duplicateCard2User = duplicateCard2User;
+module.exports.moveCard = moveCard;
 
 const classService = require("./class/classService");
 const deckService = require("./deckService");

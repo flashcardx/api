@@ -46,11 +46,9 @@ module.exports = function(app){
  * @apiVersion 1.1.0
  *  */
     app.post("/deck/:type", controllerUtils.requireLogin, (req, res)=>{
-        logger.error("at first got: ", req.body);
         switch (req.params.type) {
             case "u":
                     deckService.create4User(req.userId, req.body, r=>{
-                        logger.error("result: ", r);
                         return res.json(r);
                     })
                     break;

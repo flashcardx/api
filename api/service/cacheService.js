@@ -9,12 +9,12 @@ const logger = config.getLogger(__filename);
 
 function putImageResults(q, msg){ 
     var cacheKey = genKeyImage(q);
-    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeImageSearch);//cache time in seconds
+    client.set(cacheKey, msg, "EX", config.cacheTimeImageSearch);//cache time in seconds
 }
 
 function putGifResults(q, msg){ 
     var cacheKey = genKeyGif(q);
-    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeImageSearch); //cache time in seconds
+    client.set(cacheKey, msg, "EX", config.cacheTimeImageSearch); //cache time in seconds
 }
 
 function putDictionaryResults(lang, q, msg){ 
