@@ -374,7 +374,7 @@ function findDecksByParams(parameters, limit, skip, fields, callback) {
 function getClassDeckLean(userId, deckId, fields) {
     var deck;
     return new Promise((resolve, reject) => {
-        findByIdLean(deckId, "ownerId " + fields)
+        findByIdLean(userId, deckId, "ownerId " + fields)
             .then(d => {
                 if (!d)
                     return Promise.reject("deck not found");
@@ -392,8 +392,8 @@ function getClassDeckLean(userId, deckId, fields) {
     });
 }
 
-function findByIdLean(id, fields) {
-    return Deck.findOne({ _id: id, active: true }, fields)
+function findByIdLean(userId, id, fields) {
+    return Deck.findOne({ ownerId: userId, _id: id, active: true }, fields)
         .lean()
         .exec();
 }
@@ -463,10 +463,10 @@ function verifyDeleteImg(ownerId, deckId) {
     });
 }
 
-function verifyCanHaveChild(deckId){
+function verifyCanHaveChild(userId, deckId){
     if(!deckId)
         return Promise.resolve(DEFAULT_RECURSIVE_ORDER+1);
-    return findByIdLean(deckId, "recursiveOrder")
+    return findByIdLean(userId, deckId, "recursiveOrder")
     .then(deck=>{
         if(!deck)
             return Promise.reject("deck not found");
@@ -485,7 +485,7 @@ function saveNewDeck(deckModel, callback, classId, userId) {
     var user;
     if (deckModel._id == deckModel.parentId)
         return Promise.reject("Deck can not be its own parent ;)");
-    verifyCanHaveChild(deckModel.parentId)
+    verifyCanHaveChild(deckModel.ownerId, deckModel.parentId)
     .then(recursiveOrderParent=>{
         deckModel.recursiveOrder = recursiveOrderParent - 1;
         return deckModel.save();

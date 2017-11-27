@@ -3,6 +3,7 @@ const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const deckService = require(appRoot + "/service/deckService");
+const { query, param, body, validationResult } = require('express-validator/check');
 
 module.exports = function(app){
     const controllerUtils = require(appRoot + "/middleware").utils(app);
@@ -272,6 +273,44 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
             default: return res.json({success:false, msg:"invalid type"}); 
         }
 });
+
+/** 
+ * @api {get} /deck/:deckId Get deck details
+ * @apiGroup deck
+ * @apiName Get decks details
+ * @apiDescription Returns deck info based on query parameters.
+ * @apiParam (Parameters) {string} deckId.
+ * @apiParam (Query) {string} [fields] fields that you request from the deck
+ * @apiHeader (Headers) {string} x-access-token user session token
+ * @apiParamExample {json} Request-Example:
+ * url: /deck/59991371065a2544f7c9028c?fields=name
+ * @apiSuccessExample {json} Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {"success":true,
+ *      "msg": {name": "deck1", "_id":"59991371065a2544f7c90288"
+ *              }
+ *      }
+ * @apiVersion 1.1.0
+ *  */
+app.get("/deck/:deckId", controllerUtils.requireLogin, [
+    param('deckId', 'deckId needs to have 12 characters')
+    .isLength({ min: 12, max:24}),
+    
+    query('fields', 'fields characters limit between: 1 and 40')
+    .isLength({ min: 1, max:40})
+    ], controllerUtils.checkValidatorErrors,
+    (req, res)=>{
+        const fields = req.query.fields;
+        logger.error("fields: ", fields);
+        deckService.findByIdLean(req.userId, req.params.deckId, req.query.fields)
+        .then(r=>{
+            return res.json({success:true, msg:r});
+        })
+        .catch(err=>{
+            return res.json({success:false, msg:err});
+        })
+    })
+
 
 /**
  * @api {get} /decksName/:type/:deckId Get decks names and ids inside deck

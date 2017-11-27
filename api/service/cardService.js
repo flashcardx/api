@@ -282,7 +282,7 @@ function moveCard(userId, cardId, deckId, callback){
                 logger.error("no card found for cardId: " + cardId + ", with a userId: " + userId + "(trying to move card)");
                 return callback({success:false, msg:"This card does not exist in the user collection"});
             }
-        return deckService.findByIdLean(deckId, "ownerId ownerType");
+        return deckService.findByIdLean(userId, deckId, "ownerId ownerType");
     })
     .then(r=>{
             if(!r)

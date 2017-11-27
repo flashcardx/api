@@ -94,9 +94,6 @@ function genKeyTextToSpeech(lang, q){
     return "TextToSpeechCache" + lang + "-" + q;
 }
 
-
-
-
 module.exports = {
     putImageResults: putImageResults,
     getImageResults: getImageResults,
