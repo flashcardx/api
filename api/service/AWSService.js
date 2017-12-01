@@ -9,6 +9,7 @@ AWS.config = new AWS.Config();
 AWS.config.accessKeyId = credentials.accessKeyId;
 AWS.config.secretAccessKey = credentials.secretAccessKey;
 AWS.config.region = credentials.region;
+const langCodes = config.lang;
 if(env==="production"){
     AWS.config.update({
         useAccelerateEndpoint: true
@@ -31,7 +32,7 @@ function saveToS3(key, contentType, data, callback, type){
 //IMAGES FROM CLOUD FRONT
 function addTemporaryUrl(cards, callback){
     if(cards.length === 0)
-        return callback({success:true, msg:[]});
+        return callback({success:true, cards:[]});
     var expireAfter = 600; //url expires after 600 seconds
     cards.forEach((card, i)=>{
         cards[i] = replaceUrl(cards[i]);
@@ -83,66 +84,11 @@ function generateKey(hash, type){
 }
 
 function chooseLanguageActor(lang){
-    switch(lang){
-        //Spanish (Latin American)
-        case "es":
-            return "Enrique"; 
-        //English
-        case "en":
-            return "Brian";
-        //Danish
-        case "da":
-            return "Naja";
-        //Dutch
-        case "nl":
-            return "Lotte";
-        //French
-        case "fr":
-            return "Celine";  
-        //German
-        case "de":
-            return "Marlene"; 
-        //Icelandic
-        case "is":
-            return "Dora";     
-        //Italian
-        case "it":
-            return "Carla";   
-        //Japanese
-        case "ja":
-            return "Mizuki";   
-        //Korean
-        case "ko":
-            return "Seoyeon";   
-        //Norwegian
-        case "nb":
-            return "Liv";   
-        //Polish
-        case "pl":
-            return "Ewa";  
-        //Portuguese (Brazilian)
-        case "pt":
-            return "Vitoria"; 
-        //Romanian
-        case "ro":
-            return "Carmen"; 
-        //Russian
-        case "ru":
-            return "Tatyana"; 
-        //Swedish
-        case "sv":
-            return "Astrid"; 
-        //Turkish
-        case "tr":
-            return "Filiz";
-        //Welsh
-        case "cy":
-            return "Gwyneth"; 
-        //English
-        default:
-            logger.warn("Got Language not ready for text to speech, treating it as english(default): ", lang);
-            return "Joanna";
-    }
+    for(var i=0; i<langCodes.length; i++)
+        if(langCodes[i].code === lang)
+            return langCodes[i].voice;
+    logger.warn("chooseLanguageActor got lang code invalid: ", lang);
+    return langCodes[0].voice;
 }
 
 function textToSpeech(lang, text){

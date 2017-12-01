@@ -12,7 +12,7 @@ const classService = require(appRoot + "/service/class/classService");
 const AWSService = require(appRoot + "/service/AWSService");
 const LoginRegistryModel = require(appRoot + "/models/loginRegistryModel");
 const logger = config.getLogger(__filename);
-
+const {INVALID_USER_PASSWORD} = config.errorCodes;
 
 function loginUser(email, password, callback){
     if(!password || password==="")
@@ -29,7 +29,7 @@ function loginUser(email, password, callback){
                     registerUserLogin(user, user.email);
                 }
                 else
-                    callback({success:false, msg:"invalid email or password"});
+                    callback({success:false, code: INVALID_USER_PASSWORD, msg:"invalid password"});
         })
     }
 })};
@@ -481,3 +481,19 @@ function enrichPost4Feed(obj, feed){
                                 })
     });
 }
+
+function increasePoints(userId, points){
+        return new Promise((resolve, reject)=>{  
+            User.update({_id: userId}, {$inc:{points: points}})
+            .then(r=>{
+                if(r.nModified == 0)
+                    return reject("user not found");
+                return resolve();
+            })
+            .catch(err=>{
+                return reject(err);
+            });
+        });
+}
+
+module.exports.increasePoints = increasePoints;

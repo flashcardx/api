@@ -12,6 +12,7 @@ const passport = require("passport");
 const FacebookTokenStrategy = require('passport-facebook-token');
 const {facebookCredentials, googleCredentials} = config;
 const googleAuthVerifier = require('google-id-token-verifier');
+const {INVALID_USER_EMAIL} = config.errorCodes;
 
 passport.use(new FacebookTokenStrategy({
     clientID: facebookCredentials.appId,
@@ -149,6 +150,8 @@ module.exports = function(app){
  *     {"success":false,
  *       "msg":"invalid email or password"
  *     }
+ *@apiError errorCodes-login <code>2</code> User does not exist
+ *@apiError errorCodes-login <code>3</code> Password incorrect
  * @apiVersion 1.0.0
  *  */
     app.post("/login",function(req, res){
@@ -191,17 +194,7 @@ module.exports = function(app){
     app.get("/test", controllerUtils.requireLogin,function(req, res){
         res.json("this is a test");
     });
-
-    app.get("/validateToken/:token", (req, res)=>{
-        jwt.verify(req.params.token, app.get('jwtSecret'), function(err, decoded) {
-                    if (err) {
-                        return res.json({ success: false});    
-                        } else {
-                            return res.json({success: true, userId:decoded.id});
-                        }
-                    });
-    });
-
+    
     /**
  * @api {post} /fbAuth fbAuth
  * @apiGroup login
@@ -270,7 +263,7 @@ module.exports = function(app){
     });
 
     function generateToken(object, callback){
-        jwt.sign(object, app.get('jwtSecret'), {
+        jwt.sign(object, config.jwtSecret, {
                                     expiresIn: config.JwtExpireTime 
                         }, (err, token)=>{
                             if(err){
@@ -297,7 +290,7 @@ module.exports = function(app){
                                 }
                             }
                             else
-                                return callback({success:false, msg:"user does not exist"});
+                                return callback({success:false, code:INVALID_USER_EMAIL, msg:"user does not exist"});
                         });
 }
 }

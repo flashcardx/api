@@ -6,8 +6,8 @@ const logger = config.getLogger(__filename);
 const Cards = require(appRoot + "/models/cardModel");
 const cardService = require(appRoot + "/service/cardService");
 const classService = require(appRoot + "/service/class/classService");
-const practiceCardsService = require(appRoot + "/service/practiceCardsService");
-const { check, body, validationResult } = require('express-validator/check');
+const practiceService = require(appRoot + "/service/practiceService");
+const { check, param, query, body, validationResult } = require('express-validator/check');
 const { matchedData, sanitize } = require('express-validator/filter');
 
 module.exports = function(app){
@@ -155,13 +155,16 @@ module.exports = function(app){
      *                  "_id":"ASY54RFRF5TOJB1XW"
      *                  "name": "car",
      *                  "description": "hello world",
-     *                  "imgs": [{"hash":"sdeed653eded",
-     *                            "width": "",
-     *                             "height":""
+     *                  "imgs": [{"hash":"4f64b9842a75a917fb4581ab92850adc",
+     *                            "width": "23",
+     *                             "height":"324",
+     *                              "src": "https://d2pkpj1gudc0wt.cloudfront.net/image%2F4f64b9842a75a917fb4581ab92850adc"
      *                              },
-     *                              {"hash":"defcrdef56r4f",
-     *                               "width": "",
-     *                                "height": ""}]
+     *                              {"hash":"4f64b9842a75a917fb4581ab92850ade",
+     *                               "width": "234",
+     *                                "height": "235",
+     *                                 "src": "https://d2pkpj1gudc0wt.cloudfront.net/image%2F4f64b9842a75a917fb4581ab92850ade"
+     *                              }]
      *              }
      *      }
      * @apiVersion 1.1.0
@@ -234,16 +237,19 @@ module.exports = function(app){
      *     HTTP/1.1 200 OK
      *     {"success":true,
      *       "card": {   
-     *                  "_id":"ASY54RFRF5TOJB1XW"
+     *                  "_id":"ASY54RFRF5TOJB1XW",
      *                  "name": "car",
      *                  "description": "hello world",
-     *                  "imgs": [{"hash":"sdeed653eded",
-     *                            "width": "",
-     *                             "height":""
+     *                  "imgs": [{"hash":"4f64b9842a75a917fb4581ab92850adc",
+     *                             "width": "245",
+     *                             "height":"324",
+     *                             "src": "https://d2pkpj1gudc0wt.cloudfront.net/image%2F4f64b9842a75a917fb4581ab92850adc"
      *                              },
-     *                              {"hash":"defcrdef56r4f",
-     *                               "width": "",
-     *                                "height": ""}]
+     *                              {"hash":"4f64b9842a75a917fb4581ab92850ade",
+     *                               "width": "234",
+     *                                "height": "235",
+     *                                 "src": "https://d2pkpj1gudc0wt.cloudfront.net/image%2F4f64b9842a75a917fb4581ab92850ade"
+     *                              }]
      *              }
      *      }
      * @apiVersion 1.1.0
@@ -304,7 +310,7 @@ module.exports = function(app){
      * url: /moveCard/59991371065a2544f7c90288/599sd37ds65a2df7c9dcdc8
      * @apiSuccessExample {json} Success-Response:
      *     HTTP/1.1 200 OK
-     *     {"success":true
+     *     {"success":"true"
      *      }
      * @apiVersion 1.1.0
      *  */
@@ -315,19 +321,7 @@ module.exports = function(app){
         });
     });
 
-    app.get("/practiceCards", controllerUtils.requireLogin, (req, res)=>{
-        const userId = req.userId;
-        practiceCardsService.listCards(userId, result=>{
-            return res.json(result);
-        });
-    });
 
-     app.post("/rankCard/:cardId", controllerUtils.requireLogin, (req, res)=>{
-        const userId = req.userId;
-        const cardId = req.params.cardId;
-        practiceCardsService.rankCard(userId, cardId, req.body.addDays, result=>{
-            return res.json(result);
-        });
-    });
+
 
 };

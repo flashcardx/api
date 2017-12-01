@@ -12,6 +12,11 @@ function putImageResults(q, msg){
     client.set(cacheKey, msg, "EX", config.cacheTimeImageSearch);//cache time in seconds
 }
 
+function putUserPracticeResults(userId, msg){ 
+    var cacheKey = genKeyUserPractice(userId);
+    client.set(cacheKey, msg, "EX", config.cacheTimeUserPractice); //cache time in seconds
+}
+
 function putGifResults(q, msg){ 
     var cacheKey = genKeyGif(q);
     client.set(cacheKey, msg, "EX", config.cacheTimeImageSearch); //cache time in seconds
@@ -40,6 +45,11 @@ function getGifResults(q){
 
 function getDictionaryResults(lang, q){
     var cacheKey = genKeyDictionary(lang, q);
+    return getResults(cacheKey);
+}
+
+function getUserPracticeResults(userId){
+    var cacheKey = genKeyUserPractice(userId);
     return getResults(cacheKey);
 }
 
@@ -94,6 +104,10 @@ function genKeyTextToSpeech(lang, q){
     return "TextToSpeechCache" + lang + "-" + q;
 }
 
+function genKeyUserPractice(userId){
+    return "userPractice-" + userId;
+}
+
 module.exports = {
     putImageResults: putImageResults,
     getImageResults: getImageResults,
@@ -103,5 +117,7 @@ module.exports = {
     getDictionaryResults: getDictionaryResults,
     putTextToSpeechResults: putTextToSpeechResults,
     getTextToSpeechResults: getTextToSpeechResults,
-    genKeyTextToSpeech: genKeyTextToSpeech
+    genKeyTextToSpeech: genKeyTextToSpeech,
+    getUserPracticeResults: getUserPracticeResults,
+    putUserPracticeResults: putUserPracticeResults
 };

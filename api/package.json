@@ -61,7 +61,6 @@
     "node-thumbnail": "^0.11.0",
     "passport": "^0.4.0",
     "passport-facebook-token": "^3.3.0",
-    "randomstring": "^1.1.5",
     "redis": "^2.7.1",
     "request": "^2.81.0",
     "requestify": "^0.2.5",

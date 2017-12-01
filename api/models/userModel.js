@@ -91,6 +91,10 @@ const userSchema = new Schema({
     thumbnail:{
         type: String
     },
+    points:{
+        type: Number,
+        default: 0
+    },
     classes: [{
         id:{
             type: Schema.Types.ObjectId

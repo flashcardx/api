@@ -10,6 +10,8 @@ const userService = require("./userService");
 const logger = config.getLogger(__filename);
 const mongoose = require("mongoose");
 const AWSService = require("./AWSService");
+
+
 function saveCardUser(cardModel, userId, deckId){
     return new Promise((resolve, reject)=>{
         cardModel.save().then(()=>{
@@ -100,18 +102,15 @@ function getClassCardsUnsafe(classId, params, callback){
             query.push({"deckId": params.deckId});
     Card.find({$and: query }).select("name description imgs ownerName updated_at").sort({updated_at: params.sort}).limit(params.limit).exec(
                     (err, cards)=>{
-                         return returnCards(err, cards, callback);
+                        if(err){
+                            logger.error(err);
+                            return callback({success:false, msg:err});
+                        }
+                        return AWSService.addTemporaryUrl(cards, callback);
                     }
             );
 }
 
-function returnCards(err, cards, callback){
-        if(err){
-                logger.error(err);
-                return callback({success:false, msg:err});
-            }
-      return AWSService.addTemporaryUrl(cards, callback);
-}
 
 function deleteCard(cardId, userId, callback){
     Card.findOne({_id:cardId, ownerId: userId, ownerType:"u"}, "imgs").lean().exec()
@@ -498,7 +497,6 @@ function duplicateCard2User(userId, cardIdOld, deckId, callback){
 module.exports.getCards = getCards;
 module.exports.deleteCard = deleteCard;
 module.exports.deleteCardClassInsecure = deleteCardClassInsecure;
-module.exports.returnCards = returnCards;
 module.exports.getClassCardsUnsafe = getClassCardsUnsafe;
 module.exports.findByIdLean = findByIdLean;
 module.exports.findInDeck = findInDeck;

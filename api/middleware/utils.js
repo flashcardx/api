@@ -1,5 +1,6 @@
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
+const {INVALID_TOKEN} = config.errorCodes;
 const logger = config.getLogger(__filename);
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator/check');
@@ -14,9 +15,9 @@ module.exports = function(app){
                       if (token) {
 
                         // verifies secret and checks exp
-                        jwt.verify(token, app.get('jwtSecret'), function(err, decoded) {      
+                        jwt.verify(token, config.jwtSecret, function(err, decoded) {      
                           if (err) {
-                            return res.json({ success: false, errorCode:1, msg: 'Failed to authenticate token' });    
+                            return res.json({ success: false, code:INVALID_TOKEN, msg: 'Failed to authenticate token' });    
                           } else {
                                 req.userId = decoded.id;// if everything is good, save to request for use in other routes
                             next();
@@ -25,7 +26,7 @@ module.exports = function(app){
                       } else {
                         // if there is no token
                         // return an error
-                          return res.json({ success: false, errorCode:1, msg: 'No token provided' });            
+                          return res.json({ success: false, code:INVALID_TOKEN, msg: 'No token provided' });            
                       }
                     },
         checkValidatorErrors: (req, res, next)=>{

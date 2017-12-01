@@ -15,13 +15,11 @@ const middleware = require("./middleware");
 const controllers = require('./controller');
 const app = express();
 const logger = config.getLogger(__filename); 
-const randomstring = require('randomstring');
 
 const port = process.env.PORT || 3000;
 if (env != 'production'){
   require('longjohn');
 }
-app.set('jwtSecret', randomstring.generate()); 
 
 mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
 

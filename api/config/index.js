@@ -8,6 +8,7 @@ const logPath = require("./json/logs.json");
 const email = require("./json/email.json")[env];
 const credentials = require("./json/credentials.json")[env];
 const lang = require("./json/lang.json");
+const errorCodes = require("./json/errorCodes.json");
 const dictionaries = require("./json/dictionaries.json")[env]; 
 
 module.exports = {
@@ -25,6 +26,7 @@ module.exports = {
     JwtExpireTime: parameters.jwtExpireTime,
     cacheTimeDictionary: parameters.cacheTime.dictionary,
     cacheTimeImageSearch: parameters.cacheTime.imageSearch,
+    cacheTimeUserPractice: parameters.cacheTime.userPractice,
     urlWeb: parameters.urlWeb,
     emailService: email.service,
     emailUser: email.user,
@@ -39,6 +41,8 @@ module.exports = {
     gifApiUrl: credentials.tenorGifApi.url,
     gifApiKey: credentials.tenorGifApi.secretKey,
     facebookCredentials: credentials.facebook,
-    googleCredentials: credentials.google
+    googleCredentials: credentials.google,
+    jwtSecret: credentials.jwtSecret,
+    errorCodes: errorCodes
 };
 

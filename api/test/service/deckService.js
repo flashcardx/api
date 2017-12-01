@@ -12,7 +12,8 @@ const setup = require("./setup");
 describe("cardService", ()=>{
         const DECK_NAME="testdeck";
         var userId,
-            userDeckId
+            userDeckId,
+            userChildrenDeckId;
 
         before(done=>{
             setup.dropDatabase()
@@ -26,6 +27,12 @@ describe("cardService", ()=>{
                 var deck = {name:DECK_NAME, description:"abc", ownerId: userId};
                 var deckModel = new Deck(deck);
                 userDeckId = deckModel._id;
+                return deckModel.save();
+            })
+            .then(()=>{
+                var deck = {name:DECK_NAME, description:"abc", ownerId: userId, parentId: userDeckId};
+                var deckModel = new Deck(deck);
+                userChildrenDeckId = deckModel._id;
                 return deckModel.save();
             })
             .then(()=>{
@@ -47,5 +54,20 @@ describe("cardService", ()=>{
                 done(new Error(err));
             });
         });
+
+        it("getAllDescendantIds", done=>{
+            deckService.getAllDescendantIds()
+            .then(r=>{
+                console.log("got: ", r);
+                console.log("userdeckid: ", userDeckId.toString());
+                console.log("userChildrenDeckId: ", userChildrenDeckId.toString());
+                assert.isArray(r, "should be an array with deck ids");
+                assert.equal(r[1], userChildrenDeckId.toString(), "id of children should be the same");
+                done();
+            })
+            .catch(err=>{
+                done(err);
+            })
+        })
 
 })

@@ -1,0 +1,5 @@
+{
+    "INVALID_TOKEN": 1,
+    "INVALID_USER_EMAIL": 2,
+    "INVALID_USER_PASSWORD": 3
+}

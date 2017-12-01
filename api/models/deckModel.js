@@ -43,6 +43,7 @@ const deckSchema = new Schema({
     },
     ownerId:{
         type: Schema.Types.ObjectId,
+         ref: "users",
         index: true
         },
     duplicates:{

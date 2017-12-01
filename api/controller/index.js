@@ -5,8 +5,9 @@ const cardController = require("./cardController");
 const imgController = require("./imgController");
 const preferencesController = require("./preferencesController");
 const userController = require("./userController");
-const classController = require("./classController");
 const deckController = require("./deckController");
+const practiceController = require("./practiceController");
+const notificationController = require("./notificationController");
 
 module.exports = function(app){
     setupController(app);
@@ -16,6 +17,7 @@ module.exports = function(app){
     imgController(app);
     preferencesController(app);
     userController(app);
-    classController(app);
     deckController(app);
+    practiceController(app);
+    notificationController(app);
 };

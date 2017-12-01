@@ -27,7 +27,7 @@ module.exports = function(app){
  *         "name":"people",
  *         "description": "beautiful people",
  *         "parentId": "5998f5ea23cbd123cf8becce",
- *         "lang": "es",
+ *         "lang": "en",
  *          "img":{
  *              "hash": "xsxedede",
  *              "width": "200",
@@ -37,7 +37,15 @@ module.exports = function(app){
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
  *     {"success":true,
- *      "deck": {"_id":xxxxx, "name":"name", lang:"xxse", etc}
+ *      "deck": {"description":"beautiful people in a deck",
+                "img": {"hash": "f6a67762d80f968d2aa4f1d9e928981b",
+                        "width": "968", "height": 605,
+                        "src": "https://d2pkpj1gudc0wt.cloudfront.net/image%2Ff6a67762d80f968d2aa4f1d9e928981b"
+                        },
+                "lang":"en",
+                "name":"people",
+                "_id": "5a1b1633b6da91351c7694d9"
+            }
  *      }
  * @apiErrorExample {json} Error-Response:
  *     HTTP/1.1 200 OK
@@ -115,8 +123,16 @@ app.delete("/deckImg/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
  *     {"success":true,
- *      "deck": {"_id":xxxxx, "name":"name", lang:"xxse", etc} 
- *     }
+ *      "deck": {"description":"beautiful people in a deck",
+                "img": {"hash": "f6a67762d80f968d2aa4f1d9e928981b",
+                        "width": "968", "height": 605,
+                        "src": "https://d2pkpj1gudc0wt.cloudfront.net/image%2Ff6a67762d80f968d2aa4f1d9e928981b"
+                        },
+                "lang":"es",
+                "name":"people",
+                "_id": "5a1b1633b6da91351c7694d9"
+            }
+ *      }
  * @apiVersion 1.1.0
  *  */
 app.post("/editDeck/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
@@ -180,7 +196,7 @@ app.delete("/deck/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
  * url: /duplicateDeck/2u/59991371065a2544f7c90288?dest=59991371065a2544f7c90288
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
- *     {"success":true
+ *     {"success":"true"
  *      }
  * @apiVersion 1.1.0
  *  */
@@ -242,7 +258,7 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
  * @api {get} /decks/:type Get decks inside deck
  * @apiGroup deck
  * @apiName Get decks inside deck
- * @apiDescription Returns all decks(name, id,description, lang and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. decks per page:14. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the CDN base url.
+ * @apiDescription Returns all decks(name, id,description, lang and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. decks per page:14.
  * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
  * @apiParam (Query) {string} [parentId] id of the parent deck, if not specified returns all decks in root.
  * @apiParam (Query) {string} [classname] needed when type=c.
@@ -253,8 +269,24 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
  *     {"success":true,
- *      "decks": [{"description":"a very nice deck", "name": "deck1", "_id":"59991371065a2544f7c90288", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "es"},
- *                {"description":"a nice deck","name": "math", "_id":"59991371065a2544fasd8888", "thumbnail":"18428b0dd352776131a209bd24785b8f", "lang": "en"}]
+ *      "decks": [{"description":"aaaa",
+                    "img": {"hash": "f6a67762d80f968d2aa4f1d9e928981b",
+                            "width": "968", "height": 605,
+                            "src": "https://d2pkpj1gudc0wt.cloudfront.net/image%2Ff6a67762d80f968d2aa4f1d9e928981b"
+                            },
+                    "lang":"es",
+                    "name":"aaa",
+                    "_id": "5a1b1633b6da91351c7694d9"
+                 },
+ *                {"description":"A beaufitul thing",
+                    "img": {"hash": "f6a67762d80f968d2aa4f1d9e928981b",
+                            "width": "968", "height": 605,
+                            "src": "https://d2pkpj1gudc0wt.cloudfront.net/image%2Ff6a67762d80f968d2aa4f1d9e928981b"
+                            },
+                    "lang":"es",
+                    "name":"casa",
+                    "_id": "5a1b1633b6da91351c7694d9"
+                }]
  *      }
  * @apiVersion 1.1.0
  *  */
@@ -287,13 +319,20 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
  * @apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
  *     {"success":true,
- *      "msg": {name": "deck1", "_id":"59991371065a2544f7c90288"
- *              }
+ *      "msg": {"description":"aaaa",
+                "img": {"hash": "f6a67762d80f968d2aa4f1d9e928981b",
+                        "width": "968", "height": 605,
+                        "src": "https://d2pkpj1gudc0wt.cloudfront.net/image%2Ff6a67762d80f968d2aa4f1d9e928981b"
+                        },
+                "lang":"es",
+                "name":"aaa",
+                "_id": "5a1b1633b6da91351c7694d9"
+            }
  *      }
  * @apiVersion 1.1.0
  *  */
 app.get("/deck/:deckId", controllerUtils.requireLogin, [
-    param('deckId', 'deckId needs to have 12 characters')
+    param('deckId', 'deckId needs to be less than 24 characters')
     .isLength({ min: 12, max:24}),
     
     query('fields', 'fields characters limit between: 1 and 40')

@@ -347,6 +347,54 @@ function duplicate2Class(userId, classname, srcId, destId, callback){
     });
 }
 
+function getAllDescendantIds(deckId){
+    return new Promise((resolve, reject)=>{
+        var ids = [];
+        if(deckId)
+            ids.push(deckId);
+        Deck.find({parentId: deckId}, "_id")
+        .lean()
+        .exec()
+        .then(parents=>{
+            var children = parents.map(value=>{
+                return value._id;
+            })
+            ids = ids.concat(children);
+            return Deck.find({parentId: {$in:children}}, "_id")
+                .lean()
+                .exec();
+        })
+        .then(parents=>{
+            var children = parents.map(value=>{
+                return value._id;
+            })
+            ids = ids.concat(children);
+            return Deck.find({parentId: {$in:children}}, "_id")
+                .lean()
+                .exec();
+        })
+        .then(parents=>{
+            var children = parents.map(value=>{
+                return value._id;
+            })
+            ids = ids.concat(children);
+            return Deck.find({parentId: {$in:children}}, "_id")
+                .lean()
+                .exec();
+        })
+        .then(r=>{
+            var children = r.map(value=>{
+                return value._id;
+            })
+            ids = ids.concat(children);
+            return resolve(ids);
+        })
+        .catch(err=>{
+            return reject(err);
+        });
+    });
+}
+
 
 // HELPER FUNCTIONS:
 
@@ -549,6 +597,7 @@ module.exports.childClassDecks= childClassDecks;
 module.exports.duplicate2User= duplicate2User;
 module.exports.duplicate2Class= duplicate2Class;
 module.exports.listDeckName= listDeckName;
+module.exports.getAllDescendantIds = getAllDescendantIds;
 
 
 const classService = require("./class/classService");
