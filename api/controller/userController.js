@@ -32,7 +32,7 @@ module.exports = function(app){
 
     app.get("/getUserInfo",  controllerUtils.requireLogin, (req, res)=>{
         const userId = req.userId;
-        userService.findById(userId, "name email -_id thumbnail", r=>{
+        userService.findById(userId, "name email points -_id thumbnail", r=>{
             if(r.success == true)
                 r.msg.thumbnail = AWSService.getUrl(r.msg.thumbnail);
             return res.json(r);
