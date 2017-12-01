@@ -50,13 +50,9 @@ function update4User(userId, deckId, deck, callback) {
         })
         .then(()=>{
             if(oldHash){
-                logger.error("1");
                 return imgService.increaseImgCounter(newHash)
                 .then(()=>{
-                    logger.error(2);
-                    logger.error("old hash: ", oldHash);
                     imgService.deleteImgOnce(oldHash, r=>{
-                        logger.error(3);
                         if(r.success)
                             return Promise.resolve();
                         return Promise.reject(r.msg);

@@ -4,6 +4,7 @@ var User = require(appRoot + '/models/userModel'),
     nev = require('email-verification')(mongoose);
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
+const {BAD_SIGNUP_EMAIL_PENDING_CONFIRMATION, BAD_SIGNUP_EMAIL_ALREADY_EXISTS} = config.errorCodes;
 
 
 nev.configure({
@@ -56,7 +57,7 @@ function createTempUser(newUser, callback){
 
         // user already exists in persistent collection...
         if (existingPersistentUser)
-            return callback({success:false, msg:"User already exists"});
+            return callback({success:false, code: BAD_SIGNUP_EMAIL_ALREADY_EXISTS, msg:"User already exists"});
         
 
         // a new user
@@ -73,7 +74,7 @@ function createTempUser(newUser, callback){
         // user already exists in temporary collection...
         } else {
         logger.debug("user already exists in temporary collection");
-        return callback({success:true, email:newUser.email, errorCode:1, msg:"User is already pending verification"});
+        return callback({success:true, email:newUser.email, code:BAD_SIGNUP_EMAIL_PENDING_CONFIRMATION, msg:"User is already pending verification"});
         }
     });
 }

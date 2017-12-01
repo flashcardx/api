@@ -12,7 +12,7 @@ const classService = require(appRoot + "/service/class/classService");
 const AWSService = require(appRoot + "/service/AWSService");
 const LoginRegistryModel = require(appRoot + "/models/loginRegistryModel");
 const logger = config.getLogger(__filename);
-const {INVALID_USER_PASSWORD} = config.errorCodes;
+const {INVALID_USER_PASSWORD, BAD_SIGNUP_EMAIL_ALREADY_EXISTS} = config.errorCodes;
 
 function loginUser(email, password, callback){
     if(!password || password==="")
@@ -48,8 +48,8 @@ function loginUser(email, password, callback){
                             picture: profile.photos[0].value
                         }
                registerNewUser(user, r=>{
-                    if(r.success == false)  
-                        return cb(r.msg);
+                    if(r.success == false)
+                        return cb({msg:r.msg, code:r.code});             
                     return cb(null, r.user);
                });
       } else {
@@ -77,7 +77,7 @@ function loginUser(email, password, callback){
                         }
             registerNewUser(user, r=>{
                     if(r.success == false)  
-                        return cb(r.msg);
+                        return cb({msg:r.msg, code:r.code});
                     return cb(null, r.user);
                });
       } else {
@@ -85,7 +85,7 @@ function loginUser(email, password, callback){
       }
     })
     .catch(err=>{
-        logger.error("error when loging with Google: ", err);
+        logger.error("error when logging with Google: ", err);
         return cb(err);
     });
   };
@@ -361,13 +361,13 @@ module.exports.deleteProfilePicture= deleteProfilePicture;
 module.exports.findByIdLeanPromise= findByIdLeanPromise;
 module.exports.upsertGoogleUser = upsertGoogleUser;
 
-const emailVerification = require("./emailVerificationService");
+const emailVerificationService = require("./emailVerificationService");
 
 function registerTemporaryUser(user, callback){
      bcrypt.genSalt(10,  function(err, salt) {
             bcrypt.hash(user.password, salt, function(err, hash){
                 user.password = hash;
-                emailVerification.createTempUser(new User(user), callback);
+                emailVerificationService.createTempUser(new User(user), callback);
             });
         });
 };
@@ -388,8 +388,10 @@ function registerNewUser(user, callback){
                 newUser.thumbnail = hash;
                 newUser.save(err=>{
                             if(err){
-                                logger.error(err);
-                                return callback({success: false, msg:"could not register facebook user, " + String(err)});;
+                                const errEmail = (err.errors && err.errors.email)?err.errors.email : null;
+                                if(errEmail && errEmail.kind === "unique")
+                                    return callback({success: false, code: BAD_SIGNUP_EMAIL_ALREADY_EXISTS, msg:"could not register user, " + String(err)});;
+                                return callback({success: false, msg:"could not register user, " + String(err)});;
                             }
                             return callback({success:true, user:newUser});
                     })

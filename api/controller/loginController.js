@@ -212,7 +212,10 @@ module.exports = function(app){
     app.post("/fbAuth", function(req, res, next){
         passport.authenticate('facebook-token', (error, user)=>{
             if(error)
-                return res.json({success:false, msg: error});
+                if(error.code)
+                    return res.json({success:false, code:error.code, msg: error.msg});
+                else
+                    return res.json({success:false, msg: error});
             if(user){
                 var user = {id:user._id};
                 return generateToken(user, r=>{
@@ -242,13 +245,16 @@ module.exports = function(app){
     app.post("/googleAuth", (req, res)=>{
         const IdToken = req.body.id_token;
         const clientId = googleCredentials.clientId;
-        googleAuthVerifier.verify(IdToken, clientId, (err, tokenInfo)=>{
-            if (err) 
-                return res.json({success:false, msg:err});
+        googleAuthVerifier.verify(IdToken, clientId, (error, tokenInfo)=>{
+            if(error)
+                return res.json({success:false, msg: error});
             tokenInfo.id = tokenInfo.sub;
             userService.upsertGoogleUser(tokenInfo, (error, user)=>{
                     if(error)
-                        return res.json({success:false, msg:error});
+                        if(error.code)
+                            return res.json({success:false, code:error.code, msg: error.msg});
+                        else
+                            return res.json({success:false, msg: error});
                     if(user){
                         var user = {id:user._id};
                         return generateToken(user, r=>{

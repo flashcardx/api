@@ -9,17 +9,17 @@ const logger = config.getLogger(__filename);
 
 function putImageResults(q, msg){ 
     var cacheKey = genKeyImage(q);
-    client.set(cacheKey, msg, "EX", config.cacheTimeImageSearch);//cache time in seconds
+    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeImageSearch);//cache time in seconds
 }
 
 function putUserPracticeResults(userId, msg){ 
     var cacheKey = genKeyUserPractice(userId);
-    client.set(cacheKey, msg, "EX", config.cacheTimeUserPractice); //cache time in seconds
+    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeUserPractice); //cache time in seconds
 }
 
 function putGifResults(q, msg){ 
     var cacheKey = genKeyGif(q);
-    client.set(cacheKey, msg, "EX", config.cacheTimeImageSearch); //cache time in seconds
+    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeImageSearch); //cache time in seconds
 }
 
 function putDictionaryResults(lang, q, msg){ 
@@ -34,13 +34,29 @@ function putTextToSpeechResults(lang, q){
 }
 
 function getImageResults(q){
-    var cacheKey = genKeyImage(q);
-    return getResults(cacheKey);
+    return new Promise((resolve, reject)=>{
+        var cacheKey = genKeyImage(q);
+        getResults(cacheKey)
+        .then(r=>{
+            return resolve(JSON.parse(r));
+        })
+        .catch(err=>{
+            return reject(err);
+        })
+    })
 }
 
 function getGifResults(q){
-    var cacheKey = genKeyGif(q);
-    return getResults(cacheKey);
+    return new Promise((resolve, reject)=>{
+        var cacheKey = genKeyGif(q);
+        return getResults(cacheKey)
+        .then(r=>{
+            return resolve(JSON.parse(r));
+        })
+        .catch(err=>{
+            return reject(err);
+        })
+    });
 }
 
 function getDictionaryResults(lang, q){
