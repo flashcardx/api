@@ -9,9 +9,9 @@ const classService = require(appRoot + "/service/class/classService");
 const practiceService = require(appRoot + "/service/practiceService");
 const { check, param, query, body, validationResult } = require('express-validator/check');
 const { matchedData, sanitize } = require('express-validator/filter');
+const controllerUtils = require(appRoot + "/middleware").utils;
 
 module.exports = function(app){
-    const controllerUtils = require(appRoot + "/middleware").utils(app);
 
     /**
      * @api {get} /cards/:type/:deckId get cards

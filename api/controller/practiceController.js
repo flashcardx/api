@@ -5,10 +5,9 @@ const logger = config.getLogger(__filename);
 const practiceService = require(appRoot + "/service/practiceService");
 const { check, param, query, body, validationResult } = require('express-validator/check');
 const { matchedData, sanitize } = require('express-validator/filter');
+const controllerUtils = require(appRoot + "/middleware").utils;
 
 module.exports = function(app){
-    const controllerUtils = require(appRoot + "/middleware").utils(app);     
-
 
 /**
      * @api {get} /spCards spaced repetition cards

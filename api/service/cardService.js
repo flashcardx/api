@@ -494,6 +494,11 @@ function duplicateCard2User(userId, cardIdOld, deckId, callback){
     });
 }
 
+function countAll(){
+    return Card.count({}).exec();
+}
+
+
 module.exports.getCards = getCards;
 module.exports.deleteCard = deleteCard;
 module.exports.deleteCardClassInsecure = deleteCardClassInsecure;
@@ -508,6 +513,7 @@ module.exports.updateCard = updateCard;
 module.exports.updateCardClassUnsafe = updateCardClassUnsafe;
 module.exports.duplicateCard2User = duplicateCard2User;
 module.exports.moveCard = moveCard;
+module.exports.countAll = countAll;
 
 const classService = require("./class/classService");
 const deckService = require("./deckService");

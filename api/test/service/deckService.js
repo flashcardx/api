@@ -39,7 +39,7 @@ describe("cardService", ()=>{
                 done();
             })
             .catch(err=>{
-                console.error("error in before method(cardService): " + err);
+                console.error("error in before method(deckService): " + err);
             });
         });
 

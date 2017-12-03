@@ -21,16 +21,10 @@ if (env != 'production'){
   require('longjohn');
 }
 
-mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
-
-mongoose.connection.on('disconnected', function () {  
-  logger.warn('Mongoose default connection disconnected'); 
-  mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
-});
+config.connectMongoose();
 
 if(env != "production")
     app.use(express.static('public'));
-config.dbEvents();
 middleware.init(app);
 controllers(app);
 logger.info(packageJson.name + " starting ,  Version: " + packageJson.version);

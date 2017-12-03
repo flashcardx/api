@@ -2,17 +2,17 @@ const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const userService = require(appRoot + "/service/userService");
+const codeService = require(appRoot + "/service/codeService");
 const emailVerification = require(appRoot + "/service/emailVerificationService");
 const logger = config.getLogger(__filename);
 const jwt = require('jsonwebtoken');
 const requestify = require('requestify'); 
-const querystring = require('querystring');
-const https = require('https');
 const passport = require("passport");
 const FacebookTokenStrategy = require('passport-facebook-token');
 const {facebookCredentials, googleCredentials} = config;
 const googleAuthVerifier = require('google-id-token-verifier');
-const {INVALID_USER_EMAIL} = config.errorCodes;
+const {INVALID_USER_EMAIL, INVALID_PROMOCODE} = config.errorCodes;
+const controllerUtils = require(appRoot + "/middleware").utils;
 
 passport.use(new FacebookTokenStrategy({
     clientID: facebookCredentials.appId,
@@ -25,48 +25,7 @@ passport.use(new FacebookTokenStrategy({
   }
 ));
 
-
-function verifyRecaptcha(ip, key, callback) {
-        var post_data = querystring.stringify({
-            'secret' : config.reCaptchaSecret,
-            'response': key,
-            'remoteip': ip
-        });
-
-        var post_options = {
-            host: 'www.google.com',
-            port: '443',
-            method: 'POST',
-            path: '/recaptcha/api/siteverify',
-            headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': Buffer.byteLength(post_data)
-            }
-        };
-        var req = https.request(post_options, function(res) {
-            var data = "";
-            res.on('data', function (chunk) {
-            data += chunk.toString();
-            });
-            res.on('end', function() {
-            try {
-                var parsedData = JSON.parse(data);
-                callback(parsedData.success);
-            } catch (e) {
-                callback(false);
-            }
-            });
-        });
-        req.write(post_data); 
-        req.end();
-        req.on('error',function(err) {
-            logger.error(err);
-        });
-}
-
-
 module.exports = function(app){
-    const controllerUtils = require(appRoot + "/middleware").utils(app);
 
     /**
  * @api {post} /signup signup
@@ -101,26 +60,18 @@ module.exports = function(app){
  *      }
  *  @apiVersion 1.0.0
  *  */
-    app.post("/signup",function(req, res){
+    app.post("/signup",  controllerUtils.verifyRecaptcha, function(req, res){
         var ip = req.body.ip
-        verifyRecaptcha(ip, req.body["g-recaptcha-response"], r=>{
-            if(r == true){
-                        var user = {
-                            email: req.body.email,
-                            name: req.body.name,
-                            password: req.body.password,
-                            lang: req.body.lang
-                        };
-                        userService.registerTemporaryUser(user, result=>{
-                            return res.json(result);
-                        });
-            }
-            else{
-                logger.error("recaptcha validation failed");
-                return res.json({success:false,msg: "recaptcha validation failed"});
-            }
-        })
-    });
+        var user = {
+                     email: req.body.email,
+                     name: req.body.name,
+                     password: req.body.password,
+                     lang: req.body.lang
+            };
+        userService.registerTemporaryUser(user, result=>{
+                    return res.json(result);
+            });
+    })
 
 /**
  * @api {post} /login login
@@ -131,13 +82,11 @@ module.exports = function(app){
  * data in a token is impossible(thanks to secret) ;).
  * @apiParam (Request body) {string} email user email.
  * @apiParam (Request body) {string} password user password.
- * @apiParam (Request body) {number} [ip] recaptcha needs it.
  * @apiParam (Request body) {string} g-recaptcha-response recaptcha token
  * @apiParamExample {json} Request-Example:
  *      {
  *         "email":"pablo1234@gmail.com",
  *         "password": "1234",
- *         "ip": "192.231.00.21",
  *         "g-recaptcha-response": "abc124xsed4fr"
  *    }
  * @apiSuccessExample {json} Success-Response:
@@ -154,23 +103,14 @@ module.exports = function(app){
  *@apiError errorCodes-login <code>3</code> Password incorrect
  * @apiVersion 1.0.0
  *  */
-    app.post("/login",function(req, res){
+    app.post("/login", controllerUtils.verifyRecaptcha, function(req, res){
         if(!req.body.email || !req.body.password){
             res.json({success:false, msg:"you must send user email and password in the request"});
             return;
         }
-        var ip = req.body.ip;
-        verifyRecaptcha(ip, req.body["g-recaptcha-response"], r=>{
-            if(r == true){
-                   loginUser(req.body, r=>{
-                       return res.json(r);
-                   });     
-            }
-             else{
-                logger.error("recaptcha validation failed");
-                return res.json({success:false,msg: "recaptcha validation failed"});
-            }
-        });
+        loginUser(req.body, r=>{
+                return res.json(r);
+        });   
     });
 
     app.get("/profile", controllerUtils.requireLogin,function(req, res){
@@ -269,17 +209,26 @@ module.exports = function(app){
     });
 
     function generateToken(object, callback){
-        jwt.sign(object, config.jwtSecret, {
-                                    expiresIn: config.JwtExpireTime 
-                        }, (err, token)=>{
-                            if(err){
-                                logger.error(err);
-                                return callback({success:false, msg:String(err)});
-                            }
-                            else 
-                                return callback({success:true, token:token});
-                        });
-    }
+        codeService.validate(object.id)
+        .then(()=>{
+                jwt.sign(object, config.jwtSecret, {
+                    expiresIn: config.JwtExpireTime 
+                }, (err, token)=>{
+                    if(err){
+                        logger.error(err);
+                        return callback({success:false, msg:String(err)});
+                    }
+                    else{
+                        userService.registerUserLogin(object.id);
+                        return callback({success:true, token:token});
+                    }
+                });
+            })
+        .catch(err=>{
+                return callback({success:false, userId: object.id, code:INVALID_PROMOCODE, msg:err});
+            })
+        }
+
     function loginUser(u, callback){
         userService.loginUser(u.email, u.password, function(result){
                             if(result){

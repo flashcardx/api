@@ -7,13 +7,8 @@ const mongoose = require("mongoose");
 mongoose.Promise = global.Promise;
 const logger = config.getLogger(__filename);
 
-console.log("deleteDeck child process ready!");
-mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
-
-mongoose.connection.on('disconnected', function () {  
-  logger.warn('Mongoose default connection disconnected(child process)'); 
-  mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
-});
+logger.info("deleteDeck child process ready!");
+config.connectMongoose();
 
 process.on('message', msg=>{
   if(msg.deckId)

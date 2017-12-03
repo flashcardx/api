@@ -9,9 +9,9 @@ const dictionaryService = require(appRoot + "/service/dictionaryService");
 const searchService = require(appRoot + "/service/searchService");
 const { param} = require('express-validator/check');
 const {validateLang} = require(appRoot +"/utils/validator");
+const controllerUtils = require(appRoot + "/middleware").utils;
 
 module.exports = function(app){
-    const controllerUtils = require(appRoot + "/middleware").utils(app);
 
         app.get("/searchBing/:q", controllerUtils.requireLogin,
                                 controllerUtils.getIp,

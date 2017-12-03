@@ -10,9 +10,9 @@ const userService = require(appRoot + "/service/userService");
 const feedService = require(appRoot + "/service/feedService");
 const notificationService = require(appRoot + "/service/notificationService");
 const purifier = require(appRoot + "/utils/purifier");
+const controllerUtils = require(appRoot + "/middleware").utils;
 
 module.exports = function(app){
-    const controllerUtils = require(appRoot + "/middleware").utils(app);
 
     app.post("/class",  controllerUtils.requireLogin, function(req, res){
         var Class = {

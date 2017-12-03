@@ -3,10 +3,9 @@ const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const notificationService = require(appRoot + "/service/notificationService");
+const controllerUtils = require(appRoot + "/middleware").utils;
 
 module.exports = function(app){
-    const controllerUtils = require(appRoot + "/middleware").utils(app);
- 
 
 app.get("/activity",  controllerUtils.requireLogin, function(req, res){
         const userId = req.userId;

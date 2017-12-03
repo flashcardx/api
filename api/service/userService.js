@@ -26,7 +26,6 @@ function loginUser(email, password, callback){
             bcrypt.compare(password, user.password, function(err, result){
                 if(result){
                     callback({success:true, msg:user});
-                    registerUserLogin(user, user.email);
                 }
                 else
                     callback({success:false, code: INVALID_USER_PASSWORD, msg:"invalid password"});
@@ -90,24 +89,28 @@ function loginUser(email, password, callback){
     });
   };
 
-function registerUserLogin(userModel, userEmail){
-    const date = new Date();
-    userModel.lastLogin = date;
-    const registry = {
-        userId: userModel._id,
-        userEmail: userEmail,
-        date: date
+function registerUserLogin(userId){
+    User.findOne({_id: userId})
+    .exec()
+    .then(user=>{
+            const date = new Date();
+            user.lastLogin = date;
+            const registry = {
+                userId: user._id,
+                userEmail: user.email,
+                date: date
+            }
+            const registryModel = new LoginRegistryModel(registry); 
+            user.save((err,r)=>{
+                if(err)
+                    return logger.error(err);
+                registryModel.save(err=>{
+                    if(err)
+                        return logger.error(err);
+                });
+            });
+    })
     }
-    const registryModel = new LoginRegistryModel(registry); 
-    userModel.save((err,r)=>{
-        if(err)
-            return logger.error(err);
-        registryModel.save(err=>{
-            if(err)
-                return logger.error(err);
-        });
-    });
-}
 
 function findById(id, fields, callback){
     User.findById(id, fields, (err, user)=>{
@@ -342,6 +345,10 @@ function deleteProfilePicture(userId, callback){
 }
 
 
+function countAll(){
+    return User.count({}).exec();
+}
+
 module.exports.loginUser = loginUser;
 module.exports.findById= findById;
 module.exports.userCardLimitsOk= userCardLimitsOk;
@@ -360,6 +367,8 @@ module.exports.changeProfilePicture= changeProfilePicture;
 module.exports.deleteProfilePicture= deleteProfilePicture;
 module.exports.findByIdLeanPromise= findByIdLeanPromise;
 module.exports.upsertGoogleUser = upsertGoogleUser;
+module.exports.countAll = countAll;
+module.exports.registerUserLogin = registerUserLogin;
 
 const emailVerificationService = require("./emailVerificationService");
 

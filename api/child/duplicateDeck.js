@@ -14,13 +14,7 @@ mongoose.Promise = global.Promise;
 const logger = config.getLogger(__filename);
 
 logger.info("duplicate Deck child process ready!");
-mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
-
-mongoose.connection.on('disconnected', function () {  
-  logger.warn('Mongoose default connection disconnected(child process)'); 
-  mongoose.connect(config.getDbConnectionString(),  {server:{auto_reconnect:true}});
-});
-
+config.connectMongoose();
 process.on('message', msg=>{
   switch (msg.mode) {
       case "2u": duplicate("u", msg.userId, msg.srcId, msg.destId, msg.userId);

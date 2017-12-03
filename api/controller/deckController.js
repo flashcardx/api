@@ -4,9 +4,9 @@ const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const deckService = require(appRoot + "/service/deckService");
 const { query, param, body, validationResult } = require('express-validator/check');
+const controllerUtils = require(appRoot + "/middleware").utils;
 
 module.exports = function(app){
-    const controllerUtils = require(appRoot + "/middleware").utils(app);
 
 /**
  * @api {post} /deck/:type new deck

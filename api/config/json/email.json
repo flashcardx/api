@@ -2,16 +2,16 @@
     "development":{
         "service": "Zoho",
         "user": "noreply@flashcardx.co",
-        "password": "x3L5x9L5"
+        "password": "2s&.T!7{3ydj8~ZQ"
     },
     "pi":{
         "service": "Zoho",
         "user": "noreply@flashcardx.co",
-        "password": "x3L5x9L5"
+        "password": "2s&.T!7{3ydj8~ZQ"
     },
     "production":{
         "service": "Zoho",
         "user": "noreply@flashcardx.co",
-        "password": "x3L5x9L5"
+        "password": "2s&.T!7{3ydj8~ZQ"
     }
 }

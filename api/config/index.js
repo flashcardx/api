@@ -10,6 +10,7 @@ const credentials = require("./json/credentials.json")[env];
 const lang = require("./json/lang.json");
 const errorCodes = require("./json/errorCodes.json");
 const dictionaries = require("./json/dictionaries.json")[env]; 
+const mongoose = require("mongoose");
 
 module.exports = {
 
@@ -21,7 +22,6 @@ module.exports = {
     },
     getLogger: logger.getLogger,
     getLoggerAccess: logger.getLoggerAccess,
-    dbEvents: dbEvents,
     MaxSizeUpFiles: parseInt(parameters.maxSizeUploadFiles),
     JwtExpireTime: parameters.jwtExpireTime,
     cacheTimeDictionary: parameters.cacheTime.dictionary,
@@ -43,6 +43,18 @@ module.exports = {
     facebookCredentials: credentials.facebook,
     googleCredentials: credentials.google,
     jwtSecret: credentials.jwtSecret,
-    errorCodes: errorCodes
+    errorCodes: errorCodes,
+    connectMongoose: connectMongoose
 };
+
+function connectMongoose(){
+    mongoose.connect(module.exports.getDbConnectionString(),
+                {useMongoClient: true});
+    mongoose.connection.on('disconnected', function () {  
+                logger.warn('Mongoose default connection disconnected(child process)'); 
+                mongoose.connect(module.exports.getDbConnectionString(),
+                {useMongoClient: true});
+        });
+    dbEvents();
+}
 

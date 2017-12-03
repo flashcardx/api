@@ -8,7 +8,7 @@ const multer = require("multer");
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage,
                         limits: { fileSize: config.MaxSizeUpFiles } });
-
+const controllerUtils = require(appRoot + "/middleware").utils;
 function multerErrorHandler(err, req, res, next){
     if(err && err.code === "LIMIT_FILE_SIZE"){
         return res.json({success:false, msg:"File size is too large and can not be updated"});
@@ -17,7 +17,6 @@ function multerErrorHandler(err, req, res, next){
 }
 
 module.exports = function(app){
-    const controllerUtils = require(appRoot + "/middleware").utils(app);
 
     /**
  * @api {post} /imageProxy Image proxy
