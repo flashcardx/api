@@ -1,7 +1,8 @@
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
-const {INVALID_TOKEN} = config.errorCodes;
 const logger = config.getLogger(__filename);
+const {INVALID_TOKEN, NO_PROMOCODE} = config.errorCodes;
+const _ = require("lodash");
 const userService = require(appRoot + "/service/userService");
 const jwt = require('jsonwebtoken');
 const https = require('https');
@@ -9,7 +10,28 @@ const { validationResult } = require('express-validator/check');
 const querystring = require('querystring');
 
 function requireLogin(req, res, next){
-  // check header or url parameters or post parameters for token
+      onlyDecodeToken(req, res, ()=>{
+          const {decodedToken} = req;
+          if(decodedToken.noPromocode)
+              return res.json({ success: false, code:NO_PROMOCODE, msg: "The user does not have an active promocode"});    
+          req.userId = decodedToken.id;// if everything is good, save to request for use in other routes
+          next();
+      })
+}
+
+/*what makes it unsafe? we don't verify the promocode for the user here, however this is useful for things
+like getting user notification count, the user could not have an active account but can still see how manny notifications he has
+*/
+function requireLoginUnsafe(req, res, next){
+  onlyDecodeToken(req, res, ()=>{
+      const {decodedToken} = req;
+      req.userId = decodedToken.id;// if everything is good, save to request for use in other routes
+      next();
+  })
+}
+
+
+function onlyDecodeToken(req, res, next){
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
   // decode token
   if (token) {
@@ -18,7 +40,7 @@ function requireLogin(req, res, next){
       if (err) {
         return res.json({ success: false, code:INVALID_TOKEN, msg: 'Failed to authenticate token' });    
       } else {
-            req.userId = decoded.id;// if everything is good, save to request for use in other routes
+            req.decodedToken = decoded;
         next();
       }
     });
@@ -116,6 +138,8 @@ module.exports = {
   requireMasterLogin: requireMasterLogin,
   checkValidatorErrors: checkValidatorErrors,
   getIp: getIp,
-  verifyRecaptcha: verifyRecaptcha
+  verifyRecaptcha: verifyRecaptcha,
+  onlyDecodeToken: onlyDecodeToken,
+  requireLoginUnsafe: requireLoginUnsafe
 }
        

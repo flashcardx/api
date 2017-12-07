@@ -8,6 +8,8 @@ const AWSService = require(appRoot + "/service/AWSService");
 const { check, param, query, body, validationResult } = require('express-validator/check');
 const { matchedData, sanitizeParam } = require('express-validator/filter');
 const controllerUtils = require(appRoot + "/middleware").utils;
+const loginUtil = require("./loginUtil");
+const {INVALID_PROMOCODE} = config.errorCodes;
 
 module.exports = function(app){
 
@@ -71,35 +73,39 @@ module.exports = function(app){
      * @api {post} /promocode link promocode with user
      * @apiGroup user
      * @apiName link promocode with user
-     * @apiDescription link promocode with user account
+     * @apiDescription link promocode with user account, returns next due date for the code, and a new authentication token, since the old one was limited
      * @apiParam (Body) {Number} code promocode
-     * @apiParam (Body) {String} userId the id of the user wich will get linked to the promocode
-     * @apiParam (Request body) {string} g-recaptcha-response recaptcha token
+     * @apiParam (Body) {string} g-recaptcha-response recaptcha token
      * @apiHeader (Headers) {string} x-access-token user session token
      * @apiParamExample {json} Request-Example:
      * url: post /promocode
      * @apiSuccessExample {json} Success-Response:
      *     HTTP/1.1 200 OK
      *     {"success":true,
-     *       "due": "2018-06-03T02:19:35.226Z"}
+     *      "due": "2018-06-03T02:19:35.226Z",
+     *      "token": "dedrfr5f4rfdrf"}
      * @apiVersion 1.1.0
      *  */
     app.post("/promocode", 
     controllerUtils.verifyRecaptcha,
     [
         body('code', 'count must be 10 chars long')
-        .isLength({ min:10, max:10}),
-        body('userId', 'userId must be a valid id')
-        .isMongoId()
-    ], controllerUtils.checkValidatorErrors,
+        .isLength({ min:10, max:10})
+    ], controllerUtils.onlyDecodeToken,
     (req, res)=>{
-        var userId = req.body.userId;
+        var userId = req.decodedToken.id;
+        var dueDate;
         codeService.linkUser(userId, req.body.code)
         .then(due=>{
-            return res.json({success:true, due: due});
+            dueDate = due;
+            loginUtil.issueToken(userId, r=>{
+                if(r.success === false)
+                    return Promise.reject(r.msg);
+                return res.json({success:true, token: r.token, due: dueDate});
+            });
         }) 
         .catch(err=>{
-            return res.json({success:false, msg:err});
+            return res.json({success:false, msg:err, code: INVALID_PROMOCODE});
         })
     });
 

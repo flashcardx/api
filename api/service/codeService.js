@@ -2,10 +2,9 @@ const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const mongoose = require('mongoose');
 const config = require(appRoot + "/config");
+const logger = config.getLogger(__filename);
 const Code = require(appRoot + "/models/codeModel");
 const _ = require("lodash");
-
-const logger = config.getLogger(__filename);
 
 function save(hash, months, school){
     return new Promise((resolve, reject)=>{
@@ -25,6 +24,7 @@ function save(hash, months, school){
 
 function linkUser(userId, code){
     var endDate;
+    code = code.toUpperCase();
     return new Promise((resolve, reject)=>{
         Code.findOne({hash:code}, "start end months owner")
         .exec()
@@ -44,6 +44,7 @@ function linkUser(userId, code){
             return resolve(endDate);
         })
         .catch(err=>{
+            logger.error(err);
             return reject(err);
         });
     })
@@ -51,17 +52,19 @@ function linkUser(userId, code){
 
 function validate(userId){
     return new Promise((resolve, reject)=>{
-        if(env === "development")
-            return resolve();
+       /* if(env === "development")
+            return resolve();*/
         Code.findOne({owner: userId, end: {$gt: new Date()}}, "_id")
         .lean()
         .exec()
         .then(doc=>{
-            if(!doc)
+            if(!doc){
                 return reject("The user does not have a valid promocode");
+            }
             return resolve();
         })
         .catch(err=>{
+            logger.error(err);
             return reject(err);
         })
     })

@@ -110,7 +110,10 @@ function registerUserLogin(userId){
                 });
             });
     })
-    }
+    .catch(err=>{
+        logger.fatal("could not register user login: ", err);
+    });
+}
 
 function findById(id, fields, callback){
     User.findById(id, fields, (err, user)=>{

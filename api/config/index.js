@@ -4,7 +4,6 @@ const redis = require("./json/db")[env].redis;
 const dbEvents= require("./dbEvents");
 const parameters = require("./json/parameters.json")[env];
 const logger = require("./logger");
-const logPath = require("./json/logs.json");
 const email = require("./json/email.json")[env];
 const credentials = require("./json/credentials.json")[env];
 const lang = require("./json/lang.json");

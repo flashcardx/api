@@ -7,7 +7,7 @@ const controllerUtils = require(appRoot + "/middleware").utils;
 
 module.exports = function(app){
 
-app.get("/activity",  controllerUtils.requireLogin, function(req, res){
+app.get("/activity", controllerUtils.requireLoginUnsafe, function(req, res){
         const userId = req.userId;
         const page = req.query.page;
         notificationService.getNotifications(userId, page, r=>{
@@ -15,7 +15,7 @@ app.get("/activity",  controllerUtils.requireLogin, function(req, res){
         });
     });
 
-    app.get("/activityCount",  controllerUtils.requireLogin, function(req, res){
+    app.get("/activityCount",  controllerUtils.requireLoginUnsafe, function(req, res){
         const userId = req.userId;
         notificationService.getNotificationsCount(userId,r=>{
             return res.json(r);

@@ -2,17 +2,16 @@ const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const userService = require(appRoot + "/service/userService");
-const codeService = require(appRoot + "/service/codeService");
 const emailVerification = require(appRoot + "/service/emailVerificationService");
 const logger = config.getLogger(__filename);
-const jwt = require('jsonwebtoken');
 const requestify = require('requestify'); 
 const passport = require("passport");
 const FacebookTokenStrategy = require('passport-facebook-token');
 const {facebookCredentials, googleCredentials} = config;
 const googleAuthVerifier = require('google-id-token-verifier');
-const {INVALID_USER_EMAIL, INVALID_PROMOCODE} = config.errorCodes;
+const {INVALID_USER_EMAIL} = config.errorCodes;
 const controllerUtils = require(appRoot + "/middleware").utils;
+const loginUtil = require("./loginUtil");
 
 passport.use(new FacebookTokenStrategy({
     clientID: facebookCredentials.appId,
@@ -157,8 +156,7 @@ module.exports = function(app){
                 else
                     return res.json({success:false, msg: error});
             if(user){
-                var user = {id:user._id};
-                return generateToken(user, r=>{
+                return loginUtil.issueToken(user._id, r=>{
                             return res.json(r);
                 });
             }
@@ -196,8 +194,7 @@ module.exports = function(app){
                         else
                             return res.json({success:false, msg: error});
                     if(user){
-                        var user = {id:user._id};
-                        return generateToken(user, r=>{
+                        return loginUtil.issueToken(user._id, r=>{
                                     return res.json(r);
                         });
                     }
@@ -208,35 +205,13 @@ module.exports = function(app){
          });
     });
 
-    function generateToken(object, callback){
-        codeService.validate(object.id)
-        .then(()=>{
-                jwt.sign(object, config.jwtSecret, {
-                    expiresIn: config.JwtExpireTime 
-                }, (err, token)=>{
-                    if(err){
-                        logger.error(err);
-                        return callback({success:false, msg:String(err)});
-                    }
-                    else{
-                        userService.registerUserLogin(object.id);
-                        return callback({success:true, token:token});
-                    }
-                });
-            })
-        .catch(err=>{
-                return callback({success:false, userId: object.id, code:INVALID_PROMOCODE, msg:err});
-            })
-        }
+    
 
     function loginUser(u, callback){
         userService.loginUser(u.email, u.password, function(result){
                             if(result){
                                 if(result.success==true){
-                                    var user = {
-                                        id: result.msg._id
-                                    };
-                                    return generateToken(user, (r)=>{
+                                    return loginUtil.issueToken(result.msg._id, (r)=>{
                                         return callback(r);
                                     });
                                 }
