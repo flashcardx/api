@@ -8,6 +8,7 @@ const _ = require("lodash");
 AWS.config = new AWS.Config();
 AWS.config.accessKeyId = credentials.accessKeyId;
 AWS.config.secretAccessKey = credentials.secretAccessKey;
+logger.error("credentials: ", credentials);
 AWS.config.region = credentials.region;
 const langCodes = config.lang;
 if(env==="production"){

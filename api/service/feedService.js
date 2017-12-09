@@ -1,7 +1,7 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
-var credentials = require(appRoot + "/config/json/credentials.json")[env];
 const config = require(appRoot + "/config");
+var credentials = config.credentials;
 const logger = config.getLogger(__filename);
 var stream = require('getstream');
 // Optionally supply the app identifier and an object specifying the data center to use

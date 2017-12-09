@@ -1,7 +1,6 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const bcrypt = require("bcryptjs");
-const mongoose = require('mongoose');
 const config = require(appRoot + "/config");
 const User = require(appRoot + "/models/userModel");
 const Img = require(appRoot + "/models/imgModel");

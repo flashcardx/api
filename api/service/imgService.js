@@ -150,6 +150,7 @@ function saveImgFromBuffer(buffer, contentType=fileType(buffer).mime, type){
     return new Promise((resolve, reject)=>{
             const hash = md5(buffer);
             AWSService.saveToS3(hash, contentType, buffer, err=>{
+                logger.error("error: ", err);
                 if(err)
                     return reject(err);
                 var img = new Img;
