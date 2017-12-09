@@ -1,10 +1,10 @@
 # FlashcardX
 Node.js REST API for a the flashcard based learning platform: FlashcardX
 # Requirements:
--Unix based system(Linux or OSX)
--NODE v7
--MongoDB V3
--REDIS V4
+*Unix based system(Linux or OSX)
+*NODE v7
+*MongoDB V3
+*REDIS V4
 
 # For running the project:
 1) clone the project and standing on the /api directory run: sudo npm install
