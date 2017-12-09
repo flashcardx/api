@@ -35,24 +35,67 @@ module.exports = function(app){
      *      }
      * @apiVersion 1.1.0
      *  */
-    app.get("/cards/:type/:deckId", controllerUtils.requireLogin, function(req, res){
-        var params = {
-            skip: req.query.skip,
-            limit: req.query.limit,
-            name: req.query.q,
-            deckId: req.params.deckId
-        };
-        switch (req.params.type){
-                case "u": cardService.getCards(req.userId, params, function(result){
-                            res.json(result);
-                          });
-                        break;
-                case "c": classService.getCards(req.query.classname, req.userId, params, function(result){
-                            res.json(result);
-                          });
-                         break;
-                default: return res.json({success:false, msg:"invalid type"}); 
-            }
+    app.get("/cards/:type/:deckId", controllerUtils.requireLogin,
+        [
+            query('limit')
+            .custom(limit => {
+                if(limit == null){
+                    return true;
+                }else{
+                    let limitValue = parseInt(limit);
+                    if(isNaN(limitValue)){
+                        throw new Error("Limit must be a number");
+                    }else{
+                        if(limitValue >= 10 && limitValue <= 30){
+                            return true;
+                        }else{
+                            throw new Error("Limit must be in between 10 and 30!");
+                        }
+                    }
+                } 
+            }),
+            query('skip')
+            .custom(skip => {
+                if(skip == null){
+                    return true;
+                }else{
+                    let skipValue = parseInt(skip);
+                    if(isNaN(skipValue)){
+                        throw new Error("Skip must be a number");
+                    }else{
+                        if(skipValue > 0 && skipValue < 1000){
+                            return true;
+                        }else{
+                            throw new Error("Skip must be in between 1 and 999");
+                        }
+                    }
+                }  
+            }),
+            query('name',"Name length must be in between 1 and 40")
+            .isLength({max:40}),
+            query('classname',"Classname length must be in between 1 and 40")
+            .isLength({max: 40}),
+            param('deckId','Deck ID must be a valid Mongo ID')
+            .isMongoId()
+        ], controllerUtils.checkValidatorErrors,  
+        (req, res) => {
+            var params = {
+                skip: req.query.skip,
+                limit: req.query.limit,
+                name: req.query.q,
+                deckId: req.params.deckId
+            };
+            switch (req.params.type){
+                    case "u": cardService.getCards(req.userId, params, function(result){
+                                res.json(result);
+                            });
+                            break;
+                    case "c": classService.getCards(req.query.classname, req.userId, params, function(result){
+                                res.json(result);
+                            });
+                            break;
+                    default: return res.json({success:false, msg:"invalid type"}); 
+                }
     });
 
     /**
@@ -73,23 +116,32 @@ module.exports = function(app){
      *      }
      * @apiVersion 1.1.0
      *  */
-    app.delete("/card/:type/:cardId", controllerUtils.requireLogin, (req, res)=>{
-        const cardId = req.params.cardId;
-        const type = req.params.type;
-        const userId = req.userId;
-        const classname = req.query.classname;
-        switch (type) {
-            case "u":  cardService.deleteCard(cardId, userId, r=>{
-                            return res.json(r);               
-                        });
-                       break;
-            case "c":  classService.deleteCard(classname, cardId, userId, r=>{
-                            return res.json(r);
-                        });
-                       break;
-            default: res.json({success:false, msg:"invalid type"});
-                    break;
-        }
+    app.delete("/card/:type/:cardId", controllerUtils.requireLogin,
+        [
+            query('classname',"Classname length must be in between 1 and 40")
+            .isLength({max: 40}),
+            param('type',"Card type's length must be in 1!")
+            .isLength({min:1,max:1}),
+            param('cardId','Card ID must be a valid Mongo ID')
+            .isMongoId(),
+        ], controllerUtils.checkValidatorErrors, 
+        (req, res)=>{
+            const cardId = req.params.cardId;
+            const type = req.params.type;
+            const userId = req.userId;
+            const classname = req.query.classname;
+            switch (type) {
+                case "u":  cardService.deleteCard(cardId, userId, r=>{
+                                return res.json(r);               
+                            });
+                        break;
+                case "c":  classService.deleteCard(classname, cardId, userId, r=>{
+                                return res.json(r);
+                            });
+                        break;
+                default: res.json({success:false, msg:"invalid type"});
+                        break;
+            }
     });
 
     /**
@@ -110,24 +162,33 @@ module.exports = function(app){
      *      }
      * @apiVersion 1.1.0
      *  */
-    app.get("/duplicateCard/:type/:cardId/:deckId", controllerUtils.requireLogin, (req, res)=>{
-        const cardId = req.params.id;
-        const deckId = req.params.deckId;
-        switch (req.params.type){
-                    case "uu": cardService.duplicateCardUU(req.userId, cardId, deckId, result=>{
-                                    res.json(result);
-                                });
+    app.get("/duplicateCard/:type/:cardId/:deckId", controllerUtils.requireLogin, 
+        [
+            param('type',"Card type's length must be in 1!")
+            .isLength({min:2,max:2}),
+            param('deckId','Deck ID must be a valid Mongo ID')
+            .isMongoId(),
+            param('cardId','Card ID must be a valid Mongo ID')
+            .isMongoId(),
+        ], controllerUtils.checkValidatorErrors,
+        (req, res)=>{
+            const cardId = req.params.id;
+            const deckId = req.params.deckId;
+            switch (req.params.type){
+                        case "uu": cardService.duplicateCardUU(req.userId, cardId, deckId, result=>{
+                                        res.json(result);
+                                    });
+                                    break;
+                        case "uc": classService.duplicateCardUC(req.userId, cardId, deckId, result=>{
+                                        res.json(result);
+                                    });
+                                    break;
+                        case "cu": classService.duplicateCardCU(req.userId, cardId, deckId, result=>{
+                                        res.json(result);
+                                    });
                                 break;
-                    case "uc": classService.duplicateCardUC(req.userId, cardId, deckId, result=>{
-                                    res.json(result);
-                                });
-                                break;
-                    case "cu": classService.duplicateCardCU(req.userId, cardId, deckId, result=>{
-                                    res.json(result);
-                                });
-                               break;
-                    default: return res.json({success:false, msg: "invalid type"});
-                }
+                        default: return res.json({success:false, msg: "invalid type"});
+                    }
     });
 
     /**
@@ -170,51 +231,56 @@ module.exports = function(app){
      * @apiVersion 1.1.0
      *  */
     app.post("/card/:type/:deckId", controllerUtils.requireLogin, 
-    [
-        check('name', 'Flashcard name must be at least 1 character long and less than 40 characters')
-        .isLength({ min: 1, max:40}),
-        check('description', 'Flashcard description must be less than 850 characters')
-        .isLength({max:850}),
-         check('imgs')
-        .custom(imgs => {
-            if(!Array.isArray(imgs))
-                throw new Error("Imgs must be an array");
-            if(imgs.length > 3)
-                throw new Error("Card can not have more than 3 imgs");
-            imgs.forEach((img1, index1)=>{
-                imgs.forEach((img2, index2)=>{
-                    if(index1 != index2)
-                        if(img1.hash == img2.hash)
-                            throw new Error('Yo can not have the same image twice in a flashcard');
+        [
+            body('name', 'Flashcard name must be at least 1 character long and less than 40 characters')
+            .isLength({ min: 1, max:40}),
+            body('description', 'Flashcard description must be less than 850 characters')
+            .isLength({max:850}),
+            query('classname',"Classname length must be in between 1 and 40")
+            .isLength({max: 40}),
+            param('deckId','Deck ID must be a valid Mongo ID')
+            .isMongoId(),
+            body('imgs')
+            .custom(imgs => {
+                if(!Array.isArray(imgs))
+                    throw new Error("Imgs must be an array");
+                if(imgs.length > 3)
+                    throw new Error("Card can not have more than 3 imgs");
+                imgs.forEach((img1, index1)=>{
+                    imgs.forEach((img2, index2)=>{
+                        if(index1 != index2)
+                            if(img1.hash == img2.hash)
+                                throw new Error('You can not have the same image twice in a flashcard');
+                    });
                 });
-            });
-            return true;
-        })
-    ], controllerUtils.checkValidatorErrors,
-     (req, res)=>{
-        if(!req.body.description && req.body.imgs.length == 0)
-            return res.json({success:false, msg:"Card needs description or at least some multimedia content"});    
-        var card = {
-                name: purifier.purify(req.body.name),
-                description: purifier.purify(req.body.description),
-                imgs: req.body.imgs
-             };
-            var parameters = {
-                card: card,
-                userId: req.userId,
-                deckId: req.params.deckId
-            };
-            switch (req.params.type){
-                case "u": cardService.createUserCard(parameters, result=>{
-                            res.json(result);
-                        });
-                        break;
-                case "c": cardService.createClassCard(parameters, req.query.classname, result=>{
-                            res.json(result);
-                         });
-                         break;
-                default: return res.json({success:false, msg:"invalid type"}); 
-            }
+                return true;
+            }),
+
+        ], controllerUtils.checkValidatorErrors,
+        (req, res)=>{
+            if(!req.body.description && req.body.imgs.length == 0)
+                return res.json({success:false, msg:"Card needs description or at least some multimedia content"});    
+            var card = {
+                    name: purifier.purify(req.body.name),
+                    description: purifier.purify(req.body.description),
+                    imgs: req.body.imgs
+                };
+                var parameters = {
+                    card: card,
+                    userId: req.userId,
+                    deckId: req.params.deckId
+                };
+                switch (req.params.type){
+                    case "u": cardService.createUserCard(parameters, result=>{
+                                res.json(result);
+                            });
+                            break;
+                    case "c": cardService.createClassCard(parameters, req.query.classname, result=>{
+                                res.json(result);
+                            });
+                            break;
+                    default: return res.json({success:false, msg:"invalid type"}); 
+                }
     });
 
      /**
@@ -254,48 +320,56 @@ module.exports = function(app){
      *      }
      * @apiVersion 1.1.0
      *  */
-    app.post("/editCard/:type/:cardId", controllerUtils.requireLogin, [
-        check('name', 'Flashcard name must be at least 1 character long and less than 40 characters')
-        .isLength({ min: 1, max:40}),
-        check('description', 'Flashcard description must be less than 850 characters')
-        .isLength({max:850}),
-        check("imgs")
-        .custom(imgs=>{
-            if(!Array.isArray(imgs))
-                throw new Error("Imgs must be an array");
-            if(imgs.length > 3)
-                throw new Error("Card can not have more than 3 imgs");
-            imgs.forEach((img1, index1)=>{
-                imgs.forEach((img2, index2)=>{
-                    if(index1 != index2)
-                        if(img1.hash == img2.hash)
-                            throw new Error('Yo can not have the same image twice in a flashcard');
+    app.post("/editCard/:type/:cardId", controllerUtils.requireLogin, 
+        [
+            body('name', 'Flashcard name must be at least 1 character long and less than 40 characters')
+            .isLength({ min: 1, max:40}),
+            body('description', 'Flashcard description must be less than 850 characters')
+            .isLength({max:850}),
+            query('classname',"Classname length must be in between 1 and 40")
+            .isLength({max: 40}),
+            param('cardId','Card ID must be a valid Mongo ID')
+            .isMongoId(),
+            param('type',"Card type's length must be in 1!")
+            .isLength({min:1, max:1}),
+            body("imgs")
+            .custom(imgs=>{
+                if(!Array.isArray(imgs))
+                    throw new Error("Imgs must be an array");
+                if(imgs.length > 3)
+                    throw new Error("Card can not have more than 3 imgs");
+                imgs.forEach((img1, index1)=>{
+                    imgs.forEach((img2, index2)=>{
+                        if(index1 != index2)
+                            if(img1.hash == img2.hash)
+                                throw new Error('Yo can not have the same image twice in a flashcard');
+                    });
                 });
-            });
-            return true;
-        })
-    ], controllerUtils.checkValidatorErrors, (req, res)=>{
-        if(!req.body.description && req.body.imgs.length == 0)
-            return res.json({success:false, msg:"Card needs description or at least some multimedia content"});
-        const cardId = req.params.cardId;
-        const classname = req.query.classname;
-        const userId = req.userId;
-        const card = {
-            name : purifier.purify(req.body.name),
-            description : purifier.purify(req.body.description),
-            imgs: req.body.imgs
-        }
-        switch (req.params.type){
-                case "u": cardService.updateCard(cardId, userId, card, r=>{
-                                return res.json(r);
-                         });
-                        break;
-                case "c":  classService.updateCard(classname, userId, cardId, card, r=>{
-                                return res.json(r);
-                            });
-                         break;
-                default: return res.json({success:false, msg:"invalid type"}); 
+                return true;
+            }),
+        ], controllerUtils.checkValidatorErrors,  
+        (req, res)=>{
+            if(!req.body.description && req.body.imgs.length == 0)
+                return res.json({success:false, msg:"Card needs description or at least some multimedia content"});
+            const cardId = req.params.cardId;
+            const classname = req.query.classname;
+            const userId = req.userId;
+            const card = {
+                name : purifier.purify(req.body.name),
+                description : purifier.purify(req.body.description),
+                imgs: req.body.imgs
             }
+            switch (req.params.type){
+                    case "u": cardService.updateCard(cardId, userId, card, r=>{
+                                    return res.json(r);
+                            });
+                            break;
+                    case "c":  classService.updateCard(classname, userId, cardId, card, r=>{
+                                    return res.json(r);
+                                });
+                            break;
+                    default: return res.json({success:false, msg:"invalid type"}); 
+                }
     });
 
      /**
@@ -314,14 +388,17 @@ module.exports = function(app){
      *      }
      * @apiVersion 1.1.0
      *  */
-    app.get("/moveCard/:cardId/:deckId", controllerUtils.requireLogin, (req, res)=>{
-        const userId = req.userId;
-        cardService.moveCard(userId, req.params.cardId, req.params.deckId, r=>{
-                return res.json(r);
+    app.get("/moveCard/:cardId/:deckId", controllerUtils.requireLogin, 
+        [
+            param('cardId','Card ID must be a valid Mongo ID')
+            .isMongoId(),
+            param('deckId','Deck ID must be a valid Mongo ID')
+            .isMongoId(),
+        ], controllerUtils.checkValidatorErrors,
+        (req, res)=>{
+            const userId = req.userId;
+            cardService.moveCard(userId, req.params.cardId, req.params.deckId, r=>{
+                    return res.json(r);
+            });
         });
-    });
-
-
-
-
 };

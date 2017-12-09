@@ -54,33 +54,30 @@ module.exports = function(app){
      *      }
      * @apiVersion 1.1.0
      *  */
-    app.get("/promocodes/:count/:months",
-    controllerUtils.requireMasterLogin,
-    sanitizeParam('count').toInt(),
-    [
-      param('count', 'count must be 1>count<2000')
-      .custom(count=>{
-        if(count < 1 || count >2000)
-          throw new Error('count must be 1>count<2000');
-        return true;
-      }),
-      param("months", "months must be between: 1<months<6")
-      .custom(months=>{
-          if(months < 1 || months >6)
-            throw new Error('months must be 1>count<6');
-          return true;
-      }),
-      query("school", "school length too long")
-      .isLength({ max:40})
-
-  ], controllerUtils.checkValidatorErrors,
-    (req, res)=>{
-        const email = req.email,
-              count = req.params.count,
-              months = req.params.months,
-              school = req.query.school;
-        masterService.genCodes(email, count, months, school);
-        return res.json({success:true, msg: "The codes will be sent to your email when they are ready"});
+    app.get("/promocodes/:count/:months", controllerUtils.requireMasterLogin, sanitizeParam('count').toInt(),
+        [
+            param('count')
+            .custom(count=>{
+                if(count < 1 || count >2000)
+                throw new Error('count must be 1<=count<=2000');
+                return true;
+            }),
+            param("months")
+            .custom(months=>{
+                if(months < 1 || months >6)
+                    throw new Error('months must be 1<=months<=6');
+                return true;
+            }),
+            query("school", "school length too long")
+            .isLength({ max:40})
+        ], controllerUtils.checkValidatorErrors,
+        (req, res)=>{
+            const email = req.email,
+                count = req.params.count,
+                months = req.params.months,
+                school = req.query.school;
+            masterService.genCodes(email, count, months, school);
+            return res.json({success:true, msg: "The codes will be sent to your email when they are ready"});
     });
 
 

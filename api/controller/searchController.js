@@ -7,7 +7,7 @@ const S = require("string");
 const userService = require(appRoot + "/service/userService");
 const dictionaryService = require(appRoot + "/service/dictionaryService");
 const searchService = require(appRoot + "/service/searchService");
-const { param} = require('express-validator/check');
+const { param, validationResult } = require('express-validator/check');
 const {validateLang} = require(appRoot +"/utils/validator");
 const controllerUtils = require(appRoot + "/middleware").utils;
 
@@ -33,7 +33,12 @@ module.exports = function(app){
  * curl localhost:3000/searchGif/holis
  * @apiVersion 1.0.0
  *  */
-    app.get("/searchGif/:q", controllerUtils.requireLogin, function(req,res){
+    app.get("/searchGif/:q", controllerUtils.requireLogin, 
+    [
+        param('q','Search item max length is 30  characters')
+        .isLength({max:30})
+    ], controllerUtils.checkValidatorErrors,    
+    (req,res) => {
         searchService.searchGif(req.params.q, result=>{
             return res.json(result);
         });
@@ -71,22 +76,21 @@ module.exports = function(app){
      *      }
      * @apiVersion 1.0.0
      *  */
-    app.get('/textToSpeech/:lang/:text',
-         controllerUtils.requireLogin,[
-         param('text', 'text character limit reached')
-        .isLength({ min: 1, max: 40 }),
-        
-         param("lang")
-        .custom(lang=>{
-                if(!validateLang(lang)){
-                    logger.error("lang not valid: ", lang);
-                    throw new Error("Lang is not valid");
-                }
-                return true;
-        })
-    ],
-    controllerUtils.checkValidatorErrors,
-    (req,res) => {
+    app.get('/textToSpeech/:lang/:text', controllerUtils.requireLogin,
+        [
+            param('text', 'text character limit reached')
+            .isLength({ min: 1, max: 40 }),
+            
+            param("lang")
+            .custom(lang=>{
+                    if(!validateLang(lang)){
+                        logger.error("lang not valid: ", lang);
+                        throw new Error("Lang is not valid");
+                    }
+                    return true;
+            })
+        ], controllerUtils.checkValidatorErrors,
+        (req,res) => {
             searchService.textToSpeech(req.params.lang, decodeURIComponent(req.params.text), r=>{
                 return res.json(r);
             });

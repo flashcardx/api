@@ -2,6 +2,7 @@ const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
+const validator = require('validator');
 const deckService = require(appRoot + "/service/deckService");
 const { query, param, body, validationResult } = require('express-validator/check');
 const controllerUtils = require(appRoot + "/middleware").utils;
@@ -54,20 +55,60 @@ module.exports = function(app){
  *     }
  * @apiVersion 1.1.0
  *  */
-    app.post("/deck/:type", controllerUtils.requireLogin, (req, res)=>{
-        switch (req.params.type) {
-            case "u":
-                    deckService.create4User(req.userId, req.body, r=>{
-                        return res.json(r);
-                    })
-                    break;
-            case "c":
-                    deckService.create4Class(req.userId, req.body, r=>{
-                        return res.json(r);
-                    })
-                    break;
-            default: return res.json({success:false, msg:"invalid type"}); 
-        }
+    app.post("/deck/:type", controllerUtils.requireLogin, 
+        [
+            param('type',"Card type's length must be in 1!")
+            .isLength({min:1,max:1}),
+            body('name', 'Flashcard name must be at least 1 character long and less than 40 characters')
+            .isLength({ min: 1, max:40}),
+            body('description', 'Flashcard description must be less than 850 characters')
+            .isLength({max:850}),
+            body('classname',"Classname length must be in between 1 and 40")
+            .isLength({max: 40}),
+            body('parentId')
+            .custom(parentId => {
+                if(parentId == null) return true;
+                else{
+                    if(validator.isMongoId(parentId)){
+                        return true;
+                    }else{
+                        throw new Error('Parent Deck Id must be a valid MongoID');
+                    }
+                }
+            }),
+            body('imgs')
+            .custom(imgs => {
+                if(!Array.isArray(imgs))
+                    throw new Error("Imgs must be an array");
+                if(imgs.length > 3)
+                    throw new Error("Card can not have more than 3 imgs");
+                imgs.forEach((img1, index1)=>{
+                    imgs.forEach((img2, index2)=>{
+                        if(index1 != index2)
+                            if(img1.hash == img2.hash)
+                                throw new Error('You can not have the same image twice in a flashcard');
+                    });
+                });
+                return true;
+            }),
+            body('lang',  'Language Option must be length of 2')
+            .isLength({min:2,max:2})
+        ], controllerUtils.checkValidatorErrors,
+    
+        (req, res)=>{
+            switch (req.params.type) {
+                case "u":
+                        deckService.create4User(req.userId, req.body, r=>{
+                            return res.json(r);
+                        })
+                        break;
+                case "c":
+                        deckService.create4Class(req.userId, req.body, r=>{
+                            return res.json(r);
+                        })
+                        break;
+                default: return res.json({success:false, msg:"invalid type"}); 
+            }
 });
 
 /**
@@ -86,20 +127,27 @@ module.exports = function(app){
  *      }
  * @apiVersion 1.1.0
  *  */
-app.delete("/deckImg/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
-    switch (req.params.type) {
-            case "u":
-                    deckService.deleteImgUserDeck(req.userId, req.params.deckId, r=>{
-                        return res.json(r);
-                    });
-                    break;
-            case "c":
-                    deckService.deleteImgClassDeck(req.userId, req.params.deckId, r=>{
-                        return res.json(r);
-                    });
-                    break;
-            default: return res.json({success:false, msg:"invalid type"}); 
-        }
+app.delete("/deckImg/:type/:deckId", controllerUtils.requireLogin, 
+    [
+        param('type',"Card type's length must be in 1!")
+        .isLength({min:1,max:1}),
+        param('deckId','Deck ID must be a valid Mongo ID')
+        .isMongoId(),
+    ], controllerUtils.checkValidatorErrors,
+    (req, res)=>{
+        switch (req.params.type) {
+                case "u":
+                        deckService.deleteImgUserDeck(req.userId, req.params.deckId, r=>{
+                            return res.json(r);
+                        });
+                        break;
+                case "c":
+                        deckService.deleteImgClassDeck(req.userId, req.params.deckId, r=>{
+                            return res.json(r);
+                        });
+                        break;
+                default: return res.json({success:false, msg:"invalid type"}); 
+            }
 });
 
 
@@ -115,7 +163,7 @@ app.delete("/deckImg/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
  * @apiParam (Request body) {string} [img] Image object containing: hash, width,height. Will be shown in the deck cover.
  * @apiHeader (Headers) {string} x-access-token user session token
  * @apiParamExample {json} Request-Example:
- * url: /updateDeck/u/59991371065a2544f7c90288
+ * url: /editDeck/u/59991371065a2544f7c90288
  * body:  {
  *         "name":"people",
  *         "description": "beautiful people in a deck"
@@ -135,20 +183,57 @@ app.delete("/deckImg/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
  *      }
  * @apiVersion 1.1.0
  *  */
-app.post("/editDeck/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
-    switch (req.params.type) {
-            case "u":
-                    deckService.update4User(req.userId, req.params.deckId, req.body, r=>{
-                        return res.json(r);
-                    })
-                    break;
-            case "c":
-                    deckService.update4Class(req.userId, req.params.deckId, req.body, r=>{
-                        return res.json(r);
-                    })
-                    break;
-            default: return res.json({success:false, msg:"invalid type"}); 
-        }
+app.post("/editDeck/:type/:deckId", controllerUtils.requireLogin,
+    [
+        param('type',"Card type's length must be in 1!")
+        .isLength({min:1,max:1}),
+        param('deckId','Deck ID must be a valid Mongo ID')
+        .isMongoId(),
+        body('name', 'Flashcard name must be at least 1 character long and less than 40 characters')
+        .isLength({ min: 1, max:40}),
+        body('description', 'Flashcard description must be less than 850 characters')
+        .isLength({max:850}),
+        body('lang')
+        .custom(lang => {
+            if(lang == null) return true;
+            else{
+                if(lang.length == 2){
+                    return true;
+                }else{
+                    throw new Error('Lenght of Language must be 2!');
+                }
+            }
+        }),
+        body('imgs')
+        .custom(imgs => {
+            if(!Array.isArray(imgs))
+                throw new Error("Imgs must be an array");
+            if(imgs.length > 3)
+                throw new Error("Card can not have more than 3 imgs");
+            imgs.forEach((img1, index1)=>{
+                imgs.forEach((img2, index2)=>{
+                    if(index1 != index2)
+                        if(img1.hash == img2.hash)
+                            throw new Error('You can not have the same image twice in a flashcard');
+                });
+            });
+            return true;
+        }),
+    ], controllerUtils.checkValidatorErrors,
+    (req, res)=>{
+        switch (req.params.type) {
+                case "u":
+                        deckService.update4User(req.userId, req.params.deckId, req.body, r=>{
+                            return res.json(r);
+                        })
+                        break;
+                case "c":
+                        deckService.update4Class(req.userId, req.params.deckId, req.body, r=>{
+                            return res.json(r);
+                        })
+                        break;
+                default: return res.json({success:false, msg:"invalid type"}); 
+            }
 });
 
 /**
@@ -166,20 +251,27 @@ app.post("/editDeck/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
  *      }
  * @apiVersion 1.1.0
  *  */
-app.delete("/deck/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
-    switch (req.params.type) {
-            case "u":
-                    deckService.delete4User(req.userId, req.params.deckId, r=>{
-                        return res.json(r);
-                    })
-                    break;
-            case "c":
-                    deckService.delete4Class(req.userId, req.params.deckId, r=>{
-                        return res.json(r);
-                    })
-                    break;
-            default: return res.json({success:false, msg:"invalid type"}); 
-        }
+app.delete("/deck/:type/:deckId", controllerUtils.requireLogin, 
+    [
+        param('type',"Card type's length must be in 1!")
+        .isLength({min:1,max:1}),
+        param('deckId','Deck ID must be a valid Mongo ID')
+        .isMongoId(),
+    ], controllerUtils.checkValidatorErrors,
+    (req, res)=>{
+        switch (req.params.type) {
+                case "u":
+                        deckService.delete4User(req.userId, req.params.deckId, r=>{
+                            return res.json(r);
+                        })
+                        break;
+                case "c":
+                        deckService.delete4Class(req.userId, req.params.deckId, r=>{
+                            return res.json(r);
+                        })
+                        break;
+                default: return res.json({success:false, msg:"invalid type"}); 
+            }
 });
 
 /**
@@ -200,19 +292,30 @@ app.delete("/deck/:type/:deckId", controllerUtils.requireLogin, (req, res)=>{
  *      }
  * @apiVersion 1.1.0
  *  */
-app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, res)=>{
-    switch (req.params.type) {
-            case "2c": deckService.duplicate2Class(req.userId, req.query.classname, req.params.deckIdSrc, req.query.dest, r=>{
+app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, 
+    [
+        param('type',"Card type's length must be in 1!")
+        .isLength({min:2,max:2}),
+        param('deckIdSrc',"Deck ID source must be a valid Mongodb ID!")
+        .isMongoId(),
+        query('classname',"Classname length must be in between 1 and 40")
+        .isLength({max: 40}),
+        query('dest','Dest is optional but must be a valid Mongo ID if provided')
+        .optional().isMongoId(),
+    ], controllerUtils.checkValidatorErrors,
+    (req, res)=>{
+        switch (req.params.type) {
+                case "2c": deckService.duplicate2Class(req.userId, req.query.classname, req.params.deckIdSrc, req.query.dest, r=>{
+                                return res.json(r);
+                        });
+                        break;
+                case "2u":
+                        deckService.duplicate2User(req.userId, req.params.deckIdSrc, req.query.dest, r=>{
                             return res.json(r);
-                    });
-                    break;
-            case "2u":
-                    deckService.duplicate2User(req.userId, req.params.deckIdSrc, req.query.dest, r=>{
-                        return res.json(r);
-                    })
-                    break;
-            default: return res.json({success:false, msg:"invalid type"}); 
-        }
+                        })
+                        break;
+                default: return res.json({success:false, msg:"invalid type"}); 
+            }
 });
 
 /**
@@ -238,20 +341,27 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
  *     }
  * @apiVersion 1.1.0
  *  */
-    app.get("/alldecks/:type", controllerUtils.requireLogin, (req, res)=>{
-        switch (req.params.type) {
-            case "u":
-                    deckService.allUserDecks(req.userId, r=>{
-                        return res.json(r);
-                    })
-                    break;
-            case "c":
-                    deckService.allClassDecks(req.userId, req.query.classname, r=>{
-                        return res.json(r);
-                    })
-                    break;
-            default: return res.json({success:false, msg:"invalid type"}); 
-        }
+    app.get("/alldecks/:type", controllerUtils.requireLogin, 
+        [
+            param('type',"Card type's length must be in 1!")
+            .isLength({min:1,max:1}),
+            query('classname',"Classname length must be in between 1 and 40")
+            .isLength({max: 40}),
+        ], controllerUtils.checkValidatorErrors,    
+        (req, res)=>{
+            switch (req.params.type) {
+                case "u":
+                        deckService.allUserDecks(req.userId, r=>{
+                            return res.json(r);
+                        })
+                        break;
+                case "c":
+                        deckService.allClassDecks(req.userId, req.query.classname, r=>{
+                            return res.json(r);
+                        })
+                        break;
+                default: return res.json({success:false, msg:"invalid type"}); 
+            }
 });
 
 /**
@@ -290,20 +400,51 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
  *      }
  * @apiVersion 1.1.0
  *  */
-    app.get("/decks/:type", controllerUtils.requireLogin, (req, res)=>{
-        switch (req.params.type) {
-            case "u":
-                    deckService.childUserDecks(req.userId, req.query.parentId, parseInt(req.query.skip), r=>{
-                        return res.json(r);
-                    })
-                    break;
-            case "c":
-                    deckService.childClassDecks(req.userId, req.query.parentId, req.query.classname, req.query.skip, r=>{
-                        return res.json(r);
-                    })
-                    break;
-            default: return res.json({success:false, msg:"invalid type"}); 
-        }
+    app.get("/decks/:type", controllerUtils.requireLogin, 
+        [
+            param('type',"Card type's length must be in 1!")
+            .isLength({min:1,max:1}),
+            query('parentId')
+            .custom(parentId => {
+                if(parentId == null) return true;
+                else{
+                    if(validator.isMongoId(parentId)){
+                        return true;
+                    }else{
+                        throw new Error('Parent Deck Id must be a valid MongoID');
+                    }
+                }
+            }),
+            query('skip')
+            .custom(skip => {
+                let skipValue = parseInt(skip);
+                if(isNaN(skipValue) && skip != null){
+                    throw new Error("Skip must be a number");
+                }else{
+                    if(skipValue > 0 && skipValue < 1000){
+                        return true;
+                    }else{
+                        throw new Error("Skip must be in between 1 and 999");
+                    }
+                }
+            }),
+            query('classname',"Classname length must be in between 1 and 40")
+            .isLength({max: 40}),
+        ], controllerUtils.checkValidatorErrors,
+        (req, res)=>{
+            switch (req.params.type) {
+                case "u":
+                        deckService.childUserDecks(req.userId, req.query.parentId, parseInt(req.query.skip), r=>{
+                            return res.json(r);
+                        })
+                        break;
+                case "c":
+                        deckService.childClassDecks(req.userId, req.query.parentId, req.query.classname, req.query.skip, r=>{
+                            return res.json(r);
+                        })
+                        break;
+                default: return res.json({success:false, msg:"invalid type"}); 
+            }
 });
 
 /** 
@@ -331,12 +472,13 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, (req, r
  *      }
  * @apiVersion 1.1.0
  *  */
-app.get("/deck/:deckId", controllerUtils.requireLogin, [
-    param('deckId', 'deckId needs to be less than 24 characters')
-    .isLength({ min: 12, max:24}),
-    
-    query('fields', 'fields characters limit between: 1 and 40')
-    .isLength({ min: 1, max:40})
+app.get("/deck/:deckId", controllerUtils.requireLogin, 
+    [
+        param('deckId', 'deckId needs to be less than 24 characters')
+        .isLength({ min: 12, max:24}),
+        
+        query('fields', 'fields characters limit between: 1 and 40')
+        .isLength({ min: 1, max:40})
     ], controllerUtils.checkValidatorErrors,
     (req, res)=>{
         const fields = req.query.fields;
@@ -370,14 +512,21 @@ app.get("/deck/:deckId", controllerUtils.requireLogin, [
  *      }
  * @apiVersion 1.1.0
  *  */
-app.get("/decksName/:type", controllerUtils.requireLogin, (req, res)=>{
-        switch (req.params.type) {
-            case "u":
-                    deckService.listDeckName(req.userId, req.query.deckId, r=>{
-                        return res.json(r);
-                    })
-                    break;
-            default: return res.json({success:false, msg:"invalid type"}); 
-        }
-    });
+app.get("/decksName/:type", controllerUtils.requireLogin, 
+    [
+        param('type',"Card type's length must be in 1!")
+        .isLength({min:1,max:1}),
+        query('deckId', 'Deck Id must be a valid mongo id')
+        .isMongoId(),
+    ], controllerUtils.checkValidatorErrors,    
+    (req, res)=>{
+            switch (req.params.type) {
+                case "u":
+                        deckService.listDeckName(req.userId, req.query.deckId, r=>{
+                            return res.json(r);
+                        })
+                        break;
+                default: return res.json({success:false, msg:"invalid type"}); 
+            }
+        });
 }
