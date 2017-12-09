@@ -16,8 +16,6 @@ function notifyClassUserJoined(integrants, classname, userName, notSend){
 }
 
 function notifyPostComment(classname, username, senderId, ownerId, users2Notify){
-    logger.error("username: " + username + ",senderId: " + senderId);
-    logger.error("ownerId: " + ownerId);
     var msg = username+" commented your publication on class: " + classname;
     deliverMesaggeHP(msg, new Array(ownerId), senderId);
     msg = username + " also comented the post you comented in the class " + classname;
@@ -112,11 +110,11 @@ function deliverMesaggeLP(msg, users, notSend){
         users.forEach(i=>{
                 if(i == notSend)
                     return;
-                userService.findById(i, "-_id notificationCounter", r=>{
+                userService.findById(i, "-_id notificationPriority", r=>{
                 if(r.success === false){
                    return logger.error("error when saving notification for userid: " + i + ", could not find user " + r.msg);
                 }
-                n.priority = r.msg.notificationCounter;
+                n.priority = r.msg.notificationPriority;
                 n.ownerId = i;
                 var notification = new notificationModel(n);
                 notification.save().then(()=>{
@@ -136,11 +134,11 @@ function deliverMesaggeLP2(msg, users, notSend, notSend2){
         users.forEach(i=>{
                 if(i == notSend || i == notSend2)
                     return;
-                userService.findById(i, "-_id notificationCounter", r=>{
+                userService.findById(i, "-_id notificationPriority", r=>{
                 if(r.success === false){
                    return logger.error("error when saving notification for userid: " + i + ", could not find user " + r.msg);
                 }
-                n.priority = r.msg.notificationCounter;
+                n.priority = r.msg.notificationPriority;
                 n.ownerId = i;
                 var notification = new notificationModel(n);
                 notification.save().then(()=>{
@@ -149,6 +147,10 @@ function deliverMesaggeLP2(msg, users, notSend, notSend2){
                 });
             })
         });
+}
+
+function notifyUser(msg, userId){
+    deliverMesaggeHP(msg, [userId]);
 }
 
 function deliverMesaggeHP(msg, users, notSend){
@@ -160,11 +162,11 @@ function deliverMesaggeHP(msg, users, notSend){
         users.forEach(i=>{
                 if(i == notSend)
                     return;
-                userService.findById(i, "-_id notificationCounter", r=>{
+                userService.findById(i, "-_id notificationPriority", r=>{
                 if(r.success === false){
                    return logger.error("error when saving notification for userid: " + i +", could not find user " + r.msg);
                 }
-                n.priority = r.msg.notificationCounter + 1;
+                n.priority = r.msg.notificationPriority + 1;
                 n.ownerId = i;
                 var notification = new notificationModel(n);
                 notification.save().then(()=>{
@@ -175,9 +177,9 @@ function deliverMesaggeHP(msg, users, notSend){
         });
 }
 
-function getNotifications(userId, page, callback){
+function getNotifications(userId, page=0, callback){
     var allNotifications = [];
-    const elementsPerPage = 10;
+    const elementsPerPage = 12;
     var restrictions = [{
              'ownerId': {$eq: userId}
         }]
@@ -200,7 +202,7 @@ function getNotifications(userId, page, callback){
                             {   multi: true })
         .exec()
         .then(r=>{
-            return userService.increaseNotificationCounter(userId);
+            return userService.increaseNotificationPriority(userId);
         })
     },
     err=>{
@@ -248,5 +250,6 @@ module.exports = {
     newThumbnail: newThumbnail,
     removedThumbnail: removedThumbnail,
     notifyClassUserJoined: notifyClassUserJoined,
-    notifyPostComment: notifyPostComment
+    notifyPostComment: notifyPostComment,
+    notifyUser: notifyUser
 }

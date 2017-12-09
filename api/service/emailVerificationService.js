@@ -1,10 +1,10 @@
-
 const appRoot = require('app-root-path');
 var User = require(appRoot + '/models/userModel'),
     mongoose = require('mongoose'),
     nev = require('email-verification')(mongoose);
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
+const {BAD_SIGNUP_EMAIL_PENDING_CONFIRMATION, BAD_SIGNUP_EMAIL_ALREADY_EXISTS} = config.errorCodes;
 
 
 nev.configure({
@@ -21,13 +21,13 @@ nev.configure({
         }
     },
     verifyMailOptions: {
-        from: 'FlashCardX <pablonicolasm.pm@gmail.com>',
+        from: 'FlashcardX <' + config.emailUser + '>',
         subject: 'Please confirm account',
         html: 'Welcome to FlashCardX!<p/> Click the following link to confirm your account:</p><p>${URL}</p>',
         text: 'Welcome to FlashCardX!. Click the following link to confirm your account: ${URL}'
     },
     confirmMailOptions: {
-        from: 'FlashCardX <pablonicolasm.pm@gmail.com>',
+        from: 'FlashcardX <'+config.emailUser+'>',
         subject: 'Welcome on board!',
         html: 'Your account has been successfully verified.</p>We really hope you enjoy our app!, if you have any suggestions or comments just write us to contact@flashcardx.co, we will get back to you asap.</p>',
         text: 'Your account has been successfully verified. We really hope you enjoy our app!, if you have any suggestions or comments just write us to contact@flashcardx.co, we will get back to you asap.'
@@ -57,9 +57,8 @@ function createTempUser(newUser, callback){
 
         // user already exists in persistent collection...
         if (existingPersistentUser)
-            return callback({success:false, msg:"User already exists"});
+            return callback({success:false, code: BAD_SIGNUP_EMAIL_ALREADY_EXISTS, msg:"User already exists"});
         
-
         // a new user
         if (newTempUser) {
             var URL = newTempUser[nev.options.URLFieldName];
@@ -74,7 +73,7 @@ function createTempUser(newUser, callback){
         // user already exists in temporary collection...
         } else {
         logger.debug("user already exists in temporary collection");
-        return callback({success:false, errorCode:1, msg:"User is already pending verification"});
+        return callback({success:true, email:newUser.email, code:BAD_SIGNUP_EMAIL_PENDING_CONFIRMATION, msg:"User is already pending verification"});
         }
     });
 }
@@ -118,11 +117,7 @@ function confirmUser(url, callback){
                     return callback({success:false, msg:String(err)});
                 }
                 logger.debug("user confirmed ok, confirmation email was sent, info: " + info);
-                cardService.setInitialCards(user._id, r=>{
-                    if(r.success === false)
-                        return callback(r);
-                    return callback({success:true, msg:"User "+ user.name+ " registered ok, you can sign in now!"});
-                });
+                return callback({success:true, msg:"User "+ user.name+ " registered ok. Congratulations!, you can sign in now!"});
             });
         }
         else{

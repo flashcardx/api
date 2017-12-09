@@ -1,7 +1,6 @@
 const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
-const controllerUtils = require("./utils");
 const logger = config.getLogger(__filename);
 const Img = require(appRoot + "/models/imgModel");
 const classService = require(appRoot + "/service/class/classService");
@@ -11,9 +10,9 @@ const userService = require(appRoot + "/service/userService");
 const feedService = require(appRoot + "/service/feedService");
 const notificationService = require(appRoot + "/service/notificationService");
 const purifier = require(appRoot + "/utils/purifier");
+const controllerUtils = require(appRoot + "/middleware").utils;
 
 module.exports = function(app){
-    const controllerUtils = require("./utils")(app);
 
     app.post("/class",  controllerUtils.requireLogin, function(req, res){
         var Class = {
@@ -62,7 +61,6 @@ module.exports = function(app){
         });
     });
 
-
     //if manny users to add, call this endpoint for each user
     app.post("/addUserToClass",  controllerUtils.requireLogin, function(req, res){
         var joinerEmail = req.body.userEmail;
@@ -98,20 +96,6 @@ module.exports = function(app){
         });
     });
 
-    app.get("/activity",  controllerUtils.requireLogin, function(req, res){
-        const userId = req.userId;
-        const page = req.query.page;
-        notificationService.getNotifications(userId, page, r=>{
-            return res.json(r);
-        });
-    });
-
-    app.get("/activityCount",  controllerUtils.requireLogin, function(req, res){
-        const userId = req.userId;
-        notificationService.getNotificationsCount(userId,r=>{
-            return res.json(r);
-        });
-    });
 
     app.delete("/class/:classname",  controllerUtils.requireLogin, function(req, res){
         const classname = req.params.classname;
@@ -139,32 +123,6 @@ module.exports = function(app){
         });
     });
 
-    app.get("/classCards/:classname", controllerUtils.requireLogin, function(req, res){
-        var params = {
-            last: req.query.last,
-            limit: req.query.limit,
-            category: req.query.category,
-            sort: req.query.sort,
-            name: req.query.q
-        };
-        classService.getCards(req.params.classname, req.userId, params, function(result){
-            res.json(result);
-        });
-    });
-
-    app.post("/updateCardClass/:classname/:cardId",  controllerUtils.requireLogin, (req, res)=>{
-        const cardId = req.params.cardId;
-        const classname = req.params.classname;
-        const userId = req.userId;
-        const card = {
-            name : purifier.purify(req.body.name),
-            description : purifier.purify(req.body.description),
-            category: purifier.purify(req.body.category)
-        };
-        classService.updateCard(classname, userId, cardId, card, r=>{
-            return res.json(r);
-        });
-    });
 
     app.get("/classCategories/:classname", controllerUtils.requireLogin, (req, res)=>{
         var classname = req.params.classname;
@@ -178,15 +136,6 @@ module.exports = function(app){
         var classname = req.params.classname;
         var userId = req.userId;
         classService.getStats(classname, userId, r=>{
-            return res.json(r);
-        });
-    });
-
-    app.delete("/classCard/:classname/:id", controllerUtils.requireLogin, (req, res)=>{
-        var classname = req.params.classname;
-        var cardId = req.params.id;
-        var userId = req.userId;
-        classService.deleteCard(classname, userId, cardId, r=>{
             return res.json(r);
         });
     });
@@ -224,7 +173,7 @@ module.exports = function(app){
                 if(!r)
                     return res.json({success:false, msg:"could not find class"});
                 if(r.thumbnail)
-                    r.thumbnail = AWSService.getImgUrl(r.thumbnail);
+                    r.thumbnail = AWSService.getUrl(r.thumbnail);
                 return res.json({success:true, msg:r});
         })
         .catch(err=>{
@@ -280,11 +229,11 @@ module.exports = function(app){
         postService.getPosts(classname, userId, lastId, r=>{
             r.msg.forEach((p, index)=>{ 
                 if(p.userId.thumbnail && p.userId.thumbnail.length < 28){
-                    r.msg[index].userId.thumbnail = AWSService.getImgUrl(p.userId.thumbnail);
+                    r.msg[index].userId.thumbnail = AWSService.getUrl(p.userId.thumbnail);
                 }
                 p.comments.forEach((c, commentIndex)=>{
                         if(c.userId.thumbnail && c.userId.thumbnail.length < 28)
-                            r.msg[index].comments[commentIndex].userId.thumbnail = AWSService.getImgUrl(c.userId.thumbnail);    
+                            r.msg[index].comments[commentIndex].userId.thumbnail = AWSService.getUrl(c.userId.thumbnail);    
                     })
             })
             return res.json(r);
@@ -326,7 +275,7 @@ module.exports = function(app){
             if(r.success == true)
                 r.msg[reaction].usersId.forEach((user, index)=>{
                     if(user.thumbnail)
-                        r.msg[reaction].usersId[index].thumbnail = AWSService.getImgUrl(user.thumbnail); 
+                        r.msg[reaction].usersId[index].thumbnail = AWSService.getUrl(user.thumbnail); 
                 })
             return res.json(r);
         })
@@ -341,7 +290,7 @@ module.exports = function(app){
             if(r.success == true)
                 r.msg.comments[0][reaction].usersId.forEach((user, index)=>{
                     if(user.thumbnail)
-                        r.msg.comments[0][reaction].usersId[index].thumbnail = AWSService.getImgUrl(user.thumbnail); 
+                        r.msg.comments[0][reaction].usersId[index].thumbnail = AWSService.getUrl(user.thumbnail); 
                 })
             return res.json(r);
         })

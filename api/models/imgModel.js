@@ -8,11 +8,11 @@ const imgSchema = new Schema({
 
     hash: { type:String,
             required: [true, 'hash is required'],
-            unique: [true, 'img hash already in use, has to be unique'], 
+            index: true
     },
     timesUsed:{
         type:Number,
-        default: 1
+        default: 0
     }
 });
 

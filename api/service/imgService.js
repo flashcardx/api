@@ -12,21 +12,55 @@ const AWSService = require("./AWSService");
 const imagemin = require('imagemin');
 const imageminJpegtran = require('imagemin-jpegtran');
 const imageminPngquant = require('imagemin-pngquant');
+const md5 = require("md5");
 var thumb = require('node-thumbnail').thumb;
 var gm = require('gm').subClass({imageMagick: true});
+const fileType = require('file-type');
 
+function isFileFormatValid(format){
+    switch (format) {
+        case "image/jpeg": return true;
+        case "image/gif": return true;
+        case "image/png": return true;
+        case "text/html": return true;
+        case "text/html; charset=UTF-8": return true;
+    }
+    return false;
+}
 
+function genAndSaveThumbnail(hash, buffer){
+    var image = {
+        timesUsed: 1,
+        hash: hash
+    }; 
+    logger.error("old image: ", image);  
+    var newImg = new Img(image);
+    logger.error("about to save image: ", newImg);
+    return newImg.save()
+            .exec()
+            .then(r=>{
+                genSmallThumbnailAndSaveToS3(hash, buffer, r=>{
+                    if(r.success == true)
+                        return Promise.resolve();
+                    return Promise.reject(r.msg);
+                });
+            });
+}
+
+function genSmallThumbnailAndSaveToS3(name, buffer, callback){
+   generateThumbnailAndSaveToS3(name, buffer, 150, 150, callback);
+}
 
 ///returns filename from the thumbnail
-function generateThumbnailAndSaveToS3(name, buffer, callback){
-    var src = imgDir +"/"+ name;
+function generateThumbnailAndSaveToS3(name, buffer, w, h, callback){
+     var src = imgDir +"/"+ name;
     fs.writeFile(src, buffer, function(err) {
         if(err) {
             return logger.error(err);
         }
-        logger.error("saved");
         gm(src)
-            .resize(150, 150, "!")
+            .resize(w, h, '^')
+            .resize('200', '200', '^')
             .noProfile()
             .write(src, err=>{
                if(err){
@@ -35,9 +69,7 @@ function generateThumbnailAndSaveToS3(name, buffer, callback){
                }
                 fsp.readFile(src).
                 then(data=>{
-                    logger.error("name: " + name);
-                    AWSService.saveToS3Buffer(name, data, r=>{
-                        logger.error("result: " + JSON.stringify(r));
+                    AWSService.saveToS3(name, null, data, r=>{
                         deleteFile(src)
                         .then(()=>{
                             return callback(r);
@@ -54,72 +86,85 @@ function generateThumbnailAndSaveToS3(name, buffer, callback){
                     });
             });
         }); 
-
 }
-
-
 
 function getImgName(url, text){
      return text + Math.random() + new Date();
 };
 
 var requestNoEncoding = request.defaults({ encoding: null });
-function saveImgFromUrl(url){
+
+
+function downloadAndGetBuffer(url){
     return new Promise((resolve, reject)=>{
-        var img = new Img;
-        img.hash = img._id;
-       
-        requestNoEncoding.get(url, function (err, res, body) {
-            AWSService.saveToS3Buffer(img.hash, body, err=>{
-                if(err)
-                    return reject(err);
-                img.save(err=>{
+        const options = {
+                        url:url,
+                        headers:{"User-Agent": "NING/1.0"},
+                        timeout: 9000
+                    };
+        requestNoEncoding.head(options, (err, res, body)=>{
                     if(err)
                         return reject(err);
-                    return resolve(img.hash);
-                });    
-            }); 
+                    options.url = res.request.uri.href;
+                    const contentType = res.headers['content-type'];
+                    if(res.headers['content-length'] > config.MaxSizeUpFiles)
+                        return reject("Size of file too big, size: " + res.headers['content-length']);
+                    if(!isFileFormatValid(contentType))
+                            return reject("Invalid file format: " + contentType);
+                    requestNoEncoding.get(options, (err, res, body)=>{
+                        if(err)
+                            return reject(err);
+                        if(res.headers['content-length'] > config.MaxSizeUpFiles)
+                            return reject("Size of file too big, size: " + res.headers['content-length']);
+                        if(!body)
+                            return reject("Could not download image");
+                        return resolve({contentType, buffer:body});
+                    });
         });
     });
 }
 
+function saveThumbnailFromUrl(url){
+    return saveImgFromUrl(url, "thumbnail");
+}
+
+//should calculate md5 like card imgs
+function saveImgFromUrl(url, type){
+    if(!url)
+        return Promise.resolve();
+    return new Promise((resolve, reject)=>{
+            downloadAndGetBuffer(url)
+            .then(r=>{
+                return saveImgFromBuffer(r.buffer, r.contentType, type);
+            })        
+            .then(hash=>{
+                return resolve(hash);
+            }) 
+            .catch(err=>{
+                return reject(err);
+            });
+        });
+}
+
+function saveImgFromBuffer(buffer, contentType=fileType(buffer).mime, type){
+    return new Promise((resolve, reject)=>{
+            const hash = md5(buffer);
+            AWSService.saveToS3(hash, contentType, buffer, err=>{
+                logger.error("error: ", err);
+                if(err)
+                    return reject(err);
+                var img = new Img;
+                img.hash = hash;
+                img.save(err=>{
+                    if(err && err.code != 11000)
+                        return reject(err);
+                    return resolve(hash);
+                });    
+            }, type);
+    })
+}
 
 const downloader = require('image-downloader');
-
-function download(uri, filename){
-    return new Promise((resolve, reject)=>{
-                    request.head(uri, function(err, res, body){
-                    if(err)
-                        return reject(err);
-                    logger.debug("headers: " + JSON.stringify(res.headers));
-                    logger.debug('content-length: ' + res.headers['content-length']);
-                    logger.debug('content-type: ' + res.headers['content-type']);
-
-                    /*
-                    if(res.headers['content-type'] !== "image/jpeg" && res.headers['content-type'] !== "image/png")
-                        return reject(new Error("Content-type of uri is not supported, uri: " + uri +", content-type: " + res.headers['content-type']));
-                    */
-                
-                    if(res.headers['content-length'] > config.APIMaxSizeUpFiles)
-                        return reject(new Error("size of file too big, size: " + res.headers['content-length']));
-                    var rq = request(uri, {headers:{"User-Agent": "NING/1.0"}});
-                    rq.on("error", err=>{
-                            logger.warning("error when making request for img download: " + err);
-                            return reject("error when making request for img download: " + err);
-                    })
-                    rq.pipe(fs.createWriteStream(filename)).on('close',()=>{
-                        logger.debug(uri + " downloaded ok");
-                        resolve(res.headers['content-type']);
-                    })
-                    .on("error", (err)=>{
-                        logger.warning("error when downloading file from: " + uri);
-                        logger.warning("err: " + err);
-                        reject("error when downloading file");
-                    });
-                })
-                });
-
-};
 
 function deleteFile(filename){
     return new Promise((resolve, reject)=>{
@@ -138,158 +183,40 @@ function increaseImgsCounter(imgs){
         if(imgs.length === 0)
             return resolve();
         imgs.forEach((img, index)=>{
-                    Img.findOne({ 'hash': img.hash}).exec().then(doc=>{
-                        if(doc){
-                            doc.timesUsed++;
-                            doc.save((err)=>{
-                                if(err)return reject(err);
-                                index++;
-                                if(index === imgs.length)
-                                    return resolve();
-                            });
-                        }
-                        else{
-                            return reject("image does not exist");
-                        }
-                    })
-                })
-        })     
-}
-
-
-
-function saveImgDb(filename, hash, contentType){
-    return new Promise((resolve, reject)=>{
-        Img.findOne({ 'hash': hash}).exec().then((img=>{
-            if(img){
-                img.timesUsed++;
-                img.save((err)=>{
-                    if(err)return reject(err);
-                    return resolve(hash);
-                });
-                return;
-            }
-            fsp.readFile(filename).then((data)=>{
-            img = new Img;
-            img.hash = hash;
-            img.save((err)=>{
-                if(err)
-                    return reject(err);
-                AWSService.saveToS3(hash, contentType, data, (err,data)=>{
-                    if(err)
-                        return reject(err);
-                    resolve(hash);
-                });
-                    })
-                });
-        }), err=>{
-            reject(err);
-        });
-    });
-}
-
-
-function downloadArray(imgs, userId, callback){
-    return new Promise((resolve, reject)=>{
-        var imgHashes = [];
-        var contentType;
-        var warning;
-        if(!imgs || imgs.length === 0)
-            return resolve([]);
-        imgs.forEach((img)=>{
-            if(img.url){
-                            const imgPath = imgDir + "/" + getImgName(img.url, userId);
-                            download(img.url, imgPath)
-                            .catch(err=>{
-                                    logger.warn("error when downloading imgs");
-                                    warning = "Some images could not be downloaded";
-                                    return Promise.resolve(null);
-                                })
-                            .then(ct=>{
-                                if(!ct)
-                                    return Promise.resolve(null);
-                                contentType = ct;
-                                return md5File(imgPath);
-                            })
-                            .then(hash=>{
-                                if(!hash)
-                                    return Promise.resolve(null);
-                                return saveImgDb(imgPath, hash, contentType);
-                                    })
-                            .then(hash=>{
-                                    if(!hash){
-                                        logger.error("no hash");
-                                        imgHashes.push({});
-                                        return Promise.resolve(null);
-                                    }
-                                    imgHashes.push({
-                                        hash: hash,
-                                        width: img.width,
-                                        height: img.height
-                                    });
-                                    return deleteFile(imgPath);
-                                    })
-                            .then(()=>{
-                                    if(imgHashes.length === imgs.length)// if satisfies condition, this is the last cycle of the loop
-                                        return resolve({imgHashes: imgHashes, warning:warning});  
-                                    })
-                            .catch(err=>{
-                                    logger.error(err);
-                                    return reject(String(err));
+                    if(!img.hash){
+                        index++;
+                        if(index == imgs.length)
+                            return resolve();
+                    }
+                    else
+                        Img.findOne({ 'hash': img.hash}).exec().then(doc=>{
+                            if(doc){
+                                doc.timesUsed++;
+                                doc.save((err)=>{
+                                    if(err)return reject(err);
+                                    index++;
+                                    if(index === imgs.length)
+                                        return resolve();
                                 });
-                
-                        }//end if url
-        else if(img.data){
-            var hash = Date.now() + Math.random() + img.name;
-            registerNewImgDb(hash)
-                .then(()=>{
-                        return imagemin.buffer(new Buffer(img.data),  {
-                                                plugins: [
-                                                    imageminJpegtran(),
-                                                    imageminPngquant({quality: '60-80'})
-                                                ]
-                                            })
-                        }
-                )
-                .then((data)=>{
-                      AWSService.saveToS3Buffer(hash, data, (err,data)=>{
-                            if(err)
-                                return reject(err);
-                            imgHashes.push({
-                                    hash: hash,
-                                    width: img.width,
-                                    height: img.height
-                                });
-                            if(imgHashes.length === imgs.length)// if satisfies condition, this is the last cycle of the loop
-                                    return resolve({imgHashes: imgHashes, warning:warning});  
-                        });
-                })
-                .catch(err=>{
-                         logger.error(err);
-                         return reject(String(err));
-                    });
-        }// end if img.data
-                });// end forEach
-    });
-};
-
-function registerNewImgDb(hash){
-    return new Promise((resolve, reject)=>{
-        var img = new Img;
-        img.hash = hash;
-        img.save((err)=>{
-                if(err)
-                    return reject(err);
-                return resolve();
-        });
-    })
+                            }
+                            else{
+                                return reject("image does not exist");
+                            }
+                        })
+            })
+    })     
 }
 
-
+function increaseImgCounter(hash){
+    return Img.update({hash:hash}, {$inc:{"timesUsed":1}}).exec();
+}
 
 function deleteImgOnce(hash, callback){
-    Img.findOne({ 'hash': hash}).exec()
+    Img.findOne({'hash': hash})
+                     .exec()
                      .then(img=>{
+                        if(!img)
+                            return callback({success:false, msg:"img not found"});
                         img.timesUsed--;
                         if(img.timesUsed <= 0){
                             img.remove((err, count)=>{
@@ -321,10 +248,7 @@ function deleteImgOnce(hash, callback){
 
 };
 
-
-
 function deleteImgsOnce(imgs){
-    logger.error("imgs: " + JSON.stringify(imgs));
     return new Promise((resolve, reject)=>{
         if(!imgs || imgs.length == 0){
             return resolve(true);
@@ -340,12 +264,39 @@ function deleteImgsOnce(imgs){
     });
 }
 
+function proxyFromUrl(url, callback){
+    saveImgFromUrl(url)
+    .then(hash=>{
+        return callback({success:true, hash:hash, src: AWSService.getUrl(hash)});
+    })
+    .catch(err=>{
+        logger.error("error in proxyfromurl: ", err);
+        return callback({success:false, msg: err});
+    });
+}
+
+function proxyFromBuffer(buffer, callback){
+    console.log("time 1: ", new Date().getTime());
+    saveImgFromBuffer(buffer)
+    .then(hash=>{
+        return callback({success:true, hash:hash, src: AWSService.getUrl(hash)});
+    })
+    .catch(err=>{
+        logger.error("error in proxyfromurl: ", err);
+        return callback({success:false, msg: err});
+    });
+}
+
 module.exports = {
-    downloadArray: downloadArray,
     getImg: AWSService.getImgFromS3,
     deleteImgsOnce: deleteImgsOnce,
     increaseImgsCounter: increaseImgsCounter,
     deleteImgOnce: deleteImgOnce,
-    generateThumbnailAndSaveToS3: generateThumbnailAndSaveToS3,
-    saveImgFromUrl: saveImgFromUrl
+    genSmallThumbnailAndSaveToS3: genSmallThumbnailAndSaveToS3,
+    proxyFromUrl: proxyFromUrl,
+    proxyFromBuffer: proxyFromBuffer,
+    saveImgFromUrl: saveImgFromUrl,
+    increaseImgCounter: increaseImgCounter,
+    genAndSaveThumbnail: genAndSaveThumbnail,
+    saveThumbnailFromUrl: saveThumbnailFromUrl
 }

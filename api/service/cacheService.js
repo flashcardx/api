@@ -1,50 +1,139 @@
 const env = process.env.NODE_ENV || "development";
-const redis = require('redis');  
-const REDIS_PORT = process.env.REDIS_PORT || 6379;
-const client = redis.createClient(REDIS_PORT); 
 const appRoot = require('app-root-path');
+const redis = require('redis');  
 const config = require(appRoot + "/config");
+const client = redis.createClient({
+    url: config.getRedisConnectionString()
+});
 const logger = config.getLogger(__filename);
 
-/*
-if(env == "development")
-    client.flushdb( function (err, succeeded) {
-        if(err){
-            logger.error("error when trying to flush redis db: " + err);
-            return;
-        }
-        logger.warn("redis cache flushed result: " + succeeded); // will be true if successfull
-});
-*/
-
-//message already is a string, so does not need parsing
-function putBingResults(q, msg){ 
-    var cacheKey = genKeyBingResults(q);
-    client.set(cacheKey, JSON.stringify(msg), "EX", 604800); // value in seconds = 7 days
+function putImageResults(q, msg){ 
+    var cacheKey = genKeyImage(q);
+    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeImageSearch);//cache time in seconds
 }
 
-function getBingResults(q){
-    var cacheKey = genKeyBingResults(q);
+function putUserPracticeResults(userId, msg){ 
+    var cacheKey = genKeyUserPractice(userId);
+    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeUserPractice); //cache time in seconds
+}
+
+function putGifResults(q, msg){ 
+    var cacheKey = genKeyGif(q);
+    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeImageSearch); //cache time in seconds
+}
+
+function putDictionaryResults(lang, q, msg){ 
+    var cacheKey = genKeyDictionary(lang, q);
+    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
+}
+
+function putTextToSpeechResults(lang, q){ 
+    var cacheKey = genKeyTextToSpeech(lang, q);
+    // we save the date so we can track old files
+    client.set(cacheKey, new Date());
+}
+
+function getImageResults(q){
+    return new Promise((resolve, reject)=>{
+        var cacheKey = genKeyImage(q);
+        getResults(cacheKey)
+        .then(r=>{
+            return resolve(JSON.parse(r));
+        })
+        .catch(err=>{
+            return reject(err);
+        })
+    })
+}
+
+function getGifResults(q){
+    return new Promise((resolve, reject)=>{
+        var cacheKey = genKeyGif(q);
+        return getResults(cacheKey)
+        .then(r=>{
+            return resolve(JSON.parse(r));
+        })
+        .catch(err=>{
+            return reject(err);
+        })
+    });
+}
+
+function getDictionaryResults(lang, q){
+    var cacheKey = genKeyDictionary(lang, q);
+    return getResults(cacheKey);
+}
+
+function getUserPracticeResults(userId){
+    var cacheKey = genKeyUserPractice(userId);
+    return getResults(cacheKey);
+}
+
+function getTextToSpeechResults(lang, q){
+    var cacheKey = genKeyTextToSpeech(lang, q);
+    return getResults(cacheKey)
+    .then(r=>{
+        if(r){
+            putTextToSpeechResults(lang, q);
+            return Promise.resolve(r);
+        }
+        return Promise.resolve();
+    });
+}
+
+function getResults(cacheKey){
     return new Promise((resolve, reject)=>{
           client.get(cacheKey, function (err, data) {
             if (err){
                     logger.error("error when getting data from redis: " + err);
                     return reject(err);
                 }
-            return resolve(JSON.parse(data));
+            var json;
+            try
+            {
+                json = JSON.parse(data);
+            }
+            catch(e)
+            {
+                //if gets here, objects is not json
+                json = data;
+            }
+            return resolve(data);
         });
     });
 }
 
-function genKeyBingResults(q){
-    return "BingResults" + q;
+function genKeyImage(q){
+    return "ImageCache" + q;
 }
 
+function genKeyGif(q){
+    return "GifCache" + q;
+}
 
+function genKeyDictionary(lang, q){
+    return "DictionaryCache" + lang + "-" + q;
+}
 
+function genKeyTextToSpeech(lang, q){
+    // we add the date so we can track unused old records in the future
+    return "TextToSpeechCache" + lang + "-" + q;
+}
+
+function genKeyUserPractice(userId){
+    return "userPractice-" + userId;
+}
 
 module.exports = {
-    putBingResults: putBingResults,
-    getBingResults: getBingResults
-
+    putImageResults: putImageResults,
+    getImageResults: getImageResults,
+    putGifResults: putGifResults,
+    getGifResults: getGifResults,
+    putDictionaryResults: putDictionaryResults,
+    getDictionaryResults: getDictionaryResults,
+    putTextToSpeechResults: putTextToSpeechResults,
+    getTextToSpeechResults: getTextToSpeechResults,
+    genKeyTextToSpeech: genKeyTextToSpeech,
+    getUserPracticeResults: getUserPracticeResults,
+    putUserPracticeResults: putUserPracticeResults
 };

@@ -43,8 +43,8 @@ const userSchema = new Schema({
         cardsLeft:{
             type: Number,
             default: 2000,
-            min: [0, 'card limit reached'],
-            max: [2000, 'card limit reached']
+            min: [0, 'card min limit reached'],
+            max: [2000, 'card max limit reached']
         }
     },
     preferences:{
@@ -63,10 +63,16 @@ const userSchema = new Schema({
     facebook:{
         id: {
             type: String,
-            unique: [true, 'facebookId already in use'], 
+            unique: [true, 'facebook Id already in use'], 
             sparse: true
-        },
-        token: String
+        }
+    },
+    google:{
+        id: {
+            type: String,
+            unique: [true, 'google Id already in use'], 
+            sparse: true
+        }
     },
     classLimit:{
         type: Number,
@@ -78,20 +84,18 @@ const userSchema = new Schema({
         min: [0, 'class limit reached'],
         max: [30, 'class limit reached']
     },
-    notificationCounter:{
+    notificationPriority:{
         type: Number, 
         default: 0
     },
     thumbnail:{
-        type: String,
-        ref: "img"
+        type: String
+    },
+    points:{
+        type: Number,
+        default: 0
     },
     classes: [{
-        lang: {
-            type: String,
-            default: "en",
-            enum: langCodes
-        },
         id:{
             type: Schema.Types.ObjectId
         },
@@ -109,7 +113,7 @@ userSchema.plugin(uniqueValidator, { message: 'That {PATH} already exists, it ha
 
 userSchema.post('save', function(error, doc, next) {
   if (error.name === 'MongoError' && error.code === 11000) {
-    logger.warn(error);
+    logger.info(error);
   } else {
     next(error);
   }

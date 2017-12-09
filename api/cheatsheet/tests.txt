@@ -1,0 +1,2 @@
+run tests:
+npm run test (script must be set in package.json)

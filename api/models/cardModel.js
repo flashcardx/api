@@ -4,12 +4,6 @@ const logger = config.getLogger(__filename);
 const mongoose = require('mongoose');
 const validators = require("./validators/cardValidators");
 const Schema = mongoose.Schema;
-const lang = config.lang;
-var AutoIncrement = require('mongoose-sequence');
-
-var langCodes = lang.map((value)=>{
-    return value.code;
-});
 
 const cardSchema = new Schema({
     name:{
@@ -20,6 +14,11 @@ const cardSchema = new Schema({
     description:{
         type: String,
         validate: validators.descriptionValidator
+    },
+    ownerType:{
+        type: String,
+        enum: ["u", "c"],
+        default: "u"
     },
     imgs: [{
         hash:{
@@ -32,11 +31,6 @@ const cardSchema = new Schema({
             type: Number
         }
     }],
-    lang:{
-        type: String, 
-        default: "en",
-        enum: langCodes
-    },
     isDuplicated:{
         type: Boolean,
         default: false
@@ -46,15 +40,13 @@ const cardSchema = new Schema({
     },
     ownerId:{
          type: Schema.Types.ObjectId,
-         index:true
+         ref: "users",
+         index: true
     },
-    category:{
-        type:String,
-        default: ""
-    },
-     counter:{
-        type:Number,
-        unique: true
+    deckId:{
+         type: Schema.Types.ObjectId,
+         ref: "decks",
+         index: true
     },
     supermemo:{
         easiness:{
@@ -77,8 +69,8 @@ const cardSchema = new Schema({
     }
 );
 
-cardSchema.plugin(AutoIncrement, {inc_field: 'counter'});
 cardSchema.index({"updated_at": 1});
+cardSchema.index({ownerId: 1, deckId: 1});
 
 cardSchema.pre('update', function(next) {
   this.options.runValidators = true;

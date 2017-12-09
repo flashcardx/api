@@ -2,7 +2,7 @@ const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const userService = require("./userService");
-const dictionaryCommons = require("./dictionaryServiceCommons");
+const dictionaryService = require("./dictionaryService");
 const logger = config.getLogger(__filename);
 
 function toggleAutocomplete(userId, callback){
@@ -11,8 +11,8 @@ function toggleAutocomplete(userId, callback){
             return callback(result);
         var user = result.msg;
         if(user.preferences.autoComplete === false){
-            if(dictionaryCommons.langIsSupported(user.lang) === false)
-                return callback({success:false, msg: "Current languaje not supported, autocomplete is available for: " + dictionaryCommons.SUPPORTED_LANGS});
+            if(dictionaryService.langIsSupported(user.lang) === false)
+                return callback({success:false, msg: "Current languaje not supported, autocomplete is available for: " + dictionaryService.SUPPORTED_LANGS});
             user.preferences.autoComplete = true;
         }
         else

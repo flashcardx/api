@@ -7,31 +7,28 @@ const Img = require(appRoot + "/models/imgModel");
 const classModel = require(appRoot + "/models/classModel");
 const logger = config.getLogger(__filename);
 const userService = require(appRoot + "/service/userService");
-const cardService = require(appRoot + "/service/cardService");
 const cacheService = require(appRoot + "/service/cacheService");
 const imgService = require(appRoot + "/service/imgService");
 const AWSService = require(appRoot + "/service/AWSService");
 const feedService = require(appRoot + "/service/feedService");
-const categoryService = require(appRoot + "/service/categoryService");
 const notificationService = require(appRoot + "/service/notificationService");
-const cache = require("memory-cache");
 const ObjectId = require('mongoose').Types.ObjectId;
 
 
 function create(Class, callback){
     var userModel;
     var cId;
-    verifyOwnerLimits(Class.isPrivate, Class.owner, "plan.isPremium name classLimit classesLeft lang classes")
+    verifyOwnerLimits(Class.isPrivate, Class.owner, "plan.isPremium name classLimit classesLeft classes")
     .then((user)=>{
         userModel = user;
-        return saveClassDb(Class, user.lang)
+        return saveClassDb(Class)
     })
     .then((classId)=>{
         cId = classId;
         return linkOwnerClass(userModel, classId);
     })
     .then(()=>{
-        feedService.followClass(cId, userModel._id, userModel.lang);
+        feedService.followClass(cId, userModel._id);
         return callback({success:true});
     })
     .catch(err=>{
@@ -43,7 +40,6 @@ function create(Class, callback){
 function linkOwnerClass(userModel, classId){
     return new Promise((resolve, reject)=>{
         var c = {
-            lang: userModel.lang,
             id: classId,
             isAdmin: true 
         };
@@ -59,9 +55,8 @@ function linkOwnerClass(userModel, classId){
     });
 }
 
-function saveClassDb(Class, lang){
+function saveClassDb(Class){
     return new Promise((resolve, reject)=>{
-        Class.lang = lang;
         var newCard = new classModel(Class);
         newCard.save().then(()=>{
             resolve(newCard._id);
@@ -92,12 +87,12 @@ function verifyOwnerLimits(isPrivate, userId, fields){
 
 
 function listAll(userId, callback){
-    listAllByFieldsPopulateOwner(userId, "name thumbnail description isPrivate maxLimit cardsLeft owner maxUsers usersLeft updated_at lang", r=>{
+    listAllByFieldsPopulateOwner(userId, "name thumbnail description isPrivate maxLimit cardsLeft owner maxUsers usersLeft updated_at", r=>{
         if(r.success == false)
             return callback(r);
         var Classes = r.msg;
         Classes.forEach(c=>{
-            c.thumbnail = AWSService.getImgUrl(c.thumbnail);
+            c.thumbnail = AWSService.getUrl(c.thumbnail);
         })
         return callback({success:true, msg:Classes});
     });
@@ -111,7 +106,7 @@ function listAllShort(userId, callback){
 
 
 /**
- * This method will return ALL classes the user have,
+ * This method will return ALL classes the user has,
  * most users will have less than 30 classes(ok), but if user
  * had a dangerous high number of classes example:1000
  * performance will blow up.
@@ -119,7 +114,7 @@ function listAllShort(userId, callback){
  * 
  */
 function listAllByFields(userId, fields, callback){
-    userService.findById(userId, "classes lang -_id", r=>{
+    userService.findById(userId, "classes -_id", r=>{
         if(r.success === false){
                 logger.error(r.msg);
                 return callback(r);
@@ -132,8 +127,7 @@ function listAllByFields(userId, fields, callback){
         var processed1 = 0,
             processed2 = 0;
         user.classes.forEach((value, index, a)=>{
-            if(value.lang === user.lang){
-                classModel.findOne({_id: value.id, lang:user.lang, isActive:true}, fields)
+                classModel.findOne({_id: value.id, isActive:true}, fields)
                 .lean()
                 .exec()
                 .then(doc=>{
@@ -152,9 +146,6 @@ function listAllByFields(userId, fields, callback){
                 logger.warn(err);
                 return callback({success:false, msg:String(err)});
             });
-            }//end if
-            else
-                processed2++;
             if(processed1 + processed2 === length)
                 return callback({success:true, msg:finalResults});
     }); //end foreach
@@ -162,7 +153,7 @@ function listAllByFields(userId, fields, callback){
 }
 
 function listAllByFieldsPopulateOwner(userId, fields, callback){
-    userService.findById(userId, "classes lang -_id", r=>{
+    userService.findById(userId, "classes -_id", r=>{
         if(r.success === false){
                 logger.error(r.msg);
                 return callback(r);
@@ -175,8 +166,7 @@ function listAllByFieldsPopulateOwner(userId, fields, callback){
         var processed1 = 0,
             processed2 = 0;
         user.classes.forEach((value, index, a)=>{
-            if(value.lang === user.lang){
-                classModel.findOne({_id: value.id, lang:user.lang, isActive:true}, fields)
+                classModel.findOne({_id: value.id, isActive:true}, fields)
                 .lean()
                 .populate("owner", "name")
                 .exec()
@@ -196,51 +186,32 @@ function listAllByFieldsPopulateOwner(userId, fields, callback){
                 logger.warn(err);
                 return callback({success:false, msg:String(err)});
             });
-            }//end if
-            else
-                processed2++;
             if(processed1 + processed2 === length)
                 return callback({success:true, msg:finalResults});
     }); //end foreach
     });
 }
 
-
-
-
 // returns user id and integrants id so client can tell if is already joined to a class
 function search(name, userId, callback){
-    userService.getUserLang(userId, r=>{
-        if(r.success === false){
-                logger.error(r.msg);
-                return callback(r);
-            }
-        const lang = r.msg;
-        classModel.findOne({name:name, lang:lang, isActive:true}, "name thumbnail description cardsLeft integrants owner maxUsers usersLeft maxLimit")
+        classModel.findOne({name:name, isActive:true}, "name thumbnail description cardsLeft integrants owner maxUsers usersLeft maxLimit")
         .populate("owner", "name")
         .lean()
         .exec()
         .then(doc=>{
             if(!doc)
                 return callback({success:true});
-            doc.thumbnail = AWSService.getImgUrl(doc.thumbnail);
+            doc.thumbnail = AWSService.getUrl(doc.thumbnail);
             return callback({success:true, msg:doc, userId:userId});
         })
         .catch(err=>{
                 logger.warn(err);
                 return callback({success:false, msg:String(err)});
         });
-    });
 }
 
 function recommendClasses(userId, callback){
-    userService.getUserLang(userId, r=>{
-        if(r.success === false){
-                logger.error(r.msg);
-                return callback(r);
-            }
-        const lang = r.msg;
-        classModel.find({"owner":{$ne:userId}, "integrants":{$ne:userId}, lang:lang, isPrivate:false, usersLeft:{$gt:0}, isActive:true}, "name thumbnail description owner integrants updated_at maxLimit cardsLeft maxUsers usersLeft")
+        classModel.find({"owner":{$ne:userId}, "integrants":{$ne:userId}, isPrivate:false, usersLeft:{$gt:0}, isActive:true}, "name thumbnail description owner integrants updated_at maxLimit cardsLeft maxUsers usersLeft")
         .sort('-rank')
         .limit(8)
         .populate("owner", "name")
@@ -249,7 +220,7 @@ function recommendClasses(userId, callback){
         .then(r=>{
             if(r){
                 r.forEach(c=>{
-                    c.thumbnail = AWSService.getImgUrl(c.thumbnail);
+                    c.thumbnail = AWSService.getUrl(c.thumbnail);
                 });
                 return callback({success:true, msg: r, userId: userId});
             }
@@ -258,20 +229,19 @@ function recommendClasses(userId, callback){
                 logger.warn(err);
                 return callback({success:false, msg:String(err)});
         });
-    });
 }
 
 function joinClass(classname, userId, callback){
     var classId;
-    verifyUserIsNotInClass(userId, classname, "usersLeft owner integrants name lang isPrivate")
+    verifyUserIsNotInClass(userId, classname, "usersLeft owner integrants name isPrivate")
     .then(classModel=>{
         classId = classModel._id;
         if(classModel.isPrivate === false)
             return joinPublicClass(classModel, userId);
         return joinPrivateClass(classModel, userId);
     })
-    .then(lang=>{
-        feedService.followClass(classId, userId, lang);
+    .then(()=>{
+        feedService.followClass(classId, userId);
         return callback({success:true});
     })
      .catch(err=>{
@@ -282,7 +252,7 @@ function joinClass(classname, userId, callback){
 
 function joinPublicClass(classModel, userId){
     return new Promise((resolve, reject)=>{
-        userService.findById(userId, "name classes classesLeft lang", r=>{
+        userService.findById(userId, "name classes classesLeft", r=>{
             if(r.success === false){
                 logger.error(r.msg);
                 return reject(r);
@@ -295,7 +265,7 @@ function joinPublicClass(classModel, userId){
                     return notificationService.notifyClassUserJoined(allIntegrants, classModel.name, userModel.name, userId);
                 })
                 .then(()=>{
-                    return resolve(userModel.lang);
+                    return resolve();
                 })
                 .catch(err=>{
                     return reject(err);
@@ -315,7 +285,6 @@ function joinUserClass(userModel, classModel){
             classModel.integrants.push(new ObjectId(userModel._id));
             userModel.classes.push({
                 id: classModel._id,
-                lang: classModel.lang,
                 isAdmin: false
             });
             classModel.save()
@@ -354,7 +323,7 @@ function verifyUserIsNotInClass(userId, classname, fields){
 
 
 function addUser(classname, userJoinerEmail, userRequesterId, callback){
-    userService.findByEmail(userJoinerEmail, "name classesLeft classes lang", r=>{
+    userService.findByEmail(userJoinerEmail, "name classesLeft classes", r=>{
             if(r.success === false)
                 return callback(r);
             var user2Join = r.msg;
@@ -382,7 +351,7 @@ function addUser(classname, userJoinerEmail, userRequesterId, callback){
                         });
                 })
             .then(()=>{
-                feedService.followClass(classId, user2Join._id, user2Join.lang);
+                feedService.followClass(classId, user2Join._id);
                 callback({success:true});
             })
             .catch(err=>{
@@ -428,7 +397,7 @@ function removeUser(classname, leaverId, requesterId, callback){
                         {$or:[{"owner":{$eq:leaverId}}, {"integrants":{$eq:leaverId}}]},
                         {$or:[{"owner":{$eq:requesterId}}, {"integrants":{$eq:requesterId}}]}
                         ]},
-                        "owner isPrivate integrants lang")
+                        "owner isPrivate integrants")
         .populate("owner", "name")
         .lean()
         .exec()
@@ -446,7 +415,7 @@ function removeUser(classname, leaverId, requesterId, callback){
                 {$inc:{"classesLeft":1},
                     $pull: {"classes":{"id":new ObjectId(Class._id)}}
                 })
-                .select('name lang')
+                .select('name')
                 .lean()
                 .exec()
             .then(doc=>{
@@ -455,9 +424,7 @@ function removeUser(classname, leaverId, requesterId, callback){
                         return Promise.reject("could not find user");
                     }
                     userLeaver = doc;
-                    if(classBackup.lang != userLeaver.lang)
-                        return Promise.reject("User must have setted the same language than the class in order to leave it");
-                return classModel.findOneAndUpdate({_id:Class._id},
+               return classModel.findOneAndUpdate({_id:Class._id},
                     {$inc:{"usersLeft": 1},
                     $pull: {"integrants":new ObjectId(leaverId)}
                 },
@@ -490,7 +457,7 @@ function removeUser(classname, leaverId, requesterId, callback){
                             return Promise.resolve();
             })
             .then(()=>{
-                    feedService.unfollowClass(classBackup._id, leaverId, userLeaver.lang);
+                    feedService.unfollowClass(classBackup._id, leaverId);
                     return callback({success:true});
             })
             .catch(err=>{
@@ -500,18 +467,15 @@ function removeUser(classname, leaverId, requesterId, callback){
         });   
 }
 
-
 function mark4delete(classname, userId, callback){
     var classModel;
     var allIntegrants;
-    findByNamePopulateOwner(classname, "owner lang isActive integrants", "name lang")
+    findByNamePopulateOwner(classname, "owner isActive integrants", "name")
     .then(Class=>{
         if(!Class)
             return Promise.reject("Could not find class");
         if(Class.owner._id != userId)
             return Promise.reject("only the admin can delete a class");
-        if(Class.lang != Class.owner.lang)
-                return Promise-reject("User must have setted the same lang than the class");
         classModel = Class;
         Class.isActive = false;
         Class.name = undefined;
@@ -558,81 +522,6 @@ function findByNamePopulateOwner(classname, fields, fields2){
         .exec();
 }
 
-
-function duplicateCard2Class(classname, cardId, userId, callback){
-    var cardId;
-    var classId;
-    findClassLean(classname, userId, "cardsLeft name")
-        .then(Class=>{
-            if(!Class)
-                    return Promise.reject("Either class does not exist or user is not in the class");
-            if(Class.cardsLeft <= 0){
-                return Promise.reject("Class is full, no space for more cards");
-            }
-            classId = Class._id;
-            userService.findById(userId, "name", r=>{
-                if(r.success == false){
-                    logger.error(r.msg);
-                    return Promise.reject(r.msg);
-                }
-                const username = r.msg.name;
-                cardService.duplicateCard2Class(Class, cardId, username, r=>{
-                    if(r.success == false)
-                        return Promise.reject(r.msg);
-                    cardId = r.msg._id;
-                    decreaseCardsLeft(Class._id)
-                    .then(r=>{
-                        feedService.publishCardClassFeed(classId, cardId);
-                        return callback({success:true});
-                    })
-                    .catch(err=>{
-                        logger.error("error:" + err);
-                        return callback({success:false, msg:err});
-                    })
-                })
-            })
-        })
-        .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
-        });
-}
-
-function duplicateCard2User(classname, cardId, userId, callback){
-    var classId;
-    findClassLean(classname, userId, "cardsLeft")
-        .then(Class=>{
-            classId = Class._id;
-            if(!Class)
-                    return Promise.reject("Either class does not exist or user is not in the class");
-            if(Class.cardsLeft <= 0){
-                return Promise.reject("Class is full, no space for more cards");
-            }
-            userService.findById(userId, "name", r=>{
-                if(r.success === false){
-                    logger.error(r.msg);
-                    return Promise.reject(r.msg);
-                }
-                const username = r.msg.name;
-                cardService.duplicateCardUserClass(cardId, userId, r=>{
-                    if(r.success == false)
-                        return Promise.reject(r.msg);
-                    return Promise.resolve();
-                })
-            })
-        })
-        .then(()=>{
-            return increaseRank(classId, 2);
-        })
-        .then(()=>{
-            return callback({success:true});
-        })
-        .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
-        });
-}
-
 function increaseRank(classId, n){
     return classModel.update({_id:classId}, {$inc:{"rank":n}}).exec();
 }
@@ -653,19 +542,18 @@ function deleteCard(classname, userId, cardId, callback){
         if(!Class)
             return Promise.reject("Either class does not exist or user is not in the class");
         classModel = Class;
-        return cardService.deleteCardClass(cardId, Class._id)
+        return cardService.deleteCardClassInsecure(cardId, Class._id)
     })
     .then(()=>{
             return increaseCardsLeft(classModel._id);
     })
     .then(()=>{
-        feedService.removeCardFromClass(classModel._id, cardId);
         return callback({success:true});
     })
     .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
-        });
+                logger.error("err: " + err);
+                return callback({success:false, msg:err});
+    });
 }
 
 function getCards(classname, userId, params, callback){
@@ -673,11 +561,11 @@ function getCards(classname, userId, params, callback){
     .then(Class=>{
         if(!Class)
             return Promise.reject("Either class does not exist or user is not in the class");
-        return cardService.getClassCards(Class._id, params, callback);
+        return cardService.getClassCardsUnsafe(Class._id, params, callback);
     })
     .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
+                logger.error("err: " + err);
+                return callback({success:false, msg:err});
         });
 }
 
@@ -695,6 +583,16 @@ function findClassLean(classname, userId, fields){
 function findClassLeanNoVerify(classname, fields){
     return classModel.findOne({$and: [
                         {name:classname},
+                        {isActive:true}
+                        ]},
+                        fields)
+        .lean()
+        .exec();
+}
+
+function findByIdLeanUnsafe(id, fields){
+    return classModel.findOne({$and: [
+                        {_id:id},
                         {isActive:true}
                         ]},
                         fields)
@@ -743,33 +641,15 @@ function updateCard(classname, userId, cardId, card, callback){
     .then(Class=>{
         if(!Class)
             return Promise.reject("Either class does not exist or user is not in the class");
-        cardService.updateCardClass(cardId, Class._id, card, r=>{
-            if(r.success == false)
-                return Promise.reject(r.msg);
-            return callback({success:true});
-        });
+        return cardService.updateCardClassUnsafe(cardId, Class._id, card);
+    })
+    .then(()=>{
+        return callback({success:true});
     })
     .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
-        });
-}
-
-function getCategories(classname, userId, callback){
-    findClassLean(classname, userId, "_id")
-    .then(Class=>{
-        if(!Class)
-            return Promise.reject("Either class does not exist or user is not in the class");
-        categoryService.getCategoriesClass(Class._id, r=>{
-            if(r.success == false)
-                return Promise.reject(r.msg);
-            return callback(r);
-        });
-    })
-    .catch(err=>{
-                    logger.error("err: " + err);
-                    return callback({success:false, msg:err});
-        });
+                logger.error("err: " + err);
+                return callback({success:false, msg:err});
+    });
 }
 
 function getStats(classname, userId, callback){
@@ -777,7 +657,7 @@ function getStats(classname, userId, callback){
     .then(Class=>{
         if(!Class)
             return Promise.reject("Either class does not exist or user is not in the class");
-        Class.thumbnail = AWSService.getImgUrl(Class.thumbnail);
+        Class.thumbnail = AWSService.getUrl(Class.thumbnail);
         return callback({success:true, msg:Class});
     })
     .catch(err=>{
@@ -798,10 +678,10 @@ function getClassIntegrants(classname, userId, callback){
         .exec()
         .then(r=>{
                 if(r.owner.thumbnail)
-                    r.owner.thumbnail = AWSService.getImgUrl(r.owner.thumbnail);
+                    r.owner.thumbnail = AWSService.getUrl(r.owner.thumbnail);
                 r.integrants.forEach((v, i)=>{
                     if(r.integrants[i].thumbnail)
-                        r.integrants[i].thumbnail = AWSService.getImgUrl(v.thumbnail);
+                        r.integrants[i].thumbnail = AWSService.getUrl(v.thumbnail);
                 });
                 return callback({success:true, msg:r});
         })
@@ -824,7 +704,7 @@ function setImage(Class, userId, buffer, callback){
                         .then(r=>{
                             var allIntegrants = Class.integrants;
                             allIntegrants.push(Class.owner);
-                            imgService.generateThumbnailAndSaveToS3(newThumbnail.hash, buffer, r=>{
+                            imgService.genSmallThumbnailAndSaveToS3(newThumbnail.hash, buffer, r=>{
                                 notificationService.newThumbnail(Class.name, allIntegrants, userId);
                                 return callback({success:true});
                             });
@@ -854,8 +734,6 @@ function changeProfilePicture(classname, userId, buffer, callback){
                     return callback({success:false, msg:"could not find class"});
         });
 }
-
-
 
 function deleteProfilePicture(classname, userId, callback){
         findClassLean(classname, userId, "thumbnail owner integrants name")
@@ -887,10 +765,6 @@ function deleteProfilePicture(classname, userId, callback){
         });
 }
 
-
-
-
-
 module.exports = {
     create: create,
     listAll: listAll,
@@ -901,17 +775,70 @@ module.exports = {
     removeUser: removeUser,
     mark4delete: mark4delete,
     listAllShort: listAllShort,
-    duplicateCard2Class: duplicateCard2Class,
     getCards: getCards,
     updateCard: updateCard,
-    getCategories: getCategories,
-    getStats: getStats,
     deleteCard: deleteCard,
     getClassIntegrants: getClassIntegrants,
-    duplicateCard2User: duplicateCard2User,
     changeProfilePicture: changeProfilePicture,
     deleteProfilePicture: deleteProfilePicture,
     findClassLean: findClassLean,
     findClassLeanNoVerify: findClassLeanNoVerify,
-    findClassLeanById: findClassLeanById
+    findClassLeanById: findClassLeanById,
+    decreaseCardsLeft: decreaseCardsLeft,
+    findByIdLeanUnsafe: findByIdLeanUnsafe
 }
+
+function duplicateCardUC(userId, cardId, deckId, callback){
+    var cardId;
+    var classId;
+    deckService.findByIdLean(deckId, "ownerId")
+    .then(r=>{
+        if(!r)
+            return Promise.reject("deck not found");
+        return findClassLeanById(r.ownerId, userId, "cardsLeft name")
+    })
+    .then(Class=>{
+            if(!Class)
+                return Promise.reject("Either class does not exist or user is not in the class");
+            if(Class.cardsLeft <= 0){
+                return Promise.reject("Class is full, no space for more cards");
+            }
+            classId = Class._id;
+            userService.findById(userId, "name", r=>{
+                if(r.success == false){
+                    logger.error(r.msg);
+                    return Promise.reject(r.msg);
+                }
+                const username = r.msg.name;
+                cardService.duplicateCardUCUnsafe(Class, cardId, username, deckId, r=>{
+                    if(r.success == false)
+                        return Promise.reject(r.msg);
+                    cardId = r.msg._id;
+                    return callback({success:true});
+                })
+            })
+        })
+        .catch(err=>{
+                    logger.error("err: " + err);
+                    return callback({success:false, msg:err});
+        });
+}
+
+function duplicateCardCU(userId, classname, cardId, deckId, callback){
+    findClassLean(classname, userId, "_id")
+    .then(r=>{
+        if(!r)
+            return Promise.reject("Class not found");
+        return cardService.duplicateCard2User(userId, cardId, deckId, callback);
+    })
+    .catch(err=>{
+        logger.error("error in duplicateclasscu: " + err);
+        return callback({success:false, msg:err});
+    })
+}
+
+module.exports.duplicateCardUC = duplicateCardUC;
+module.exports.duplicateCardCU = duplicateCardCU;
+
+const deckService = require(appRoot + "/service/deckService");
+const cardService = require(appRoot + "/service/cardService");

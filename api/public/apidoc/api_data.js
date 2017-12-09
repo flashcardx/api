@@ -1,41 +1,1339 @@
 define({ "api": [
   {
     "type": "post",
+    "url": "/card/:type/:deckId",
+    "title": "create card",
+    "group": "card",
+    "name": "create_card",
+    "description": "<p>create card inside deck.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "deckId",
+            "description": "<p>id for the deck where card will be created.</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>If deck is in class, classname is required.</p>"
+          }
+        ],
+        "Body": [
+          {
+            "group": "Body",
+            "type": "string",
+            "optional": false,
+            "field": "name",
+            "description": "<p>card name.</p>"
+          },
+          {
+            "group": "Body",
+            "type": "string",
+            "optional": true,
+            "field": "description",
+            "description": "<p>description for card.</p>"
+          },
+          {
+            "group": "Body",
+            "type": "Array",
+            "optional": true,
+            "field": "imgs",
+            "description": "<p>Array with objects containing image hashes(Up to 3) and size(width and height), you need to call the image proxy method first for getting the hash.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /card/c/59991371065a2544f7c90288?classname=unlam1\nbody: { \"name\":\"car\",\n         \"description\": \"a ferrari\",\n         \"hashes\":[\"dcc6456deddddr\", \"4f5f8dddrfoklh4\"]\n     }",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"card\": {   \n             \"_id\":\"ASY54RFRF5TOJB1XW\"\n             \"name\": \"car\",\n             \"description\": \"hello world\",\n             \"imgs\": [{\"hash\":\"4f64b9842a75a917fb4581ab92850adc\",\n                       \"width\": \"23\",\n                        \"height\":\"324\",\n                         \"src\": \"https://d2pkpj1gudc0wt.cloudfront.net/image%2F4f64b9842a75a917fb4581ab92850adc\"\n                         },\n                         {\"hash\":\"4f64b9842a75a917fb4581ab92850ade\",\n                          \"width\": \"234\",\n                           \"height\": \"235\",\n                            \"src\": \"https://d2pkpj1gudc0wt.cloudfront.net/image%2F4f64b9842a75a917fb4581ab92850ade\"\n                         }]\n         }\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/cardController.js",
+    "groupTitle": "card"
+  },
+  {
+    "type": "delete",
+    "url": "/card/:type/:cardId",
+    "title": "delete card",
+    "group": "card",
+    "name": "delete_card",
+    "description": "<p>deletes the card.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u:user card, c:class card.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "cardId",
+            "description": "<p>id of the card to be deleted.</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>needed when type=c.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /card/u/59991371065a2544f7c90288",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/cardController.js",
+    "groupTitle": "card"
+  },
+  {
+    "type": "get",
+    "url": "/duplicateCard/:type/:cardId/:deckId",
+    "title": "duplicate card",
+    "group": "card",
+    "name": "duplicate_card",
+    "description": "<p>duplicates card from user to user.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>uu:user to user, uc:user to class, cu: class to user.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "cardId",
+            "description": "<p>id of the card to be duplicated.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "deckId",
+            "description": "<p>id for the deck where card will be created.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /duplicateCard/uu/59991371065a2544f7c90288/59991371065a2544f7c9028a",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/cardController.js",
+    "groupTitle": "card"
+  },
+  {
+    "type": "post",
+    "url": "/editCard/:type/:cardId",
+    "title": "edit card",
+    "group": "card",
+    "name": "edit_card",
+    "description": "<p>edit card's data, *undefined values wont be updated.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u:user, c:class.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "cardId",
+            "description": "<p>id of the card to be updated.</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>needed when type=c.</p>"
+          }
+        ],
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "name",
+            "description": "<p>name for the card.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "description",
+            "description": "<p>description for the card.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /editCard/u/59991371065a2544f7c90288\nbody: { \"name\":\"car\",\n         \"description\": \"a ferrari updated\"\n     }",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n  \"card\": {   \n             \"_id\":\"ASY54RFRF5TOJB1XW\",\n             \"name\": \"car\",\n             \"description\": \"hello world\",\n             \"imgs\": [{\"hash\":\"4f64b9842a75a917fb4581ab92850adc\",\n                        \"width\": \"245\",\n                        \"height\":\"324\",\n                        \"src\": \"https://d2pkpj1gudc0wt.cloudfront.net/image%2F4f64b9842a75a917fb4581ab92850adc\"\n                         },\n                         {\"hash\":\"4f64b9842a75a917fb4581ab92850ade\",\n                          \"width\": \"234\",\n                           \"height\": \"235\",\n                            \"src\": \"https://d2pkpj1gudc0wt.cloudfront.net/image%2F4f64b9842a75a917fb4581ab92850ade\"\n                         }]\n         }\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/cardController.js",
+    "groupTitle": "card"
+  },
+  {
+    "type": "get",
+    "url": "/cards/:type/:deckId",
+    "title": "get cards",
+    "group": "card",
+    "name": "get_cards",
+    "description": "<p>returns cards inside deck.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u: deck in user. c: deck in class.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": true,
+            "field": "deckId",
+            "description": "<p>id for the deck where the cards are. if undefined will return/search cards in all decks!</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>needed when type=c</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "limit",
+            "defaultValue": "12",
+            "description": "<p>limit how manny cards will be returned</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "skip",
+            "defaultValue": "0",
+            "description": "<p>used for pagination, how manny to skip?</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "name",
+            "description": "<p>name send this parameter for searching by card name(reg expressions accepted)</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /cards/u/59991371065a2544f7c90288?limit=10",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"msg\": [{\"_id\":\"59a5c98fb2ec6536aa422456\",\"updated_at\":\"2017-08-29T20:07:43.325Z\",\"name\":\"card class\",\"description\":\"I can fly in a class\",\"imgs\":[]}]\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/cardController.js",
+    "groupTitle": "card"
+  },
+  {
+    "type": "post",
+    "url": "/moveCard/:cardId/:deckId",
+    "title": "move card",
+    "group": "card",
+    "name": "move_card",
+    "description": "<p>move card to another deck, the same user must own both decks.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "cardId:",
+            "description": "<p>id of the card to be moved</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "deckId:",
+            "description": "<p>id of the deck where the card will be moved.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /moveCard/59991371065a2544f7c90288/599sd37ds65a2df7c9dcdc8",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":\"true\"\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/cardController.js",
+    "groupTitle": "card"
+  },
+  {
+    "type": "get",
+    "url": "/spCards",
+    "title": "spaced repetition cards",
+    "group": "card",
+    "name": "spaced_repetition_cards",
+    "description": "<p>gets 8 cards that need sp practice for every card gives you the repetition days for every option too.</p>",
+    "parameter": {
+      "fields": {
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "deckId",
+            "description": "<p>id for specific deck you wanna practice</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /spCards",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":\"true\",\n  \"msg\": \"[{\"stats\":{\"bad\":1, \"ok\":6, \"perfect\":30},\n            \"_id\":\"ASY54RFRF5TOJB1XW\",\n             \"name\": \"car\",\n             \"description\": \"hello world\",\n             \"imgs\": [{\"hash\":\"4f64b9842a75a917fb4581ab92850adc\",\n                        \"width\": \"245\",\n                        \"height\":\"324\",\n                        \"src\": \"https://d2pkpj1gudc0wt.cloudfront.net/image%2F4f64b9842a75a917fb4581ab92850adc\"\n                         },\n                         {\"hash\":\"4f64b9842a75a917fb4581ab92850ade\",\n                          \"width\": \"234\",\n                           \"height\": \"235\",\n                            \"src\": \"https://d2pkpj1gudc0wt.cloudfront.net/image%2F4f64b9842a75a917fb4581ab92850ade\"\n                         }]},\n         {\"stats\":{\"bad\":1, \"ok\":6, \"perfect\":30},\n            \"_id\":\"ASY54RFRFsasd5TOJB1XW\",\n             \"name\": \"car2\",\n             \"description\": \"hello world2\",\n             \"imgs\": [{\"hash\":\"4f64b9842a75a917fb4581ab92850adc\",\n                        \"width\": \"245\",\n                        \"height\":\"324\",\n                        \"src\": \"https://d2pkpj1gudc0wt.cloudfront.net/image%2F4f64b9842a75a917fb4581ab92850adc\"\n                         },\n                         {\"hash\":\"4f64b9842a75a917fb4581ab92850ade\",\n                          \"width\": \"234\",\n                           \"height\": \"235\",\n                            \"src\": \"https://d2pkpj1gudc0wt.cloudfront.net/image%2F4f64b9842a75a917fb4581ab92850ade\"\n                         }]}]\"\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/cardController.js",
+    "groupTitle": "card"
+  },
+  {
+    "type": "get",
+    "url": "/alldecks/:type",
+    "title": "Get all decks",
+    "group": "deck",
+    "name": "Get_all_decks",
+    "description": "<p>Returns all decks(name and id) from user or class.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>Needed for getting class decks.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /alldecks/u",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"decks\": [{\"name\": \"deck1\", id:\"59991371065a2544f7c90288\"},\n           {\"name\": \"math\", id:\"59991371065a2544fasd8888\"}]\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "examples": [
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\": false,\n  \"msg\": \"some mongodb error\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "get",
+    "url": "/deck/:deckId",
+    "title": "Get deck details",
+    "group": "deck",
+    "name": "Get_decks_details",
+    "description": "<p>Returns deck info based on query parameters.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "deckId.",
+            "description": ""
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "fields",
+            "description": "<p>fields that you request from the deck</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /deck/59991371065a2544f7c9028c?fields=name",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"msg\": {name\": \"deck1\", \"_id\":\"59991371065a2544f7c90288\"\n         }\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "get",
+    "url": "/decks/:type",
+    "title": "Get decks inside deck",
+    "group": "deck",
+    "name": "Get_decks_inside_deck",
+    "description": "<p>Returns all decks(name, id,description, lang and thumbnail) inside a deck, it uses pagination so once limit reached use skip for getting elements from other pages. decks per page:14. Note:For getting the final img url you need to concatenate the thumbnail hash you get with the CDN base url.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "parentId",
+            "description": "<p>id of the parent deck, if not specified returns all decks in root.</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>needed when type=c.</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "skip",
+            "defaultValue": "0",
+            "description": "<p>Used for pagination, if every page has 14 items, when skip=14 you will get items from page 2.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /decks/u?parentId=59991371065a2544f7c9028c&skip=14",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"decks\": [{\"description\":\"a very nice deck\", \"name\": \"deck1\", \"_id\":\"59991371065a2544f7c90288\", \"thumbnail\":\"18428b0dd352776131a209bd24785b8f\", \"lang\": \"es\"},\n           {\"description\":\"a nice deck\",\"name\": \"math\", \"_id\":\"59991371065a2544fasd8888\", \"thumbnail\":\"18428b0dd352776131a209bd24785b8f\", \"lang\": \"en\"}]\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "get",
+    "url": "/decksName/:type/:deckId",
+    "title": "Get decks names and ids inside deck",
+    "group": "deck",
+    "name": "Get_decks_inside_deck",
+    "description": "<p>Returns all decks(name, id) inside a deck, it has a limit of 50 objects, TODO: add pagination for returning more objects.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "deckId",
+            "description": "<p>id of the parent deck, if not specified returns all decks in root.</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>needed when type=c.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /decks/u/59991371065a2544f7c9028c",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"decks\": [{\"name\": \"deck1\", \"_id\":\"59991371065a2544f7c90288\"},\n           {\"name\": \"math\", \"_id\":\"59991371065a2544fasd8888\"}]\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "delete",
+    "url": "/deck/:type/:deckId",
+    "title": "delete deck",
+    "group": "deck",
+    "name": "delete_deck",
+    "description": "<p>If success=true deck including all its child decks and cards.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /deck/u/59991371065a2544f7c90288",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "delete",
+    "url": "/deckImg/:type/:deckId",
+    "title": "delete deck image",
+    "group": "deck",
+    "name": "delete_deck_image",
+    "description": "<p>deletes deck thumbnail.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "deckId",
+            "description": "<p>id of the deck.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /deckImg/u/5998f5ea23cbd123cf8becce",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "get",
+    "url": "/duplicateDeck/:type/:deckIdSrc",
+    "title": "duplicate deck",
+    "group": "deck",
+    "name": "duplicate_deck",
+    "description": "<p>duplicates deck to other deck, or root path of user/class.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>2u: duplicates to user(from class or other user), 2c: to class(from user or other class where user has access).</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "deckIdSrc",
+            "description": "<p>id of deck to be duplicated</p>"
+          }
+        ],
+        "Query": [
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "dest",
+            "description": "<p>id for the deck of destiny, if not specified deck will go to the root</p>"
+          },
+          {
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>needed if type=2c</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /duplicateDeck/2u/59991371065a2544f7c90288?dest=59991371065a2544f7c90288",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "post",
+    "url": "/editDeck/:type/:deckId",
+    "title": "edit deck",
+    "group": "deck",
+    "name": "edit_deck",
+    "description": "<p>edit name/description/language/image of the deck. *Only defined parameters will be updated.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          }
+        ],
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "name",
+            "description": "<p>name for the deck.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "description",
+            "description": "<p>description for deck.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "lang",
+            "description": "<p>Language code for the deck.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "img",
+            "description": "<p>Image object containing: hash, width,height. Will be shown in the deck cover.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /updateDeck/u/59991371065a2544f7c90288\nbody:  {\n        \"name\":\"people\",\n        \"description\": \"beautiful people in a deck\"\n   }",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"deck\": {\"_id\":xxxxx, \"name\":\"name\", lang:\"xxse\", etc} \n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "post",
+    "url": "/deck/:type",
+    "title": "new deck",
+    "group": "deck",
+    "name": "new_deck",
+    "description": "<p>creates user or class deck depending on type param, returns the new deck.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "type",
+            "description": "<p>u or c depending on if deck belongs to user or class.</p>"
+          }
+        ],
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": false,
+            "field": "name",
+            "description": "<p>name for the deck.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": false,
+            "field": "description",
+            "description": "<p>description for deck.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "classname",
+            "description": "<p>needed if deck will be for a class.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "parentId",
+            "description": "<p>required if new deck(child) is inside another deck(parent).</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "lang",
+            "defaultValue": "en",
+            "description": "<p>Language code for the deck.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "img",
+            "description": "<p>Image object containing: hash, width,height. Will be shown in the deck cover.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /deck/u\nbody: {\n        \"name\":\"people\",\n        \"description\": \"beautiful people\",\n        \"parentId\": \"5998f5ea23cbd123cf8becce\",\n        \"lang\": \"es\",\n         \"img\":{\n             \"hash\": \"xsxedede\",\n             \"width\": \"200\",\n             \"height\": \"56\"\n             }\n   }",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"deck\": {\"_id\":xxxxx, \"name\":\"name\", lang:\"xxse\", etc}\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "examples": [
+        {
+          "title": "Error-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\": false,\n  \"msg\": \"some mongodb error\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/deckController.js",
+    "groupTitle": "deck"
+  },
+  {
+    "type": "post",
+    "url": "/imageProxy",
+    "title": "Image proxy",
+    "group": "image",
+    "name": "Image_proxy",
+    "description": "<p>recives dimentions and url or buffer of the image, saves it and returns hash(if concatenated with CDN url you get the image url) you must either send data or url parameters in the body. but never both.</p>",
+    "parameter": {
+      "fields": {
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "data",
+            "description": "<p>buffer with image data for saving URL FORM ENCODED!! CHECK HOW WEB DEALS WITH IT.</p>"
+          },
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": true,
+            "field": "url",
+            "description": "<p>image url for downloading.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "url: /imageProxy\nbody: {\n        \"src\":\"www.example.com/img.jpg\"\n   }",
+          "type": "json"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"hash\": \"599dae000df00e4588f5ea23cbd123cf8becce\"\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.1.0",
+    "filename": "controller/imgController.js",
+    "groupTitle": "image"
+  },
+  {
+    "type": "post",
+    "url": "/fbAuth",
+    "title": "fbAuth",
+    "group": "login",
+    "name": "fbAuth",
+    "description": "<p>receives facebook access token, if credentials are ok returns auth token for the user, if user doesnt exist it creates the user first and returns token.</p>",
+    "parameter": {
+      "fields": {
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": false,
+            "field": "action-token",
+            "description": "<p>facebook access token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "    HTTP/1.1 200 OK\n    {\"success\":true,\n    \"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjU5OTczMDFkMTA5ZmNlMzVjOTM0YjBhZCIsImlhdCI6MTUwMzA4MTYzOSwiZXhwIjoxNTAzMDg1MjM5fQ.bqmogt0-pDLsUbVtSTvziTVcrA7_993WnFtaRQRAN-Q\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.0.0",
+    "filename": "controller/loginController.js",
+    "groupTitle": "login"
+  },
+  {
+    "type": "post",
+    "url": "/googleAuth",
+    "title": "googleAuth",
+    "group": "login",
+    "name": "googleAuth",
+    "description": "<p>receives Google access token, if credentials are ok returns auth token for the user, if user doesn't exist it creates the user first and returns token.</p>",
+    "parameter": {
+      "fields": {
+        "Request body": [
+          {
+            "group": "Request body",
+            "type": "string",
+            "optional": false,
+            "field": "id_token",
+            "description": "<p>google access token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "    HTTP/1.1 200 OK\n    {\"success\":true,\n    \"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjU5OTczMDFkMTA5ZmNlMzVjOTM0YjBhZCIsImlhdCI6MTUwMzA4MTYzOSwiZXhwIjoxNTAzMDg1MjM5fQ.bqmogt0-pDLsUbVtSTvziTVcrA7_993WnFtaRQRAN-Q\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.0.0",
+    "filename": "controller/loginController.js",
+    "groupTitle": "login"
+  },
+  {
+    "type": "post",
     "url": "/login",
     "title": "login",
     "group": "login",
     "name": "login",
-    "description": "<p>receives user email and paswword and returns token with userid encrypted in it. note: the client can see the userid easily since getting the real data in the token is really easy, but setting data in a token is impossible(thanks to secret) ;).</p>",
+    "description": "<p>receives user email and password and returns token with userid encrypted in it. note: the client can see the userid easily since getting the real data in the token is really easy, but setting data in a token is impossible(thanks to secret) ;).</p>",
     "parameter": {
       "fields": {
-        "user": [
+        "Request body": [
           {
-            "group": "user",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "email",
             "description": "<p>user email.</p>"
           },
           {
-            "group": "user",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "password",
             "description": "<p>user password.</p>"
-          }
-        ],
-        "client": [
+          },
           {
-            "group": "client",
+            "group": "Request body",
             "type": "number",
             "optional": true,
             "field": "ip",
             "description": "<p>recaptcha needs it.</p>"
-          }
-        ],
-        "recaptcha": [
+          },
           {
-            "group": "recaptcha",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "g-recaptcha-response",
@@ -82,49 +1380,45 @@ define({ "api": [
     "description": "<p>receives new user info and recaptcha code. generates temporal user(lasts 24hs) until user is validated by email</p>",
     "parameter": {
       "fields": {
-        "user": [
+        "Request body": [
           {
-            "group": "user",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "email",
             "description": "<p>can not exist other user with same email.</p>"
           },
           {
-            "group": "user",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "name",
             "description": "<p>user name.</p>"
           },
           {
-            "group": "user",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "password",
             "description": "<p>user password.</p>"
           },
           {
-            "group": "user",
+            "group": "Request body",
             "type": "string",
             "optional": true,
             "field": "lang",
             "defaultValue": "en",
             "description": "<p>language shortcode</p>"
-          }
-        ],
-        "client": [
+          },
           {
-            "group": "client",
+            "group": "Request body",
             "type": "number",
             "optional": true,
             "field": "ip",
             "description": "<p>recaptcha needs it.</p>"
-          }
-        ],
-        "recaptcha": [
+          },
           {
-            "group": "recaptcha",
+            "group": "Request body",
             "type": "string",
             "optional": false,
             "field": "g-recaptcha-response",
@@ -135,7 +1429,7 @@ define({ "api": [
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "  {\n     \"email\":\"pablo1234@gmail.com\",\n     \"name\": \"pablo marino\",\n     \"password\": \"1234\",\n     \"lang\": \"en\",\n     \"g-recaptcha-response\": \"abc124xsed4fr\"\n}",
+          "content": "  {\n     \"email\":\"pablo1234@gmail.com\",\n     \"name\": \"pablo marino\",\n     \"password\": \"1234\",\n     \"lang\": \"en\",\n     \"g-recaptcha-response\": \"abc124xsed4fr\",\n      \"ip\": \"0.xxx.xxx.xx\"\n}",
           "type": "json"
         }
       ]
@@ -171,9 +1465,9 @@ define({ "api": [
     "description": "<p>receives search parameters and returns array with gif images.</p>",
     "parameter": {
       "fields": {
-        "search parameters": [
+        "Parameters": [
           {
-            "group": "search parameters",
+            "group": "Parameters",
             "type": "string",
             "optional": false,
             "field": "q",
@@ -185,15 +1479,15 @@ define({ "api": [
         {
           "title": "Request-Example:",
           "content": "curl localhost:3000/searchGif/holis",
-          "type": "param"
+          "type": "Parameter"
         }
       ]
     },
     "header": {
       "fields": {
-        "accessToken": [
+        "Headers": [
           {
-            "group": "accessToken",
+            "group": "Headers",
             "type": "string",
             "optional": false,
             "field": "x-access-token",
@@ -201,6 +1495,66 @@ define({ "api": [
           }
         ]
       }
+    },
+    "version": "1.0.0",
+    "filename": "controller/searchController.js",
+    "groupTitle": "search"
+  },
+  {
+    "type": "get",
+    "url": "/textToSpeech/:lang/:text",
+    "title": "textToSPeech",
+    "group": "search",
+    "name": "textToSPeech",
+    "description": "<p>receives lang and text and returns URL for downloading audio file.</p>",
+    "parameter": {
+      "fields": {
+        "Parameters": [
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "lang",
+            "description": "<p>ISO 2 letter lang code.</p>"
+          },
+          {
+            "group": "Parameters",
+            "type": "string",
+            "optional": false,
+            "field": "Text",
+            "description": "<p>to make speech of, max 40 characters NOTE: YOU MUST ENCODE THIS FIELD, CAUSE THIS IS PART OF THE URL, OTHERWISE CHARACERS LIKE '?' WILL GET LOOSE</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "curl localhost:3000/textToSpeech/es/holis",
+          "type": "Parameter"
+        }
+      ]
+    },
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":\"true\",\n  \"msg\": \"https://d2pkpj1gudc0wt.cloudfront.net/audio/eddrr7f8f8f7d4fg\"\n }",
+          "type": "json"
+        }
+      ]
     },
     "version": "1.0.0",
     "filename": "controller/searchController.js",

@@ -5,10 +5,6 @@ const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
 const uniqueValidator = require('mongoose-unique-validator');
 const validators = require("./validators/classValidators");
-const lang = config.lang;
-var langCodes = lang.map((value)=>{
-    return value.code;
-});
 
 
 
@@ -29,11 +25,6 @@ const classSchema = new Schema({
         ref: "users"
     },
     waiting: [{type:Schema.Types.ObjectId, ref: "users"}],
-    lang:{
-        type: String,
-        default: "en",
-        enum: langCodes
-    },
     maxLimit:{
         type:Number,
         default: 3000
