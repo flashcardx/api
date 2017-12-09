@@ -1,14 +1,14 @@
-# FlashCardX
+# FlashcardX
 Node.js REST API for a the flashcard based learning platform: FlashcardX
-Requirements for running the project:
+# Requirements:
 Unix based system(Linux or OSX)
 NODE v7
 MongoDB V3
 REDIS V4
 
-for running the project:
+# for running the project:
 1) clone the project and standing on the /api directory run: sudo npm install
 2) create a folder called: "flashcardx-keys" in your $HOME directory (run "$HOME" in the console to know where it is pointing)
-3) inside the "flashcardx-keys folder" you gotta drop the keys for the cloud service, write us to: "contact@flashcardx.co" and we will send you those keys
+3) inside the "flashcardx-keys folder" you gotta drop the keys for the cloud services, write us to: "contact@flashcardx.co" and we will send you those keys
 4) start the databases: mongo with "sudo mongod" and redis with "redis-server"
-5) in /api dir run the project with node app.js
+5) in /api dir run the project with "node app.js"
