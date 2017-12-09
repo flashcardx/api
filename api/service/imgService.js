@@ -33,9 +33,7 @@ function genAndSaveThumbnail(hash, buffer){
         timesUsed: 1,
         hash: hash
     }; 
-    logger.error("old image: ", image);  
     var newImg = new Img(image);
-    logger.error("about to save image: ", newImg);
     return newImg.save()
             .exec()
             .then(r=>{
@@ -150,7 +148,6 @@ function saveImgFromBuffer(buffer, contentType=fileType(buffer).mime, type){
     return new Promise((resolve, reject)=>{
             const hash = md5(buffer);
             AWSService.saveToS3(hash, contentType, buffer, err=>{
-                logger.error("error: ", err);
                 if(err)
                     return reject(err);
                 var img = new Img;
@@ -276,7 +273,6 @@ function proxyFromUrl(url, callback){
 }
 
 function proxyFromBuffer(buffer, callback){
-    console.log("time 1: ", new Date().getTime());
     saveImgFromBuffer(buffer)
     .then(hash=>{
         return callback({success:true, hash:hash, src: AWSService.getUrl(hash)});
