@@ -1,11 +1,10 @@
 const env = process.env.NODE_ENV || "development";
-const db = require("./json/db")[env].mongo;
-const redis = require("./json/db")[env].redis;
+const db = require("$HOME/flashcardx-keys/json/db")[env];
 const dbEvents= require("./dbEvents");
 const parameters = require("./json/parameters.json")[env];
 const logger = require("./logger");
-const email = require("./json/email.json")[env];
-const credentials = require("./json/credentials.json")[env];
+const email = require("$HOME/flashcardx-keys/email.json")[env];
+const credentials = require("$HOME/flashcardx-keys/credentials.json")[env];
 const lang = require("./json/lang.json");
 const errorCodes = require("./json/errorCodes.json");
 const dictionaries = require("./json/dictionaries.json")[env]; 

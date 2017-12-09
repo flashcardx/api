@@ -1,3 +1,6 @@
 .vscode/*
 api/node_modules/*
 api/logs/*
+api/config/json/credentials.json
+api/config/json/db.json
+api/config/json/email.json
