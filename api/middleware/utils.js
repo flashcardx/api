@@ -1,3 +1,4 @@
+const env = process.env.NODE_ENV || "development";
 const appRoot = require('app-root-path');
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
@@ -52,12 +53,11 @@ function onlyDecodeToken(req, res, next){
 }
 
 function requireMasterLogin(req, res, next){
-    requireLogin(req, res, ()=>{
+    requireLoginUnsafe(req, res, ()=>{
     const userId = req.userId;
     userService.findById(userId, "email -_id", r=>{
-      if(r.success === true && (r.msg.email==="pablo-n-m@hotmail.com"
-                              ||r.msg.email==="pablonicolasm.pm@gmail.com" 
-                              ||r.msg.email==="fmartin@codearsolutions.com")){
+      if(env==="development" || (r.success === true && (r.msg.email==="pablo-n-m@hotmail.com"
+                              ||r.msg.email==="pablonicolasm.pm@gmail.com")) ){
             req.email = r.msg.email;
             return next();  
       }

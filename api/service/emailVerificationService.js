@@ -59,7 +59,6 @@ function createTempUser(newUser, callback){
         if (existingPersistentUser)
             return callback({success:false, code: BAD_SIGNUP_EMAIL_ALREADY_EXISTS, msg:"User already exists"});
         
-
         // a new user
         if (newTempUser) {
             var URL = newTempUser[nev.options.URLFieldName];

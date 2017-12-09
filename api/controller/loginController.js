@@ -59,7 +59,7 @@ module.exports = function(app){
  *      }
  *  @apiVersion 1.0.0
  *  */
-    app.post("/signup",  controllerUtils.verifyRecaptcha, function(req, res){
+    app.post("/signup", controllerUtils.verifyRecaptcha, function(req, res){
         var ip = req.body.ip
         var user = {
                      email: req.body.email,
