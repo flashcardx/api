@@ -14,6 +14,6 @@
     "access": "/logs/access.log",
     "app": "/logs/app.log",
     "levelFile": "fatal",
-    "levelConsole":"warn"
+    "levelConsole":"info"
  }
 }
