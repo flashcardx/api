@@ -65,32 +65,6 @@ module.exports = function(app){
             .isLength({max:850}),
             body('classname',"Classname length must be in between 1 and 40")
             .isLength({max: 40}),
-            body('parentId')
-            .custom(parentId => {
-                if(parentId == null) return true;
-                else{
-                    if(validator.isMongoId(parentId)){
-                        return true;
-                    }else{
-                        throw new Error('Parent Deck Id must be a valid MongoID');
-                    }
-                }
-            }),
-            body('imgs')
-            .custom(imgs => {
-                if(!Array.isArray(imgs))
-                    throw new Error("Imgs must be an array");
-                if(imgs.length > 3)
-                    throw new Error("Card can not have more than 3 imgs");
-                imgs.forEach((img1, index1)=>{
-                    imgs.forEach((img2, index2)=>{
-                        if(index1 != index2)
-                            if(img1.hash == img2.hash)
-                                throw new Error('You can not have the same image twice in a flashcard');
-                    });
-                });
-                return true;
-            }),
             body('lang',  'Language Option must be length of 2')
             .isLength({min:2,max:2})
         ], controllerUtils.checkValidatorErrors,
