@@ -23,8 +23,7 @@ if (env != 'production'){
 
 config.connectMongoose();
 
-if(env != "production")
-    app.use(express.static('public'));
+app.use(express.static('public'));
 middleware.init(app);
 controllers(app);
 logger.info(packageJson.name + " starting ,  Version: " + packageJson.version);
