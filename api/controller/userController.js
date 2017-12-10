@@ -86,27 +86,26 @@ module.exports = function(app){
      *      "token": "dedrfr5f4rfdrf"}
      * @apiVersion 1.1.0
      *  */
-    app.post("/promocode", 
-    controllerUtils.verifyRecaptcha,
-    [
-        body('code', 'count must be 10 chars long')
-        .isLength({ min:10, max:10})
-    ], controllerUtils.onlyDecodeToken,
-    (req, res)=>{
-        var userId = req.decodedToken.id;
-        var dueDate;
-        codeService.linkUser(userId, req.body.code)
-        .then(due=>{
-            dueDate = due;
-            loginUtil.issueToken(userId, r=>{
-                if(r.success === false)
-                    return Promise.reject(r.msg);
-                return res.json({success:true, token: r.token, due: dueDate});
-            });
-        }) 
-        .catch(err=>{
-            return res.json({success:false, msg:err, code: INVALID_PROMOCODE});
-        })
-    });
+    app.post("/promocode", controllerUtils.verifyRecaptcha,
+        [
+            body('code', 'count must be 10 chars long')
+            .isLength({ min:10, max:10})
+        ], controllerUtils.onlyDecodeToken,
+        (req, res)=>{
+            var userId = req.decodedToken.id;
+            var dueDate;
+            codeService.linkUser(userId, req.body.code)
+            .then(due=>{
+                dueDate = due;
+                loginUtil.issueToken(userId, r=>{
+                    if(r.success === false)
+                        return Promise.reject(r.msg);
+                    return res.json({success:true, token: r.token, due: dueDate});
+                });
+            }) 
+            .catch(err=>{
+                return res.json({success:false, msg:err, code: INVALID_PROMOCODE});
+            })
+        });
 
 }

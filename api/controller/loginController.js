@@ -12,6 +12,7 @@ const googleAuthVerifier = require('google-id-token-verifier');
 const {INVALID_USER_EMAIL} = config.errorCodes;
 const controllerUtils = require(appRoot + "/middleware").utils;
 const loginUtil = require("./loginUtil");
+const { body, validationResult } = require('express-validator/check');
 
 passport.use(new FacebookTokenStrategy({
     clientID: facebookCredentials.appId,
@@ -59,17 +60,30 @@ module.exports = function(app){
  *      }
  *  @apiVersion 1.0.0
  *  */
-    app.post("/signup", controllerUtils.verifyRecaptcha, function(req, res){
-        var ip = req.body.ip
-        var user = {
-                     email: req.body.email,
-                     name: req.body.name,
-                     password: req.body.password,
-                     lang: req.body.lang
-            };
-        userService.registerTemporaryUser(user, result=>{
-                    return res.json(result);
-            });
+    app.post("/signup", controllerUtils.verifyRecaptcha, 
+        [
+            body('email','Must be a valid email')
+            .isEmail(),
+            body('name',"Name should be between 3 and 50 characters")
+            .isLength({min: 3, max: 50}),
+            body('password','Password should be between 4 and 60 characters')
+            .isLength({min:4,max:60}),
+            body('lang','Language should between 2 to 20')
+            .isLength({min:2, max:20}),
+            body('ip','IP must be valid')
+            .isIP()
+        ], controllerUtils.checkValidatorErrors,
+        (req, res) => {
+            var ip = req.body.ip
+            var user = {
+                        email: req.body.email,
+                        name: req.body.name,
+                        password: req.body.password,
+                        lang: req.body.lang
+                };
+            userService.registerTemporaryUser(user, result=>{
+                        return res.json(result);
+                });
     })
 
 /**
@@ -102,14 +116,21 @@ module.exports = function(app){
  *@apiError errorCodes-login <code>3</code> Password incorrect
  * @apiVersion 1.0.0
  *  */
-    app.post("/login", controllerUtils.verifyRecaptcha, function(req, res){
-        if(!req.body.email || !req.body.password){
-            res.json({success:false, msg:"you must send user email and password in the request"});
-            return;
-        }
-        loginUser(req.body, r=>{
-                return res.json(r);
-        });   
+    app.post("/login", controllerUtils.verifyRecaptcha, 
+        [
+            body('email','Must be a valid email')
+            .isEmail(),
+            body('password','Password should be between 4 and 60 characters')
+            .isLength({min:4,max:60}),
+        ], controllerUtils.checkValidatorErrors,
+        (req, res) => {
+            if(!req.body.email || !req.body.password){
+                res.json({success:false, msg:"you must send user email and password in the request"});
+                return;
+            }
+            loginUser(req.body, r=>{
+                    return res.json(r);
+            });   
     });
 
     app.get("/profile", controllerUtils.requireLogin,function(req, res){

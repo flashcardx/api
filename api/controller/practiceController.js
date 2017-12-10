@@ -53,9 +53,10 @@ module.exports = function(app){
      * @apiVersion 1.1.0
      *  */
     app.get("/spCards", controllerUtils.requireLogin, 
-            [query('deckId', 'deckId needs to be less than 24 characters')
-            .isLength({max:24})],
-            controllerUtils.checkValidatorErrors,
+        [
+            query('deckId', 'Deck ID must be a valid Mongo ID')
+            .optional().isMongoId(),
+        ], controllerUtils.checkValidatorErrors,
         (req, res)=>{
         practiceService.listCards(req.userId, req.query.deckId, result=>{
             return res.json(result);
@@ -85,14 +86,14 @@ module.exports = function(app){
      *      }
      * @apiVersion 1.1.0
      *  */
-     app.post("/rankCard", [
-         body("cardId", "Card id must be 24 characters long and is mandatory")
-         .isLength({min:24, max:24}),
-
-         body("name", "card name is required and must be less than 40 characters")
-         .isLength({min:1, max:40})
-        ], controllerUtils.checkValidatorErrors,
-           controllerUtils.requireLogin, (req, res)=>{
+     app.post("/rankCard", 
+        [
+            body("cardId", "Card id must be valid Mongo ID")
+            .isMongoId(),
+            body("name", "card name is required and must be less than 40 characters")
+            .isLength({min:1, max:40})
+        ], controllerUtils.checkValidatorErrors, controllerUtils.requireLogin,
+        (req, res)=>{
                 const userId = req.userId;
                 const cardId = req.body.cardId;
                 const name = req.body.name
