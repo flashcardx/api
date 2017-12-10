@@ -37,7 +37,6 @@ module.exports = function(app){
  * @apiParam (Request body) {string} name user name.
  * @apiParam (Request body) {string} password user password.
  * @apiParam (Request body) {string} [lang="en"]  language shortcode
- * @apiParam (Request body) {number} [ip] recaptcha needs it.
  * @apiParam (Request body) {string} g-recaptcha-response recaptcha token
  *@apiParamExample {json} Request-Example:
  *      {
@@ -45,8 +44,7 @@ module.exports = function(app){
  *         "name": "pablo marino",
  *         "password": "1234",
  *         "lang": "en",
- *         "g-recaptcha-response": "abc124xsed4fr",
- *          "ip": "0.xxx.xxx.xx"
+ *         "g-recaptcha-response": "abc124xsed4fr"
  *    }
  *@apiSuccessExample {json} Success-Response:
  *     HTTP/1.1 200 OK
@@ -69,9 +67,7 @@ module.exports = function(app){
             body('password','Password should be between 4 and 60 characters')
             .isLength({min:4,max:60}),
             body('lang','Language should between 2 to 20')
-            .isLength({min:2, max:20}),
-            body('ip','IP must be valid')
-            .isIP()
+            .optional().isLength({min:2, max:2})
         ], controllerUtils.checkValidatorErrors,
         (req, res) => {
             var ip = req.body.ip
