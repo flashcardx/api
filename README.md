@@ -1,5 +1,5 @@
 # FlashcardX
-Node.js REST API for a the flashcard based learning platform: FlashcardX
+Node.js REST API for the flashcard based learning platform: FlashcardX
 # Requirements:
 <ul>
     
