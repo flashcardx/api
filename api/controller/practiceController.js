@@ -55,7 +55,7 @@ module.exports = function(app){
     app.get("/spCards", controllerUtils.requireLogin, 
         [
             query('deckId', 'Deck ID must be a valid Mongo ID')
-            .isMongoId(),
+            .optional().isMongoId(),
         ], controllerUtils.checkValidatorErrors,
         (req, res)=>{
         practiceService.listCards(req.userId, req.query.deckId, result=>{

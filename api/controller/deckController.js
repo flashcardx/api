@@ -421,10 +421,10 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin,
                 if(isNaN(skipValue) && skip != null){
                     throw new Error("Skip must be a number");
                 }else{
-                    if(skipValue > 0 && skipValue < 1000){
+                    if(skipValue >= 0 && skipValue < 10000){
                         return true;
                     }else{
-                        throw new Error("Skip must be in between 1 and 999");
+                        throw new Error("Skip must be in between 0 and 9999");
                     }
                 }
             }),
@@ -517,7 +517,7 @@ app.get("/decksName/:type", controllerUtils.requireLogin,
         param('type',"Card type's length must be in 1!")
         .isLength({min:1,max:1}),
         query('deckId', 'Deck Id must be a valid mongo id')
-        .isMongoId(),
+        .optional().isMongoId(),
     ], controllerUtils.checkValidatorErrors,    
     (req, res)=>{
             switch (req.params.type) {

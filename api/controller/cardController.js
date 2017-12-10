@@ -63,10 +63,10 @@ module.exports = function(app){
                     if(isNaN(skipValue)){
                         throw new Error("Skip must be a number");
                     }else{
-                        if(skipValue > 0 && skipValue < 1000){
+                        if(skipValue >= 0 && skipValue < 10000){
                             return true;
                         }else{
-                            throw new Error("Skip must be in between 1 and 999");
+                            throw new Error("Skip must be in between 0 and 9999");
                         }
                     }
                 }  
