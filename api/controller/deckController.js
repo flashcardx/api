@@ -177,22 +177,7 @@ app.post("/editDeck/:type/:deckId", controllerUtils.requireLogin,
                     throw new Error('Lenght of Language must be 2!');
                 }
             }
-        }),
-        body('imgs')
-        .custom(imgs => {
-            if(!Array.isArray(imgs))
-                throw new Error("Imgs must be an array");
-            if(imgs.length > 3)
-                throw new Error("Card can not have more than 3 imgs");
-            imgs.forEach((img1, index1)=>{
-                imgs.forEach((img2, index2)=>{
-                    if(index1 != index2)
-                        if(img1.hash == img2.hash)
-                            throw new Error('You can not have the same image twice in a flashcard');
-                });
-            });
-            return true;
-        }),
+        })
     ], controllerUtils.checkValidatorErrors,
     (req, res)=>{
         switch (req.params.type) {
