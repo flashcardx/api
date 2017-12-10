@@ -27,3 +27,5 @@ Node.js REST API for the flashcard based learning platform: FlashcardX
 # Slack group
 https://flashcardx.slack.com
 
+# API endpoints documentation
+https://api.flashcardx.co/apidoc
