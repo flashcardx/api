@@ -22,15 +22,15 @@ nev.configure({
     },
     verifyMailOptions: {
         from: 'FlashcardX <' + config.emailUser + '>',
-        subject: 'Please confirm account',
-        html: 'Welcome to FlashCardX!<p/> Click the following link to confirm your account:</p><p>${URL}</p>',
-        text: 'Welcome to FlashCardX!. Click the following link to confirm your account: ${URL}'
+        subject: 'Confirma tu Email',
+        html: '<p>Bienvenido a flashcardx!<p/> <a href="${URL}">Hace click aqui</a> para confirmar tu cuenta</p>',
+        text: 'Bienvenido a flashcardx!\nHace click en el siguiene enlace:${URL} para confirmar tu cuenta'
     },
     confirmMailOptions: {
         from: 'FlashcardX <'+config.emailUser+'>',
-        subject: 'Welcome on board!',
-        html: 'Your account has been successfully verified.</p>We really hope you enjoy our app!, if you have any suggestions or comments just write us to contact@flashcardx.co, we will get back to you asap.</p>',
-        text: 'Your account has been successfully verified. We really hope you enjoy our app!, if you have any suggestions or comments just write us to contact@flashcardx.co, we will get back to you asap.'
+        subject: 'Bienvenido a bordo!',
+        html: '<p>Tu cuenta fue verificada correctamente.</p>Espero que nuestra plataforma te ayude a mejorar tu aprendizaje, si tenes sugerencias, ideas o comentarios escribinos a: contact@flashcardx.co, nos pondremos en contacto con vos lo antes posible.</p><p>Pablo Marino, fundador de flashcardx</p>',
+        text: 'Tu cuenta fue verificada correctamente.\nEspero que nuestra plataforma te ayude a mejorar tu aprendizaje, si tenes sugerencias, ideas o comentarios escribinos a: contact@flashcardx.co, nos pondremos en contacto con vos lo antes posible.\nPablo Marino, fundador de flashcardx'
     }
 }, function(err, options){
     if (err) 
