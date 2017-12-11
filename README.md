@@ -22,10 +22,17 @@ Node.js REST API for the flashcard based learning platform: FlashcardX
             </ul>
 6) in /api dir run the project with `node app.js`
 
+## Contributing
 
+We'd greatly appreciate any contribution you make :). Please make a pull request to the branch [develop](https://github.com/flashcardx/api/tree/develop). Every week we merge the develop branch with master.
 
 # Slack group
 https://flashcardx.slack.com
 
-# API endpoints documentation
+# Documentation
 https://api.flashcardx.co/apidoc
+
+## License
+
+This project is licensed under the terms of the
+[MIT license](https://github.com/flashcardx/api/blob/master/LICENSE).
