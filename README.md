@@ -24,7 +24,9 @@ Node.js REST API for the flashcard based learning platform: FlashcardX
 
 ## Contributing
 
-We'd greatly appreciate any contribution you make :). Please make a pull request to the branch [develop](https://github.com/flashcardx/api/tree/develop). Every week we merge the develop branch with master.
+We'd greatly appreciate any contribution you make :).
+Please check out our [milestones](https://github.com/flashcardx/api/milestones) here we have all the future goals for the project, you can pick any issue that's not taken by somebody and assign it to yourself, or if you have new ideas create a new issue in the [nice to have milestone](https://github.com/flashcardx/api/milestone/3) 
+Please make a pull request to the branch [develop](https://github.com/flashcardx/api/tree/develop). Every week we merge the develop branch with master.
 
 # Slack group
 https://flashcardx.slack.com
