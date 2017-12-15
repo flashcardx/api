@@ -37,4 +37,4 @@ https://api.flashcardx.co/apidoc
 ## License
 
 This project is licensed under the terms of the
-[MIT license](https://github.com/flashcardx/api/blob/master/LICENSE).
+[MIT license](https://github.com/flashcardx/api/blob/master/LICENSE).). With the exception of the trademark and logos(flashcardx) wich are property of [Pablo Nicolas Marino](https://github.com/pablonm3)
