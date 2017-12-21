@@ -16,7 +16,7 @@ module.exports = function(app){
  * @apiDescription creates user or class deck depending on type param, returns the new deck.
  * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
  * @apiParam (Request body) {string} name name for the deck.
- * @apiParam (Request body) {string} description description for deck.
+ * @apiParam (Request body) {string} description description for deck, maxLenght:400 characters..
  * @apiParam (Request body) {string} [classname] needed if deck will be for a class.
  * @apiParam (Request body) {string} [parentId] required if new deck(child) is inside another deck(parent).
  * @apiParam (Request body) {string} [lang=en] Language code for the deck.
@@ -57,12 +57,12 @@ module.exports = function(app){
  *  */
     app.post("/deck/:type", controllerUtils.requireLogin, 
         [
-            param('type',"Card type's length must be in 1!")
+            param('type',"deck type's length must be in 1!")
             .isLength({min:1,max:1}),
-            body('name', 'Flashcard name must be at least 1 character long and less than 40 characters')
-            .isLength({ min: 1, max:40}),
-            body('description', 'Flashcard description must be less than 850 characters')
-            .isLength({max:850}),
+            body('name', 'deck name must be at least 1 character long and less than 40 characters')
+            .isLength({max:400}),
+            body('description', 'deck description must be less than 400 characters')
+            .isLength({max:400}),
             body('classname',"Classname length must be in between 1 and 40")
             .isLength({max: 40}),
             body('lang',  'Language Option must be length of 2')
@@ -132,7 +132,7 @@ app.delete("/deckImg/:type/:deckId", controllerUtils.requireLogin,
  * @apiDescription edit name/description/language/image of the deck. *Only defined parameters will be updated.
  * @apiParam (Parameters) {string} type u or c depending on if deck belongs to user or class.
  * @apiParam (Request body) {string} [name] name for the deck.
- * @apiParam (Request body) {string} [description] description for deck.
+ * @apiParam (Request body) {string} [description] description for deck, maxLenght:400 characters.
  * @apiParam (Request body) {string} [lang] Language code for the deck.
  * @apiParam (Request body) {string} [img] Image object containing: hash, width,height. Will be shown in the deck cover.
  * @apiHeader (Headers) {string} x-access-token user session token
@@ -163,10 +163,10 @@ app.post("/editDeck/:type/:deckId", controllerUtils.requireLogin,
         .isLength({min:1,max:1}),
         param('deckId','Deck ID must be a valid Mongo ID')
         .isMongoId(),
-        body('name', 'Flashcard name must be at least 1 character long and less than 40 characters')
+        body('name', 'deck name must be at least 1 character long and less than 40 characters')
         .isLength({ min: 1, max:40}),
-        body('description', 'Flashcard description must be less than 850 characters')
-        .isLength({max:850}),
+        body('description', 'deck description must be less than 400 characters')
+        .isLength({max:400}),
         body('lang')
         .custom(lang => {
             if(lang == null) return true;
@@ -212,7 +212,7 @@ app.post("/editDeck/:type/:deckId", controllerUtils.requireLogin,
  *  */
 app.delete("/deck/:type/:deckId", controllerUtils.requireLogin, 
     [
-        param('type',"Card type's length must be in 1!")
+        param('type',"deck type's length must be in 1!")
         .isLength({min:1,max:1}),
         param('deckId','Deck ID must be a valid Mongo ID')
         .isMongoId(),
@@ -253,7 +253,7 @@ app.delete("/deck/:type/:deckId", controllerUtils.requireLogin,
  *  */
 app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin, 
     [
-        param('type',"Card type's length must be in 1!")
+        param('type',"deck type's length must be in 1!")
         .isLength({min:2,max:2}),
         param('deckIdSrc',"Deck ID source must be a valid Mongodb ID!")
         .isMongoId(),
@@ -302,7 +302,7 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin,
  *  */
     app.get("/alldecks/:type", controllerUtils.requireLogin, 
         [
-            param('type',"Card type's length must be in 1!")
+            param('type',"deck type's length must be in 1!")
             .isLength({min:1,max:1}),
             query('classname',"Classname length must be in between 1 and 40")
             .isLength({max: 40}),
@@ -361,7 +361,7 @@ app.get("/duplicateDeck/:type/:deckIdSrc", controllerUtils.requireLogin,
  *  */
     app.get("/decks/:type", controllerUtils.requireLogin, 
         [
-            param('type',"Card type's length must be in 1!")
+            param('type',"deck type's length must be in 1!")
             .isLength({min:1,max:1}),
             query('parentId')
             .custom(parentId => {
