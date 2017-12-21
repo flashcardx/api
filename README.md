@@ -4,7 +4,7 @@ Node.js REST API for the flashcard based learning platform: FlashcardX
 <ul>
     
     Unix based system(Linux or OSX)
-    NODE v8
+    NODE v7+
     MongoDB V3
     REDIS V4 
 </ul>
