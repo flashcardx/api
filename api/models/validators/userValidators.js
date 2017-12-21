@@ -17,11 +17,12 @@ var nameValidator = [
 var emailValidator = [
   validate({
     validator: 'isLength',
-    arguments: [3, 50],
+    arguments: [0, 80],
     message: 'email should be between {ARGS[0]} and {ARGS[1]} characters'
   }),
   validate({
     validator: 'isEmail',
+    passIfEmpty: true,
     message: 'email format is invalid'
   }),
 ];
