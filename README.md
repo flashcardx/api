@@ -29,8 +29,8 @@ Please check out our [milestones](https://github.com/flashcardx/api/milestones) 
 Please make a pull request to the branch [develop](https://github.com/flashcardx/api/tree/develop). Every week we merge the develop branch with master.
 
 # Slack group
-Send us an email(contact@flashcardx.co) requesting an invitation for our Slack group 
-https://flashcardx.slack.com
+Send us an email(contact@flashcardx.co) requesting an invitation for our [Slack group] 
+(https://flashcardx.slack.com)
 Here we discuss new ideas about the future of the platform!
 
 # Documentation
