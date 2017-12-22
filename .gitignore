@@ -4,3 +4,5 @@ api/logs/*
 api/config/json/credentials.json
 api/config/json/db.json
 api/config/json/email.json
+
+api/scripts/data/
