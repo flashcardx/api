@@ -17,9 +17,9 @@ const { body, validationResult } = require('express-validator/check');
 passport.use(new FacebookTokenStrategy({
     clientID: facebookCredentials.appId,
     clientSecret: facebookCredentials.secret,
-    profileFields: ['id', 'emails', 'name', "picture.type(large)"]
+    profileFields: ['id', 'email', 'gender', 'locale', 'name', 'timezone', 'updated_time', 'verified']
   }, (accessToken, refreshToken, profile, done)=>{
-    userService.upsertFbUser(accessToken, refreshToken, profile, function(err, user) {
+     userService.upsertFbUser(accessToken, refreshToken, profile, function(err, user) {
         return done(err, user);
       });
   }

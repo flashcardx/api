@@ -35,7 +35,8 @@ function loginUser(email, password, callback){
  function upsertFbUser(accessToken, refreshToken, profile, cb) {
     return User.findOne({
           'facebook.id': profile.id
-    }).exec()
+    })
+    .exec()
     .then(user=>{
       // no user was found, lets create a new one
       if (!user) {
@@ -427,7 +428,7 @@ function getFeed(userId, lastId, callback){
                     case "deck1":  promises.push(enrichDeckTypeOne4Feed(obj, type));
                                     break;
                     case "post":   promises.push(enrichPost4Feed(obj, type));
-                                break;
+                                    break;
                     default: Promise.reject("invalid obj type when getting feed"); 
                             break;
                 }
