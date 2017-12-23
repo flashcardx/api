@@ -332,7 +332,7 @@ function createUserCard(parameters, callback){
                                 return saveCardUser(cardModel, parameters.userId,  parameters.deckId);
                            })
                            .then(()=>{
-                                    const Kard = AWSService.replaceUrl(cardModel.toJSON());
+                                    const Kard = AWSService.generateAddUrls(cardModel.toJSON());
                                     if(!warning)
                                         return callback({success:true, card: Kard});
                                     else
@@ -366,7 +366,7 @@ function replaceImgs(oldImgs, newImgs){
                 promises.push(imgService.increaseImgCounter(img.hash));
         })
         return Promise.all(promises);
-    }
+}
 
 
 function updateCard(id, userId, card, callback){
@@ -396,7 +396,7 @@ function updateCard(id, userId, card, callback){
                             logger.error(err);
                             return Promise.reject(err);
                         }
-                    const kard = AWSService.replaceUrl(Doc.toJSON());
+                    const kard = AWSService.generateAddUrls(Doc.toJSON());
                     return callback({success:true, card:kard});
             });
     })

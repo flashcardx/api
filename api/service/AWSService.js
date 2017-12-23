@@ -35,7 +35,7 @@ function addTemporaryUrl(cards, callback){
         return callback({success:true, cards:[]});
     var expireAfter = 600; //url expires after 600 seconds
     cards.forEach((card, i)=>{
-        cards[i] = replaceUrl(cards[i]);
+        cards[i] = generateAddUrls(cards[i]);
     });
     return callback({success:true, cards: cards});
 }
@@ -53,7 +53,7 @@ function removeFromS3(hash, callback, type){
         });
 };
 
-function replaceUrl(Kard){
+function generateAddUrls(Kard){
     var card = _.clone(Kard);
     card.imgs = card.imgs.map(img=>{
         return {width: img.width,
@@ -62,6 +62,7 @@ function replaceUrl(Kard){
                 src: getUrl(img.hash)
             }
     });
+    card.TTSSrc = getUrl("TextToSpeechCacheen-EMBEZZLE", "audio");
     return card;
 }
 
@@ -115,7 +116,7 @@ module.exports = {
     saveToS3: saveToS3,
     removeFromS3: removeFromS3,
     addTemporaryUrl: addTemporaryUrl,
-    replaceUrl: replaceUrl,
+    generateAddUrls: generateAddUrls,
     getUrl: getUrl,
     textToSpeech: textToSpeech
 }
