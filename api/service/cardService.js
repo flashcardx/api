@@ -316,7 +316,7 @@ function createUserCard(parameters, callback){
                                 return deckService.validateOwnership(parameters.userId, parameters.deckId);
                             })
                             .then(()=>{
-                                deckService.getLang(parameters.userId, parameters.deckId);
+                                return deckService.getLang(parameters.userId, parameters.deckId);
                             })
                             .then(lang=>{
                                 deckLang = lang;

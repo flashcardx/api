@@ -26,7 +26,7 @@ function getLang(userId, deckId){
             .then(d => {
                 if (!d)
                     return Promise.reject("deck not found");
-                return resolve(r.lang);
+                return resolve(d.lang);
             })
             .catch(err=>{
                 return reject(err);
