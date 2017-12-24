@@ -1,19 +1,10 @@
 { "development":{
-    "access": "/logs/access.log",
-    "app": "/logs/app.log",
-    "levelFile": "error",
     "levelConsole":"info"
 },
  "pi":{
-    "access": "/logs/access.log",
-    "app": "/logs/app.log",
-    "levelFile": "error",
     "levelConsole":"info"
 },
  "production":{
-    "access": "/logs/access.log",
-    "app": "/logs/app.log",
-    "levelFile": "fatal",
     "levelConsole":"info"
  }
 }

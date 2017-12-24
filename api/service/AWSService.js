@@ -62,23 +62,23 @@ function generateAddUrls(Kard){
                 src: getUrl(img.hash)
             }
     });
-    card.TTSSrc = getUrl("TextToSpeechCacheen-EMBEZZLE", "audio");
+    card.TTSSrc = getUrl("TaTS", "audio", {"lang":"en","q":"EMBEZZLEj/fg rfr?&=dfddff"});
     return card;
 }
 
-function getUrl(key, type){
+function getUrl(key, type, querystring){
     if(!key)
         return undefined;
-    key = generateKey(key, type);
-    return credentials.cloudfrontUrl + encodeURIComponent(key);
+    key = generateKey(key, type, querystring);
+    return credentials.cloudfrontUrl + key;
 }
 
-function generateKey(hash, type){
+function generateKey(hash, type, querystring){
     switch (type) {
         case "thumbnail":
             return "thumbnail/"+hash;
         case "audio":
-            return "audio/"+ hash;
+            return "audio/"+ hash + "?lang="+querystring.lang+"&q="+encodeURIComponent(querystring.q);
         default:
             return "image/"+hash;
     }
