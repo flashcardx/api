@@ -9,7 +9,6 @@ AWS.config = new AWS.Config();
 AWS.config.accessKeyId = credentials.accessKeyId;
 AWS.config.secretAccessKey = credentials.secretAccessKey;
 AWS.config.region = credentials.region;
-const langCodes = config.lang;
 if(env==="production"){
     AWS.config.update({
         useAccelerateEndpoint: true
@@ -53,6 +52,7 @@ function removeFromS3(hash, callback, type){
         });
 };
 
+//generates urls for images and audio(text to speech)
 function generateAddUrls(Kard){
     var card = _.clone(Kard);
     card.imgs = card.imgs.map(img=>{
@@ -62,7 +62,7 @@ function generateAddUrls(Kard){
                 src: getUrl(img.hash)
             }
     });
-    card.TTSSrc = getUrl("TaTS", "audio", {"lang":"en","q":"EMBEZZLEj/fg rfr?&=dfddff"});
+    card.TTSSrc = getUrl("TTS", "audio", {"lang":card.deckId.lang,"q":card.name});
     return card;
 }
 
@@ -84,40 +84,11 @@ function generateKey(hash, type, querystring){
     }
 }
 
-function chooseLanguageActor(lang){
-    for(var i=0; i<langCodes.length; i++)
-        if(langCodes[i].code === lang)
-            return langCodes[i].voice;
-    logger.warn("chooseLanguageActor got lang code invalid: ", lang);
-    return langCodes[0].voice;
-}
-
-function textToSpeech(lang, text){
-    return new Promise((resolve, reject)=>{
-        const ssml = "<speak><prosody volume='x-loud' rate='slow'><lang xml:lang='"+lang+"'>"+text+"</lang></prosody></speak>"
-        var voiceId = chooseLanguageActor(lang);
-        let params = {
-            OutputFormat: "ogg_vorbis",
-            Text: ssml,
-            VoiceId: voiceId,
-            TextType: "ssml"
-        }
-        polly.synthesizeSpeech(params, (err, data) => {
-            if (err)
-                return reject("Failed to process text to speech: " + err.code);
-            if(data){
-                return resolve({contentType: data.ContentType, buffer: data.AudioStream});
-            }
-        });
-    })
-}
-
 module.exports = {
     saveToS3: saveToS3,
     removeFromS3: removeFromS3,
     addTemporaryUrl: addTemporaryUrl,
     generateAddUrls: generateAddUrls,
-    getUrl: getUrl,
-    textToSpeech: textToSpeech
+    getUrl: getUrl
 }
 

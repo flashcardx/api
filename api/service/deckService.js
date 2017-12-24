@@ -20,6 +20,20 @@ function initChild() {
     childProcess = require(appRoot + "/child");
 }
 
+function getLang(userId, deckId){
+    return new Promise((resolve, reject) => {
+        findByIdLean(userId, deckId, "lang")
+            .then(d => {
+                if (!d)
+                    return Promise.reject("deck not found");
+                return resolve(r.lang);
+            })
+            .catch(err=>{
+                return reject(err);
+            })
+        })
+}
+
 function create4User(userId, deck, callback) {
     deck.ownerType = "u";
     deck.ownerId = userId;
@@ -594,6 +608,6 @@ module.exports.duplicate2User= duplicate2User;
 module.exports.duplicate2Class= duplicate2Class;
 module.exports.listDeckName= listDeckName;
 module.exports.getAllDescendantIds = getAllDescendantIds;
-
+module.exports.getLang = getLang;
 
 const classService = require("./class/classService");

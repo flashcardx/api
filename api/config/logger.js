@@ -11,7 +11,7 @@ function getLogger(name){
                 streams: [
                     {
                      level: logs.levelConsole,
-                     stream: formatOut // log ERROR and above to stdout
+                     stream: formatOut 
                     }
                 ],
                  serializers: bunyan.stdSerializers
@@ -24,7 +24,7 @@ function getLogger(name){
                 streams: [
                     {
                      level: logs.levelConsole,
-                     stream: formatOut  // log WARN and above to stdout
+                     stream: formatOut 
                     }
                 ],
                  serializers: bunyan.stdSerializers
