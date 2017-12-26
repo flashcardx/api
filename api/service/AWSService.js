@@ -78,7 +78,7 @@ function generateKey(hash, type, querystring){
         case "thumbnail":
             return "thumbnail/"+hash;
         case "audio":
-            return "audio/"+ hash + "?lang="+querystring.lang+"&q="+encodeURIComponent(querystring.q);
+            return "audio/"+ hash + "?lang="+querystring.lang+"&q="+querystring.q;
         default:
             return "image/"+hash;
     }
