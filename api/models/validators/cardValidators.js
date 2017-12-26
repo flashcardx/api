@@ -5,6 +5,12 @@ var nameValidator = [
     validator: 'isLength',
     arguments: [1, 40],
     message: 'Name should be between {ARGS[0]} and {ARGS[1]} characters'
+  }),
+  validate({
+    validator: function(val) {
+      return !val.includes("/");
+    },
+    message: 'Card name can not contain: / character'
   })
 ];
 
