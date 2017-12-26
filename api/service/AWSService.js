@@ -9,7 +9,6 @@ AWS.config = new AWS.Config();
 AWS.config.accessKeyId = credentials.accessKeyId;
 AWS.config.secretAccessKey = credentials.secretAccessKey;
 AWS.config.region = credentials.region;
-const langCodes = config.lang;
 if(env==="production"){
     AWS.config.update({
         useAccelerateEndpoint: true
@@ -35,7 +34,7 @@ function addTemporaryUrl(cards, callback){
         return callback({success:true, cards:[]});
     var expireAfter = 600; //url expires after 600 seconds
     cards.forEach((card, i)=>{
-        cards[i] = replaceUrl(cards[i]);
+        cards[i] = generateAddUrls(cards[i]);
     });
     return callback({success:true, cards: cards});
 }
@@ -53,7 +52,8 @@ function removeFromS3(hash, callback, type){
         });
 };
 
-function replaceUrl(Kard){
+//generates urls for images and audio(text to speech)
+function generateAddUrls(Kard){
     var card = _.clone(Kard);
     card.imgs = card.imgs.map(img=>{
         return {width: img.width,
@@ -62,61 +62,33 @@ function replaceUrl(Kard){
                 src: getUrl(img.hash)
             }
     });
+    card.TTSSrc = getUrl("TTS", "audio", {"lang":card.deckId.lang,"q":card.name});
     return card;
 }
 
-function getUrl(key, type){
+function getUrl(key, type, querystring){
     if(!key)
         return undefined;
-    key = generateKey(key, type);
-    return credentials.cloudfrontUrl + encodeURIComponent(key);
+    key = generateKey(key, type, querystring);
+    return credentials.cloudfrontUrl + key;
 }
 
-function generateKey(hash, type){
+function generateKey(hash, type, querystring){
     switch (type) {
         case "thumbnail":
             return "thumbnail/"+hash;
         case "audio":
-            return "audio/"+ hash;
+            return "audio/"+ hash + "?lang="+querystring.lang+"&q="+querystring.q;
         default:
             return "image/"+hash;
     }
-}
-
-function chooseLanguageActor(lang){
-    for(var i=0; i<langCodes.length; i++)
-        if(langCodes[i].code === lang)
-            return langCodes[i].voice;
-    logger.warn("chooseLanguageActor got lang code invalid: ", lang);
-    return langCodes[0].voice;
-}
-
-function textToSpeech(lang, text){
-    return new Promise((resolve, reject)=>{
-        const ssml = "<speak><prosody volume='x-loud' rate='slow'><lang xml:lang='"+lang+"'>"+text+"</lang></prosody></speak>"
-        var voiceId = chooseLanguageActor(lang);
-        let params = {
-            OutputFormat: "ogg_vorbis",
-            Text: ssml,
-            VoiceId: voiceId,
-            TextType: "ssml"
-        }
-        polly.synthesizeSpeech(params, (err, data) => {
-            if (err)
-                return reject("Failed to process text to speech: " + err.code);
-            if(data){
-                return resolve({contentType: data.ContentType, buffer: data.AudioStream});
-            }
-        });
-    })
 }
 
 module.exports = {
     saveToS3: saveToS3,
     removeFromS3: removeFromS3,
     addTemporaryUrl: addTemporaryUrl,
-    replaceUrl: replaceUrl,
-    getUrl: getUrl,
-    textToSpeech: textToSpeech
+    generateAddUrls: generateAddUrls,
+    getUrl: getUrl
 }
 

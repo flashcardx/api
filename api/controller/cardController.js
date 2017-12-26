@@ -71,10 +71,10 @@ module.exports = function(app){
                     }
                 }  
             }),
-            query('name',"Name length must be in between 1 and 40")
+            query('name',"Name length must be less than 40 chars")
             .isLength({max:40}),
-            query('classname',"Classname length must be in between 1 and 40")
-            .isLength({max: 40}),
+            query('classname',"Classname length must be less than 50 chars")
+            .isLength({max: 50}),
             param('deckId','Deck ID must be a valid Mongo ID')
             .isMongoId()
         ], controllerUtils.checkValidatorErrors,  
@@ -142,53 +142,6 @@ module.exports = function(app){
                 default: res.json({success:false, msg:"invalid type"});
                         break;
             }
-    });
-
-    /**
-     * @api {get} /duplicateCard/:type/:cardId/:deckId duplicate card
-     * @apiGroup card
-     * @apiName duplicate card
-     * @apiDescription duplicates card from user to user.
-     * @apiParam (Parameters) {string} type uu:user to user, uc:user to class, cu: class to user.
-     * @apiParam (Parameters) {string} cardId id of the card to be duplicated.
-     * @apiParam (Parameters) {string} deckId id for the deck where card will be created.
-     * @apiHeader (Headers) {string} x-access-token user session token
-     * @apiParamExample {json} Request-Example:
-     * url: /duplicateCard/uu/59991371065a2544f7c90288/59991371065a2544f7c9028a
-     * 
-     * @apiSuccessExample {json} Success-Response:
-     *     HTTP/1.1 200 OK
-     *     {"success":true
-     *      }
-     * @apiVersion 1.1.0
-     *  */
-    app.get("/duplicateCard/:type/:cardId/:deckId", controllerUtils.requireLogin, 
-        [
-            param('type',"Card type's length must be in 1!")
-            .isLength({min:2,max:2}),
-            param('deckId','Deck ID must be a valid Mongo ID')
-            .isMongoId(),
-            param('cardId','Card ID must be a valid Mongo ID')
-            .isMongoId(),
-        ], controllerUtils.checkValidatorErrors,
-        (req, res)=>{
-            const cardId = req.params.id;
-            const deckId = req.params.deckId;
-            switch (req.params.type){
-                        case "uu": cardService.duplicateCardUU(req.userId, cardId, deckId, result=>{
-                                        res.json(result);
-                                    });
-                                    break;
-                        case "uc": classService.duplicateCardUC(req.userId, cardId, deckId, result=>{
-                                        res.json(result);
-                                    });
-                                    break;
-                        case "cu": classService.duplicateCardCU(req.userId, cardId, deckId, result=>{
-                                        res.json(result);
-                                    });
-                                break;
-                        default: return res.json({success:false, msg: "invalid type"});
-                    }
     });
 
     /**

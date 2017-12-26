@@ -67,6 +67,7 @@ function getCards(userId, params, callback){
     .sort({updated_at: "desc"})
     .skip(parseInt(params.skip))
     .limit(params.limit)
+    .populate("deckId", "lang")
     .lean()
     .exec()
     .then(cards=>{
@@ -308,12 +309,17 @@ function createUserCard(parameters, callback){
     parameters.card.deckId = parameters.deckId;
     var cardModel = new Card(parameters.card);
     var user;
+    var deckLang;
     var warning;
     validateCard(cardModel)
                             .then(()=>{
                                 return deckService.validateOwnership(parameters.userId, parameters.deckId);
                             })
                             .then(()=>{
+                                return deckService.getLang(parameters.userId, parameters.deckId);
+                            })
+                            .then(lang=>{
+                                deckLang = lang;
                                 return userService.userCardLimitsOk(parameters.userId);
                             })
                             .then((result)=>{
@@ -332,7 +338,9 @@ function createUserCard(parameters, callback){
                                 return saveCardUser(cardModel, parameters.userId,  parameters.deckId);
                            })
                            .then(()=>{
-                                    const Kard = AWSService.replaceUrl(cardModel.toJSON());
+                                    var card = cardModel.toJSON();
+                                    card.deckId = {lang: deckLang};
+                                    const Kard = AWSService.generateAddUrls(card);
                                     if(!warning)
                                         return callback({success:true, card: Kard});
                                     else
@@ -366,12 +374,13 @@ function replaceImgs(oldImgs, newImgs){
                 promises.push(imgService.increaseImgCounter(img.hash));
         })
         return Promise.all(promises);
-    }
+}
 
 
 function updateCard(id, userId, card, callback){
     var Doc;
     Card.findOne({ '_id': id, ownerId: userId, ownerType:"u"}, "name description _id imgs")
+    .populate("deckId", "lang")
     .exec()
     .then(doc=>{
             if(!doc){
@@ -396,7 +405,7 @@ function updateCard(id, userId, card, callback){
                             logger.error(err);
                             return Promise.reject(err);
                         }
-                    const kard = AWSService.replaceUrl(Doc.toJSON());
+                    const kard = AWSService.generateAddUrls(Doc.toJSON());
                     return callback({success:true, card:kard});
             });
     })

@@ -27,12 +27,6 @@ function putDictionaryResults(lang, q, msg){
     client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
 }
 
-function putTextToSpeechResults(lang, q){ 
-    var cacheKey = genKeyTextToSpeech(lang, q);
-    // we save the date so we can track old files
-    client.set(cacheKey, new Date());
-}
-
 function getImageResults(q){
     return new Promise((resolve, reject)=>{
         var cacheKey = genKeyImage(q);
@@ -69,18 +63,6 @@ function getUserPracticeResults(userId){
     return getResults(cacheKey);
 }
 
-function getTextToSpeechResults(lang, q){
-    var cacheKey = genKeyTextToSpeech(lang, q);
-    return getResults(cacheKey)
-    .then(r=>{
-        if(r){
-            putTextToSpeechResults(lang, q);
-            return Promise.resolve(r);
-        }
-        return Promise.resolve();
-    });
-}
-
 function getResults(cacheKey){
     return new Promise((resolve, reject)=>{
           client.get(cacheKey, function (err, data) {
@@ -115,11 +97,6 @@ function genKeyDictionary(lang, q){
     return "DictionaryCache" + lang + "-" + q;
 }
 
-function genKeyTextToSpeech(lang, q){
-    // we add the date so we can track unused old records in the future
-    return "TextToSpeechCache" + lang + "-" + q;
-}
-
 function genKeyUserPractice(userId){
     return "userPractice-" + userId;
 }
@@ -131,9 +108,6 @@ module.exports = {
     getGifResults: getGifResults,
     putDictionaryResults: putDictionaryResults,
     getDictionaryResults: getDictionaryResults,
-    putTextToSpeechResults: putTextToSpeechResults,
-    getTextToSpeechResults: getTextToSpeechResults,
-    genKeyTextToSpeech: genKeyTextToSpeech,
     getUserPracticeResults: getUserPracticeResults,
     putUserPracticeResults: putUserPracticeResults
 };
