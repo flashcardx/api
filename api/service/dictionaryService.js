@@ -14,7 +14,8 @@ const SUPPORTED_LANGS = "English";
 function translate(userId, text, from, to, callback){
     translator(text, {from:from, to: to})
     .then(res => {
-        return callback({success:true, text:res.text, from:res.from.language.iso});
+        callback({success:true, text:res.text, from:res.from.language.iso});
+        cacheService.putTranslatorLastLang(userId, to);
     })
     .catch(err => {
         logger.error(err);

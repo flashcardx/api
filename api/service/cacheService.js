@@ -27,6 +27,11 @@ function putDictionaryResults(lang, q, msg){
     client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
 }
 
+function putTranslatorLastLang(userId, lang){
+    var cacheKey = genKeyTranslatorLastLang(userId, lang);
+    client.set(cacheKey, lang, "EX", config.cacheTimeTranslateLang);//cache time in seconds
+}
+
 function getImageResults(q){
     return new Promise((resolve, reject)=>{
         var cacheKey = genKeyImage(q);
@@ -60,6 +65,11 @@ function getDictionaryResults(lang, q){
 
 function getUserPracticeResults(userId){
     var cacheKey = genKeyUserPractice(userId);
+    return getResults(cacheKey);
+}
+
+function getTranslatorLastLang(userId){
+    var cacheKey = genKeyTranslatorLastLang(userId);
     return getResults(cacheKey);
 }
 
@@ -101,6 +111,10 @@ function genKeyUserPractice(userId){
     return "userPractice-" + userId;
 }
 
+function genKeyTranslatorLastLang(userId){
+    return "translateLastLang-"+userId;
+}
+
 module.exports = {
     putImageResults: putImageResults,
     getImageResults: getImageResults,
@@ -109,5 +123,7 @@ module.exports = {
     putDictionaryResults: putDictionaryResults,
     getDictionaryResults: getDictionaryResults,
     getUserPracticeResults: getUserPracticeResults,
-    putUserPracticeResults: putUserPracticeResults
+    putUserPracticeResults: putUserPracticeResults,
+    putTranslatorLastLang: putTranslatorLastLang,
+    getTranslatorLastLang: getTranslatorLastLang
 };

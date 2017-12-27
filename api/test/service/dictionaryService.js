@@ -1,6 +1,7 @@
 const appRoot = require('app-root-path');
 const assert = require("chai").assert;
 const dictionaryService = require(appRoot+"/service/dictionaryService");
+const cacheService = require(appRoot+"/service/cacheService");
 const mongoose = require("mongoose");
 const config = require(appRoot + "/config");
 const User = require(appRoot + "/models/userModel");
@@ -31,16 +32,58 @@ describe("dictionaryService", ()=>{
     it("translate hello to hola should succeed", done=>{
         dictionaryService.translate(USERID_1, "hello", "en", "es", r=>{
             assert.equal(r.success, true, "success should be true");
+            assert.equal(r.text, "Hola", "translation should be: Hola");
             done();
         })
     })
 
     it("translate hello to hola without from should succeed", done=>{
         dictionaryService.translate(USERID_1, "hello", undefined, "es", r=>{
-            logger.info("got: ", r);
             assert.equal(r.success, true, "success should be true");
+            assert.equal(r.text, "Hola", "translation should be: Hola");
             done();
+       })
+    })
+
+    it("cache last lang should not exists", done=>{
+        setup.dropCache()
+        .then(()=>{
+            return cacheService.getTranslatorLastLang(USERID_1)
+        })
+        .then(r=>{
+            assert.notExists(r);
+            done();
+        })
+        .catch(err=>{
+            done(err);
         })
     })
 
+    it("cache last lang should be created after translation", done=>{
+        setup.dropCache()
+        .then(()=>{
+            return cacheService.getTranslatorLastLang(USERID_1)
+        })
+        .then(r=>{
+            assert.notExists(r);
+            return new Promise((resolve, reject)=>{
+                dictionaryService.translate(USERID_1, "hello", "en", "es", r=>{
+                    assert.equal(r.success, true, "success should be true");
+                    assert.equal(r.text, "Hola", "translation should be: Hola");
+                    resolve();
+                })
+            })
+        })
+        .then(()=>{
+            return cacheService.getTranslatorLastLang(USERID_1) 
+        })
+        .then(lang=>{
+            assert.equal(lang, "es", "lang should be: 'es'");
+            done();
+        })
+        .catch(err=>{
+            done(err);
+        })
+    })
+        
 });

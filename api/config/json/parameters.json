@@ -6,7 +6,8 @@
         "cacheTime":{
             "dictionary": 604800,
             "imageSearch": 604800,
-            "userPractice": 180
+            "userPractice": 180,
+            "translateLang": 2419200
         }
     },
     "pi":{
@@ -16,7 +17,8 @@
         "cacheTime":{
             "dictionary": 604800,
             "imageSearch": 604800,
-            "userPractice": 180
+            "userPractice": 180,
+            "translateLang": 2419200
         }
     },
     "production":{
@@ -26,7 +28,8 @@
         "cacheTime": {
             "dictionary": 604800,
             "imageSearch": 604800,
-            "userPractice": 180
+            "userPractice": 180,
+            "translateLang": 2419200
         } 
     }
 }
