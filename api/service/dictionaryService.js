@@ -7,8 +7,17 @@ const dictionaries = config.dictionaries;
 const userService = require("./userService");
 const cacheService = require("./cacheService");
 const preferencesService = require("./preferencesService");
-
+const translate = require('google-translate-api');
 const SUPPORTED_LANGS = "English";
+
+
+function translate(text, from, to, callback){
+    translate(text, {from:from, to: to}).then(res => {
+        return callback({success:true, text:res.text, from:res.from.language.iso});
+    }).catch(err => {
+        console.error(err);
+    });
+}
 
 
 function langIsSupported(lang){
