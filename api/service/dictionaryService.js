@@ -11,13 +11,13 @@ const translator = require('google-translate-api');
 const SUPPORTED_LANGS = "English";
 
 
-function translate(text, from, to, callback){
+function translate(userId, text, from, to, callback){
     translator(text, {from:from, to: to})
     .then(res => {
         return callback({success:true, text:res.text, from:res.from.language.iso});
     })
     .catch(err => {
-        console.error(err);
+        logger.error(err);
         callback({success:false, msg:err});
     });
 }
@@ -95,5 +95,6 @@ module.exports = {
     define: define,
     suggest: suggest,
     SUPPORTED_LANGS: SUPPORTED_LANGS,
-    langIsSupported: langIsSupported
+    langIsSupported: langIsSupported,
+    translate: translate
 }
