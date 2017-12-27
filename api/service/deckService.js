@@ -577,7 +577,7 @@ function saveNewDeck(deckModel, callback, classId, userId) {
             return imgService.increaseImgCounter(deckModel.img.hash);                            
     })
     .then(()=>{
-            logger.error("deckModel: ", deckModel);
+            logger.debug("new deck: ", deckModel);
             deckModel = deckModel.toJSON();//needed for editing the object props
             if(deckModel.img.hash)
                 deckModel.img.src = AWSService.getUrl(deckModel.img.hash);

@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
 const { exec } = require('child_process');
+const appRoot = require('app-root-path');
 
 before("before all(root)", ()=>{
-    require("../../app");
+    require(appRoot+"/app");
 })
 
 after(done=>{
