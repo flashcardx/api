@@ -48,7 +48,7 @@ describe("dictionaryService", ()=>{
     it("cache last lang should not exists", done=>{
         setup.dropCache()
         .then(()=>{
-            return cacheService.getTranslatorLastLang(USERID_1)
+            return cacheService.getTranslatorLastLangs(USERID_1)
         })
         .then(r=>{
             assert.notExists(r);
@@ -62,7 +62,7 @@ describe("dictionaryService", ()=>{
     it("cache last lang should be created after translation", done=>{
         setup.dropCache()
         .then(()=>{
-            return cacheService.getTranslatorLastLang(USERID_1)
+            return cacheService.getTranslatorLastLangs(USERID_1)
         })
         .then(r=>{
             assert.notExists(r);
@@ -75,10 +75,12 @@ describe("dictionaryService", ()=>{
             })
         })
         .then(()=>{
-            return cacheService.getTranslatorLastLang(USERID_1) 
+            return cacheService.getTranslatorLastLangs(USERID_1, true) 
         })
-        .then(lang=>{
-            assert.equal(lang, "es", "lang should be: 'es'");
+        .then(r=>{
+            var object = JSON.parse(r);
+            assert.equal(object.to, "es", "to lang should be: 'es'");
+            assert.equal(object.from, "en", "from lang should be 'en'");
             done();
         })
         .catch(err=>{

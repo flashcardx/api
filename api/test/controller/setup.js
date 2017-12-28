@@ -19,13 +19,16 @@ function setupBasicUser(){
             return userModel.save()
         })
         .then(()=>{
-            var code = {hash:CODE, months:1, owner: userId};
+            var code = {hash:CODE, months:1, owner: userId, end:new Date().setDate(new Date().getDate() + 10)};
             var codeModel = new Code(code);
             return codeModel.save();
         })
         .then(()=>{
             loginUtil.issueToken(userId, r=>{
-                resolve(r);
+                if(r.success)
+                    resolve(r.token);
+                else
+                    reject(r.msg)
             });
         })
         .catch(err=>{

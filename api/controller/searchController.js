@@ -18,7 +18,7 @@ module.exports = function(app){
                                 (req,res)=>{
                const clientIp = req.ip;
                searchService.searchBing(req.params.q, clientIp, result=>{
-                    return res.json(result);
+                     return res.json(result);
                });
         });
         

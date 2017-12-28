@@ -15,7 +15,7 @@ function translate(userId, text, from, to, callback){
     translator(text, {from:from, to: to})
     .then(res => {
         callback({success:true, text:res.text, from:res.from.language.iso});
-        cacheService.putTranslatorLastLang(userId, to);
+        cacheService.putTranslatorLastLangs(userId, from, to);
     })
     .catch(err => {
         logger.error(err);
