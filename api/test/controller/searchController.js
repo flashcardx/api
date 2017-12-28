@@ -5,7 +5,6 @@ const app = require(appRoot +"/app");
 const setup = require("./setup");
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
-logger.info("app: ", app);
 describe("search controller", ()=>{
 
     var ACCESS_TOKEN;
@@ -28,13 +27,11 @@ describe("search controller", ()=>{
         const text = "hello",
               to="es";
         const url = "/translate?text="+text+"&to="+to;
-        logger.info("access token: ", ACCESS_TOKEN);
         request(app)
         .get(url)
         .set("x-access-token", ACCESS_TOKEN)
         .expect(200)
         .then(({body})=>{
-            logger.info("body: ", body);
             assert.equal(body.success, true, "success should be true");
             assert.equal(body.text, "Hola", "translation should be right");
             assert.equal(body.from, "en", "from language should be autodected");
@@ -46,6 +43,30 @@ describe("search controller", ()=>{
         })
     })
 
-
+    it("test traslate last languages", done=>{
+        const text = "hello",
+              to="es";
+        const url = "/translate?text="+text+"&to="+to;
+        request(app)
+        .get(url)
+        .set("x-access-token", ACCESS_TOKEN)
+        .expect(200)
+        .then(()=>{
+            return request(app)
+                    .get("/translateUsedLangs")
+                    .set("x-access-token", ACCESS_TOKEN)
+                    .expect(200)
+        })
+        .then(({body})=>{
+            const o = JSON.parse(body.msg);
+            assert.equal(o.to, "es", "'to' lang should be: 'es'");
+            assert.notExists(o.from);
+            done();
+        })
+        .catch(err=>{
+            logger.error("error: ", err);
+            done(err);
+        })
+    })
 
 })

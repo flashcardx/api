@@ -7,6 +7,7 @@ const S = require("string");
 const userService = require(appRoot + "/service/userService");
 const dictionaryService = require(appRoot + "/service/dictionaryService");
 const searchService = require(appRoot + "/service/searchService");
+const cacheService = require(appRoot + "/service/cacheService");
 const { query, param, validationResult } = require('express-validator/check');
 const {validateLang} = require(appRoot +"/utils/validator");
 const controllerUtils = require(appRoot + "/middleware").utils;
@@ -93,5 +94,30 @@ module.exports = function(app){
         dictionaryService.translate(req.userId, req.query.text, req.query.from, req.query.to, r=>{
             res.json(r);
         });
+    });
+
+
+        /**
+     * @api {get} /translateUsedLangs translate used langs
+     * @apiGroup search
+     * @apiName translate used langs
+     * @apiDescription The last languages(from and to) the user used in the translator.
+     * @apiHeader (Headers) {string} x-access-token user session token
+     * @apiParamExample {Parameter} Request-Example:
+     * curl localhost:3000/translateUsedLangs
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {"success":true,
+     *      "to": "es",
+     *      "from": "en"
+     *      }
+     * @apiVersion 1.0.0
+     *  */
+    app.get("/translateUsedLangs", controllerUtils.requireLogin,
+    (req, res)=>{
+        cacheService.getTranslatorLastLangs(req.userId)
+        .then(r=>{
+            return res.json({success:true, msg:r});
+        }) 
     });
 };
