@@ -72,6 +72,7 @@
     "xss-filters": "^1.2.7"
   },
   "devDependencies": {
-    "longjohn": "^0.2.12"
+    "longjohn": "^0.2.12",
+    "supertest": "^3.0.0"
   }
 }

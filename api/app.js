@@ -34,3 +34,5 @@ process.on('uncaughtException', err=>{
 
 require(appRoot + "/service/deckService").initChild();
 app.listen(port);
+
+module.exports = app;
