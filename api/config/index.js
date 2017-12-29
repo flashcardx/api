@@ -28,6 +28,7 @@ module.exports = {
     cacheTimeDictionary: parameters.cacheTime.dictionary,
     cacheTimeImageSearch: parameters.cacheTime.imageSearch,
     cacheTimeUserPractice: parameters.cacheTime.userPractice,
+    cacheTimeTranslateLang: parameters.cacheTime.translateLang,
     urlWeb: parameters.urlWeb,
     emailService: email.service,
     emailUser: email.user,

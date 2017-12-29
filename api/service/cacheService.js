@@ -27,6 +27,12 @@ function putDictionaryResults(lang, q, msg){
     client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
 }
 
+function putTranslatorLastLangs(userId, fromLang , toLang){
+    var cacheKey = genKeyTranslatorLastLangs(userId);
+    const object = {from: fromLang, to: toLang};
+    client.set(cacheKey, JSON.stringify(object), "EX", config.cacheTimeTranslateLang);//cache time in seconds
+}
+
 function getImageResults(q){
     return new Promise((resolve, reject)=>{
         var cacheKey = genKeyImage(q);
@@ -63,6 +69,11 @@ function getUserPracticeResults(userId){
     return getResults(cacheKey);
 }
 
+function getTranslatorLastLangs(userId){
+    var cacheKey = genKeyTranslatorLastLangs(userId);
+    return getResults(cacheKey);
+}
+
 function getResults(cacheKey){
     return new Promise((resolve, reject)=>{
           client.get(cacheKey, function (err, data) {
@@ -70,16 +81,6 @@ function getResults(cacheKey){
                     logger.error("error when getting data from redis: " + err);
                     return reject(err);
                 }
-            var json;
-            try
-            {
-                json = JSON.parse(data);
-            }
-            catch(e)
-            {
-                //if gets here, objects is not json
-                json = data;
-            }
             return resolve(data);
         });
     });
@@ -101,6 +102,10 @@ function genKeyUserPractice(userId){
     return "userPractice-" + userId;
 }
 
+function genKeyTranslatorLastLangs(userId){
+    return "translateLastLang-"+userId;
+}
+
 module.exports = {
     putImageResults: putImageResults,
     getImageResults: getImageResults,
@@ -109,5 +114,7 @@ module.exports = {
     putDictionaryResults: putDictionaryResults,
     getDictionaryResults: getDictionaryResults,
     getUserPracticeResults: getUserPracticeResults,
-    putUserPracticeResults: putUserPracticeResults
+    putUserPracticeResults: putUserPracticeResults,
+    putTranslatorLastLangs: putTranslatorLastLangs,
+    getTranslatorLastLangs: getTranslatorLastLangs
 };

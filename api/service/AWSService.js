@@ -62,8 +62,12 @@ function generateAddUrls(Kard){
                 src: getUrl(img.hash)
             }
     });
-    card.TTSSrc = getUrl("TTS", "audio", {"lang":card.deckId.lang,"q":card.name});
+    card.TTSSrc = generateTTSUrl(card.name, card.deckId.lang); 
     return card;
+}
+
+function generateTTSUrl(text, lang){
+    return getUrl("TTS", "audio", {"lang":lang,"q":text});
 }
 
 function getUrl(key, type, querystring){
@@ -89,6 +93,7 @@ module.exports = {
     removeFromS3: removeFromS3,
     addTemporaryUrl: addTemporaryUrl,
     generateAddUrls: generateAddUrls,
-    getUrl: getUrl
+    getUrl: getUrl,
+    generateTTSUrl: generateTTSUrl
 }
 

@@ -6,9 +6,24 @@ const requestify = require("requestify");
 const dictionaries = config.dictionaries;
 const userService = require("./userService");
 const cacheService = require("./cacheService");
+const AWSService = require("./AWSService");
 const preferencesService = require("./preferencesService");
-
+const translator = require('google-translate-api');
 const SUPPORTED_LANGS = "English";
+
+
+function translate(userId, text, from, to, callback){
+    translator(text, {from:from, to: to})
+    .then(res => {
+        const audioSrc = AWSService.generateTTSUrl(res.text, to);
+        callback({success:true, audioSrc: audioSrc, text:res.text, from:res.from.language.iso});
+        cacheService.putTranslatorLastLangs(userId, from, to);
+    })
+    .catch(err => {
+        logger.error(err);
+        callback({success:false, msg:err});
+    });
+}
 
 
 function langIsSupported(lang){
@@ -83,5 +98,6 @@ module.exports = {
     define: define,
     suggest: suggest,
     SUPPORTED_LANGS: SUPPORTED_LANGS,
-    langIsSupported: langIsSupported
+    langIsSupported: langIsSupported,
+    translate: translate
 }

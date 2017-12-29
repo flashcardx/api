@@ -1,8 +1,11 @@
 const mongoose = require("mongoose");
 const { exec } = require('child_process');
+const appRoot = require('app-root-path');
+const redis = require('redis');  
+const config = require(appRoot + "/config");
 
 before("before all(root)", ()=>{
-    require("../../app");
+    require(appRoot+"/app");
 })
 
 after(done=>{
@@ -26,4 +29,19 @@ function dropDatabase(){
     });
 };
 
+
+function dropCache(){
+    const client = redis.createClient({
+        url: config.getRedisConnectionString()
+    });
+    return new Promise((resolve, reject)=>{
+        client.flushdb(err=>{
+            if(err)
+                return reject(err);
+            resolve();
+        });
+    });
+}
+
 module.exports.dropDatabase = dropDatabase;
+module.exports.dropCache = dropCache;
