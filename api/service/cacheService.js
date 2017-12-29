@@ -81,7 +81,7 @@ function getResults(cacheKey){
                     logger.error("error when getting data from redis: " + err);
                     return reject(err);
                 }
-           return resolve(data);
+            return resolve(data);
         });
     });
 }

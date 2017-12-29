@@ -74,7 +74,8 @@ module.exports = function(app){
      *     HTTP/1.1 200 OK
      *     {"success":true,
      *      "text": "hola",
-     *      "from": "en"
+     *      "from": "en",
+     *      "audioSrc":"https://d32suzxs6u0rur.cloudfront.net/audio/TTS?lang=es&q=hola"
      *      }
      * @apiVersion 1.0.0
      *  */
