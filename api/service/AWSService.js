@@ -24,7 +24,7 @@ function saveToS3(key, contentType, data, callback, type){
                   Key: key,
                   Body: data,
                   ContentType: contentType,
-                  CacheControl: 'public, max-age=5184000'};
+                  CacheControl: 'public, max-age=15552000'};
     s3.upload(params, callback);
 }
 
@@ -32,7 +32,6 @@ function saveToS3(key, contentType, data, callback, type){
 function addTemporaryUrl(cards, callback){
     if(cards.length === 0)
         return callback({success:true, cards:[]});
-    var expireAfter = 600; //url expires after 600 seconds
     cards.forEach((card, i)=>{
         cards[i] = generateAddUrls(cards[i]);
     });
