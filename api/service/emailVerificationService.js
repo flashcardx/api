@@ -3,6 +3,7 @@ var User = require(appRoot + '/models/userModel'),
     mongoose = require('mongoose'),
     nev = require('email-verification')(mongoose);
 const config = require(appRoot + "/config");
+const codeService = require("./codeService");
 const logger = config.getLogger(__filename);
 const {BAD_SIGNUP_EMAIL_PENDING_CONFIRMATION, BAD_SIGNUP_EMAIL_ALREADY_EXISTS} = config.errorCodes;
 
@@ -112,13 +113,20 @@ function confirmUser(url, callback){
         }
         // user was found!
         if (user) {
-              nev.sendConfirmationEmail(user.email, function(err, info) {
-                if(err){
-                    return callback({success:false, msg:String(err)});
-                }
-                logger.debug("user confirmed ok, confirmation email was sent, info: " + info);
-                return callback({success:true, msg:"User "+ user.name+ " registered ok. Congratulations!, you can sign in now!"});
-            });
+              codeService.generateFreeTrial(user._id)
+              .then(()=>{
+                  nev.sendConfirmationEmail(user.email, function(err, info) {
+                      if(err){
+                          return callback({success:false, msg:String(err)});
+                        }
+                        logger.debug("user confirmed ok, confirmation email was sent, info: " + info);
+                        return callback({success:true, msg:"User "+ user.name+ " registered ok. Congratulations!, you can sign in now!"});
+                    });
+                })
+              .catch(err=>{
+                    logger.error("errot when generating free trial code for new use(after email verification)r: ", err);
+                    return callback({success:false, msg:err});
+                })
         }
         else{
             // user's data probably expired...
