@@ -5,6 +5,7 @@ const config = require(appRoot + "/config");
 const User = require(appRoot + "/models/userModel");
 const Img = require(appRoot + "/models/imgModel");
 const imgService = require(appRoot + "/service/imgService");
+const codeService = require(appRoot + "/service/codeService");
 const deckService = require(appRoot + "/service/deckService");
 const feedService = require(appRoot + "/service/feedService");
 const classService = require(appRoot + "/service/class/classService");
@@ -66,7 +67,7 @@ function loginUser(email, password, callback){
           'google.id': profile.id
     }).exec()
     .then(user=>{
-      // no user was found, lets create a new one
+      // no user was found, let's create a new one
       if (!user) {
             var user = {
                             "google.id": profile.id,
@@ -388,30 +389,32 @@ module.exports.registerTemporaryUser= registerTemporaryUser;
 
 const cardService = require("./cardService");
 
-function registerNewUser(user, callback){
-    var hash;
-    imgService.saveThumbnailFromUrl(user.picture)
-        .then(h=>{
-            hash = h;
+function registerNewUser(data, callback){
+    var hash,
+        newUser;
+    imgService.saveThumbnailFromUrl(data.picture)
+        .then(hash=>{
             return imgService.increaseImgCounter(hash);
         })
         .then(()=>{
-                var newUser = new User(user);
-                newUser.thumbnail = hash;
-                newUser.save(err=>{
-                            if(err){
-                                const errEmail = (err.errors && err.errors.email)?err.errors.email : null;
-                                if(errEmail && errEmail.kind === "unique")
-                                    return callback({success: false, code: BAD_SIGNUP_EMAIL_ALREADY_EXISTS, msg:"could not register user, " + String(err)});;
-                                return callback({success: false, msg:"could not register user, " + String(err)});;
-                            }
-                            return callback({success:true, user:newUser});
-                    })
+                var user = new User(data);
+                user.thumbnail = hash;
+                newUser = user;
+                return newUser.save();
         })
-    .catch(err=>{
-        logger.error("error when registering user,  " + err);
-        return callback({success:false, msg:err.toString()});
-    })
+        .then(()=>{
+          return codeService.generateFreeTrial(newUser._id)
+        })
+        .then(()=>{
+            return callback({success:true, user:newUser});
+        })
+        .catch(err=>{
+            const errEmail = (err.errors && err.errors.email)?err.errors.email : null;
+            if(errEmail && errEmail.kind === "unique")
+                    return callback({success: false, code: BAD_SIGNUP_EMAIL_ALREADY_EXISTS, msg:"could not register user, " + String(err)});
+            logger.error("error when registering user,  " + err);
+            return callback({success:false, msg:err.toString()});
+        })
 };
 
 const postService = require(appRoot + "/service/class/postService");
