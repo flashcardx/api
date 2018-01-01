@@ -22,6 +22,10 @@ const codeSchema = new Schema({
     end: {
         type: Date
     },
+    isFreeTrial:{
+        type: Boolean,
+        default: true
+    },
     owner: {
         type: Schema.Types.ObjectId,
         ref: "users",
