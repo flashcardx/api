@@ -61,20 +61,11 @@ function parseEnglishResultDefine(r){
     return text;
 }
 
-function define(userId, word, callback){
-    userService.findById(userId, 'preferences lang', (r)=>{
-        if(r.success === false)
-            return callback(r);
-        var user = r.msg;
-        if(user.preferences.autoComplete === false)
-            return callback({success:false, msg: "autocomplete mode is off for user"});
-        switch(user.lang){
+function define(lang, word, callback){
+    switch(lang){
             case "en":  return defineEnglish(word, callback);
-            default: preferencesService.turnOffAutocomplete(user, result=>{
-                        return callback({success:false, msg:"Current languaje is not supported, autocomplete is available for: " + SUPPORTED_LANGS});
-                    });
-        }
-     });
+            default: return callback({success:false, msg:"Current languaje is not supported, autocomplete is available for: " + SUPPORTED_LANGS});
+    }
 }
 
 function suggest(userId, word, callback){

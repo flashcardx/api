@@ -88,4 +88,17 @@ describe("dictionaryService", ()=>{
         })
     })
         
+    it("define: find definition for word in english", done=>{
+        dictionaryService.define("en", "hello", r=>{
+            assert.equal(r.success, true);
+            done();
+        })
+    })
+
+    it("define: find definition for word in non available language, should fail", done=>{
+        dictionaryService.define("fr", "hello", r=>{
+            assert.equal(r.success, false);
+            done();
+        })
+    })
 });

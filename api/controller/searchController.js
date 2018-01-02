@@ -45,19 +45,41 @@ module.exports = function(app){
         });
     });
 
-    app.get("/define/:word", controllerUtils.requireLogin, (req, res)=>{
-            const word = req.params.word;
-            dictionaryService.define(req.userId, word, r=>{
+
+    /**
+     * @api {get} /define/:word find definitions
+     * @apiGroup search
+     * @apiName find definitions
+     * @apiDescription receives lang and word and returns definitions or examples for that word.
+     * @apiParam (Parameters) {string} lang language code of the word.
+     * * @apiParam (Parameters) {string} word The word to define.
+     * @apiHeader (Headers) {string} x-access-token user session token
+     * @apiParamExample {Parameter} Request-Example:
+     * curl localhost:3000/es/casa
+     * @apiVersion 1.0.0
+     *  */
+    app.get("/define/:lang/:word", controllerUtils.requireLogin,
+    [
+        param('lang','lang code must be 2 characters long')
+        .isLength({min:2, max:2}),
+        
+        param('word','word must be between 1 and 40 characters')
+        .isLength({min:1, max:40})
+    ], controllerUtils.checkValidatorErrors,
+    (req, res)=>{
+            const word = req.params.word,
+                  lang = req.params.lang;
+            dictionaryService.define(lang, word, r=>{
                 res.json(r);
             });
-        });
+    });
 
     app.get("/suggest/:word", controllerUtils.requireLogin, (req, res)=>{
             const word = req.params.word;
             dictionaryService.suggest(req.userId, word, r=>{
                 res.json(r);
             });
-        });
+    });
 
         /**
      * @api {get} /translate translate
