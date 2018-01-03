@@ -6,18 +6,25 @@ const requestify = require("requestify");
 const dictionaries = config.dictionaries;
 const userService = require("./userService");
 const cacheService = require("./cacheService");
+const deckService = require("./deckService");
 const AWSService = require("./AWSService");
 const preferencesService = require("./preferencesService");
 const translator = require('google-translate-api');
 const SUPPORTED_LANGS = "English";
 
 
-function translate(userId, text, from, to, callback){
+function translate(userId, deckId, text, from, to, callback){
     translator(text, {from:from, to: to})
     .then(res => {
         const audioSrc = AWSService.generateTTSUrl(res.text, to);
         callback({success:true, audioSrc: audioSrc, text:res.text, from:res.from.language.iso});
-        cacheService.putTranslatorLastLangs(userId, from, to);
+        return Promise.resolve();
+    })
+    .then(()=>{
+        return deckService.validateOwnership(userId, deckId);
+    })
+    .then(()=>{
+        cacheService.putTranslatorLastLangs(userId, deckId, from, to);
     })
     .catch(err => {
         logger.error(err);
@@ -25,6 +32,20 @@ function translate(userId, text, from, to, callback){
     });
 }
 
+function getTranslatorLastLangs(userId, deckId){
+    return new Promise((resolve, reject)=>{
+        deckService.validateOwnership(userId, deckId)
+        .then(()=>{
+            return cacheService.getTranslatorLastLangs(userId, deckId);
+        })  
+        .then(r=>{
+            resolve(r);
+        })
+        .catch(err=>{
+            reject(err);
+        })
+    });
+}
 
 function langIsSupported(lang){
     if(lang == "en")
@@ -99,5 +120,6 @@ module.exports = {
     suggest: suggest,
     SUPPORTED_LANGS: SUPPORTED_LANGS,
     langIsSupported: langIsSupported,
-    translate: translate
+    translate: translate,
+    getTranslatorLastLangs: getTranslatorLastLangs
 }
