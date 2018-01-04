@@ -46,12 +46,12 @@ module.exports = function(app){
 
 
     /**
-     * @api {get} /define/:word find definitions
+     * @api {get} /define/:lang/:word find definitions
      * @apiGroup search
      * @apiName find definitions
      * @apiDescription receives lang and word and returns definitions or examples for that word.
      * @apiParam (Parameters) {string} lang language code of the word.
-     * * @apiParam (Parameters) {string} word The word to define.
+     * @apiParam (Parameters) {string} word The word to define.
      * @apiHeader (Headers) {string} x-access-token user session token
      * @apiParamExample {Parameter} Request-Example:
      * curl localhost:3000/es/casa
@@ -81,7 +81,7 @@ module.exports = function(app){
     });
 
         /**
-     * @api {get} /translate translate
+     * @api {get} /translate/:deckId translate
      * @apiGroup search
      * @apiName translate
      * @apiDescription A translator.
