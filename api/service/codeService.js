@@ -28,7 +28,6 @@ function linkUser(userId, code){
         Code.remove({ end: {$lt: new Date()}, owner: userId }) //deletes old code if exists and is due
         .exec()
         .then(()=>{
-            console.log("code: ", code);
             return Code.findOne({hash:code}, "start end months owner")
             .exec();
         })
@@ -91,7 +90,6 @@ function generateFreeTrial(userId){
         code.end = code.start.addDays(1);
         var codeModel = new Code(code);
         codeModel.save(err=>{
-            logger.error("error: ", err);
             if(err)
                 return reject(err);
             return resolve();
