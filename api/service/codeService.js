@@ -87,7 +87,7 @@ function generateFreeTrial(userId){
             owner: userId
         }
         code.start = new Date();
-        code.end = code.start.addDays(1);
+        code.end = code.start.addDays(2);
         var codeModel = new Code(code);
         codeModel.save(err=>{
             if(err)
