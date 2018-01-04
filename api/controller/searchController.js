@@ -123,7 +123,7 @@ module.exports = function(app){
 
 
         /**
-     * @api {get} /translateUsedLangs translate used langs
+     * @api {get} /translateUsedLangs/:deckId translate used langs
      * @apiGroup search
      * @apiName translate used langs
      * @apiDescription The last languages(from and to) the user used in the translator.
