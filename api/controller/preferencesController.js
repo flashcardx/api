@@ -18,10 +18,4 @@ module.exports = function(app){
         })
     });
 
-    app.get("/toggleAutocomplete", controllerUtils.requireLogin, (req, res)=>{
-        preferencesService.toggleAutocomplete(req.userId, r=>{
-            res.json(r);
-        });
-    });
-
 }

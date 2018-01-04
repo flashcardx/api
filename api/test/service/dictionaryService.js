@@ -12,7 +12,8 @@ describe("dictionaryService", ()=>{
 
     var USERID_1;
 
-    before(done=>{
+    before( function(done){
+        this.timeout(100000);
         setup.dropDatabase()
         .then(()=>{
             var user = {name:"tester", password:"1234", "plan.cardsLeft":200};
@@ -101,4 +102,14 @@ describe("dictionaryService", ()=>{
             done();
         })
     })
+
+    it("define: find definition for word in spanish", done=>{
+        dictionaryService.define("es", "pito", r=>{
+            console.log("result: ", r);
+            assert.equal(r.success, true);
+            done();
+        })
+    })
+
+    
 });
