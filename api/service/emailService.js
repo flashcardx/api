@@ -12,6 +12,13 @@ let transporter = nodemailer.createTransport({
         pass: config.emailPassword
     }
 });
+let transporterPablo = nodemailer.createTransport({
+    service: config.emailService,
+    auth: {
+        user: config.emailUserPablo, 
+        pass: config.emailPasswordPablo
+    }
+});
 
 function sendText(to, subject, text){
     return new Promise((resolve, reject)=>{
@@ -29,6 +36,23 @@ function sendText(to, subject, text){
     });
 }
 
+function sendTextAsPablo(to, subject, text){
+    return new Promise((resolve, reject)=>{
+            let mailOptions = {
+                from: `"Pablo de FlashcardX" <${config.emailUserPablo}>`,
+                to: to,
+                subject: subject,
+                text: text, 
+            };
+            transporterPablo.sendMail(mailOptions, (err, info) => {
+            if (err)
+                return reject(err);
+            return resolve();
+        });
+    });
+}
+
 module.exports = {
-    sendText: sendText
+    sendText: sendText,
+    sendTextAsPablo: sendTextAsPablo
 }

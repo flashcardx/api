@@ -33,6 +33,8 @@ module.exports = {
     emailService: email.service,
     emailUser: email.user,
     emailPassword: email.password,
+    emailUserPablo: email.userPablo,
+    emailPasswordPablo: email.passwordPablo,
     lang: lang,
     AWSCredentials: credentials.AWS,
     dictionaries: dictionaries,
