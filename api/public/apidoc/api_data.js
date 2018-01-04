@@ -161,73 +161,6 @@ define({ "api": [
     "groupTitle": "card"
   },
   {
-    "type": "get",
-    "url": "/duplicateCard/:type/:cardId/:deckId",
-    "title": "duplicate card",
-    "group": "card",
-    "name": "duplicate_card",
-    "description": "<p>duplicates card from user to user.</p>",
-    "parameter": {
-      "fields": {
-        "Parameters": [
-          {
-            "group": "Parameters",
-            "type": "string",
-            "optional": false,
-            "field": "type",
-            "description": "<p>uu:user to user, uc:user to class, cu: class to user.</p>"
-          },
-          {
-            "group": "Parameters",
-            "type": "string",
-            "optional": false,
-            "field": "cardId",
-            "description": "<p>id of the card to be duplicated.</p>"
-          },
-          {
-            "group": "Parameters",
-            "type": "string",
-            "optional": false,
-            "field": "deckId",
-            "description": "<p>id for the deck where card will be created.</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Request-Example:",
-          "content": "url: /duplicateCard/uu/59991371065a2544f7c90288/59991371065a2544f7c9028a",
-          "type": "json"
-        }
-      ]
-    },
-    "header": {
-      "fields": {
-        "Headers": [
-          {
-            "group": "Headers",
-            "type": "string",
-            "optional": false,
-            "field": "x-access-token",
-            "description": "<p>user session token</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "examples": [
-        {
-          "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\"success\":true\n }",
-          "type": "json"
-        }
-      ]
-    },
-    "version": "1.1.0",
-    "filename": "controller/cardController.js",
-    "groupTitle": "card"
-  },
-  {
     "type": "post",
     "url": "/editCard/:type/:cardId",
     "title": "edit card",
@@ -963,7 +896,7 @@ define({ "api": [
             "type": "string",
             "optional": true,
             "field": "description",
-            "description": "<p>description for deck.</p>"
+            "description": "<p>description for deck, maxLenght:400 characters.</p>"
           },
           {
             "group": "Request body",
@@ -1046,7 +979,7 @@ define({ "api": [
             "type": "string",
             "optional": false,
             "field": "description",
-            "description": "<p>description for deck.</p>"
+            "description": "<p>description for deck, maxLenght:400 characters..</p>"
           },
           {
             "group": "Request body",
@@ -1753,34 +1686,42 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/textToSpeech/:lang/:text",
-    "title": "textToSPeech",
+    "url": "/translate",
+    "title": "translate",
     "group": "search",
-    "name": "textToSPeech",
-    "description": "<p>receives lang and text and returns URL for downloading audio file.</p>",
+    "name": "translate",
+    "description": "<p>A translator.</p>",
     "parameter": {
       "fields": {
-        "Parameters": [
+        "Query": [
           {
-            "group": "Parameters",
+            "group": "Query",
             "type": "string",
             "optional": false,
-            "field": "lang",
-            "description": "<p>ISO 2 letter lang code.</p>"
+            "field": "text",
+            "description": "<p>The text you wanna translate.</p>"
           },
           {
-            "group": "Parameters",
+            "group": "Query",
+            "type": "string",
+            "optional": true,
+            "field": "from",
+            "defaultValue": "undefined",
+            "description": "<p>The iso code for the lang of the text param, if not provided the API will try to autodetect it.</p>"
+          },
+          {
+            "group": "Query",
             "type": "string",
             "optional": false,
-            "field": "Text",
-            "description": "<p>to make speech of, max 40 characters NOTE: YOU MUST ENCODE THIS FIELD, CAUSE THIS IS PART OF THE URL, OTHERWISE CHARACERS LIKE '?' WILL GET LOOSE</p>"
+            "field": "to",
+            "description": "<p>The iso code for the language to translate the text.</p>"
           }
         ]
       },
       "examples": [
         {
           "title": "Request-Example:",
-          "content": "curl localhost:3000/textToSpeech/es/holis",
+          "content": "curl localhost:3000/translate?text=hello&to=en",
           "type": "Parameter"
         }
       ]
@@ -1802,7 +1743,49 @@ define({ "api": [
       "examples": [
         {
           "title": "Success-Response:",
-          "content": "HTTP/1.1 200 OK\n{\"success\":\"true\",\n  \"msg\": \"https://d2pkpj1gudc0wt.cloudfront.net/audio/eddrr7f8f8f7d4fg\"\n }",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"text\": \"hola\",\n \"from\": \"en\",\n \"audioSrc\":\"https://d32suzxs6u0rur.cloudfront.net/audio/TTS?lang=es&q=hola\"\n }",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "1.0.0",
+    "filename": "controller/searchController.js",
+    "groupTitle": "search"
+  },
+  {
+    "type": "get",
+    "url": "/translateUsedLangs",
+    "title": "translate used langs",
+    "group": "search",
+    "name": "translate_used_langs",
+    "description": "<p>The last languages(from and to) the user used in the translator.</p>",
+    "header": {
+      "fields": {
+        "Headers": [
+          {
+            "group": "Headers",
+            "type": "string",
+            "optional": false,
+            "field": "x-access-token",
+            "description": "<p>user session token</p>"
+          }
+        ]
+      }
+    },
+    "parameter": {
+      "examples": [
+        {
+          "title": "Request-Example:",
+          "content": "curl localhost:3000/translateUsedLangs",
+          "type": "Parameter"
+        }
+      ]
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "Success-Response:",
+          "content": "HTTP/1.1 200 OK\n{\"success\":true,\n \"to\": \"es\",\n \"from\": \"en\"\n }",
           "type": "json"
         }
       ]

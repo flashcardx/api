@@ -5,25 +5,6 @@ const userService = require("./userService");
 const dictionaryService = require("./dictionaryService");
 const logger = config.getLogger(__filename);
 
-function toggleAutocomplete(userId, callback){
-    userService.findById(userId, 'preferences lang', result=>{
-        if(result.success === false)
-            return callback(result);
-        var user = result.msg;
-        if(user.preferences.autoComplete === false){
-            if(dictionaryService.langIsSupported(user.lang) === false)
-                return callback({success:false, msg: "Current languaje not supported, autocomplete is available for: " + dictionaryService.SUPPORTED_LANGS});
-            user.preferences.autoComplete = true;
-        }
-        else
-            user.preferences.autoComplete = false;
-        userService.saveUser(user, r=>{
-            if(r.success === false)
-                return callback(r);
-            return callback({success: true});
-        })
-    });
-}
 
 function getPreferences(userId, callback){
     userService.findById(userId,'preferences', (result)=>{
@@ -41,7 +22,6 @@ function turnOffAutocomplete(userModel, callback){
 
 
 module.exports = {
-    toggleAutocomplete: toggleAutocomplete,
     getPreferences: getPreferences,
     turnOffAutocomplete: turnOffAutocomplete
 }

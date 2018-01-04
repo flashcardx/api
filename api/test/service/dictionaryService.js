@@ -12,7 +12,7 @@ describe("dictionaryService", ()=>{
     var USERID_1,
         DECKID;
 
-    before(function(done){
+    before( function(done){
         this.timeout(100000);
         setup.dropDatabase()
         .then(()=>{
@@ -96,4 +96,27 @@ describe("dictionaryService", ()=>{
         })
     })
         
+    it("define: find definition for word in english", done=>{
+        dictionaryService.define("en", "hello", r=>{
+            assert.equal(r.success, true);
+            done();
+        })
+    })
+
+    it("define: find definition for word in non available language, should fail", done=>{
+        dictionaryService.define("fr", "hello", r=>{
+            assert.equal(r.success, false);
+            done();
+        })
+    })
+
+    it("define: find definition for word in spanish", done=>{
+        dictionaryService.define("es", "pito", r=>{
+            console.log("result: ", r);
+            assert.equal(r.success, true);
+            done();
+        })
+    })
+
+    
 });
