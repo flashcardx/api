@@ -36,6 +36,14 @@ function sendText(to, subject, text){
     });
 }
 
+function sendError(where, text){
+    return sendText("pablo@flashcardx.co", "ERROR - "+where, text);
+}
+
+function sendLog(where, text){
+    return sendText("pablo@flashcardx.co", "LOG - "+where, text);
+}
+
 function sendTextAsPablo(to, subject, text){
     return new Promise((resolve, reject)=>{
             let mailOptions = {
@@ -54,5 +62,7 @@ function sendTextAsPablo(to, subject, text){
 
 module.exports = {
     sendText: sendText,
-    sendTextAsPablo: sendTextAsPablo
+    sendTextAsPablo: sendTextAsPablo,
+    sendError: sendError,
+    sendLog: sendLog
 }
