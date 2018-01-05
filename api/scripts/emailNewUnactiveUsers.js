@@ -7,6 +7,7 @@ const User = require(appRoot + "/models/userModel");
 const Card = require(appRoot + "/models/cardModel");
 const config = require(appRoot + "/config");
 config.connectMongoose();
+var emailedUsers = 0;
 
 Date.prototype.addDays = function(days) {
     var dat = new Date(this.valueOf());
@@ -15,13 +16,13 @@ Date.prototype.addDays = function(days) {
 }
 
 function run(){ 
-    var twoDaysBefore = new Date().addDays(-2);
+    var twoDaysBefore = new Date().addDays(-2),
+        threeDaysBefore = new Date().addDays(-3);
     var promises = []
-    User.find({created_at: {$lt: twoDaysBefore}}, "email name")
+    User.find({created_at: {$gt: threeDaysBefore, $lt: twoDaysBefore}}, "email name")
     .lean()
     .exec()
     .then(users=>{
-        console.log("got users: ", users);
         users.forEach(user=> {
             if(!user.email)
                 return;
@@ -30,8 +31,11 @@ function run(){
         return Promise.all(promises);
     })
     .then(()=>{
-        emailService.sendLog("email new unactive users", "finished ok ");
         console.log("finished ok"); 
+        return emailService.sendLog("email new unactive users", "finished ok, emailed users: "+ emailedUsers);
+    })
+    .then(()=>{
+        process.exit()
     })
     .catch(err=>{
         console.error("error fetching users: ", err);
@@ -46,7 +50,6 @@ function emailIfUnactive(user){
             .limit(1)
             .exec()
             .then(cards=>{
-                console.log("cards: ", cards);
                 if(cards.length !== 0)
                     return resolve({done: true});
                 var name = user.name.split(" ")[0]; 
@@ -54,8 +57,10 @@ function emailIfUnactive(user){
                 return emailService.sendTextAsPablo(user.email, "¿Hubo algún problema?", text); 
             })
             .then(r=>{
-                if(!r || !r.done)
-                     resolve();
+                if(!r || !r.done){
+                    emailedUsers++;
+                    resolve();
+                }
             })
             .catch(err=>{
                 reject(err);
