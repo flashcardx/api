@@ -119,6 +119,7 @@ function verifyRecaptchaHelper(ip, key, callback) {
       res.on('end', function() {
       try {
           var parsedData = JSON.parse(data);
+          console.log("parsed data is: ", parsedData);
           callback(parsedData.success);
       } catch (e) {
           callback(false);
