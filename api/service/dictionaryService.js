@@ -139,6 +139,7 @@ function parseGlosbeResultDefine(r){
 }
 
 function define(lang, word, callback){
+    word = word.toLowerCase();
     switch(lang){
             case "en":  return defineEnglish(word, callback);
             case "es":  return defineOthers(word, "es", callback) 

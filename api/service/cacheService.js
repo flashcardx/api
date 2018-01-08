@@ -24,7 +24,7 @@ function putGifResults(q, msg){
 
 function putDictionaryResults(lang, q, msg){ 
     var cacheKey = genKeyDictionary(lang, q);
-    client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
+    client.set(cacheKey, msg, "EX", config.cacheTimeDictionary);//cache time in seconds
 }
 
 function putTranslatorLastLangs(userId, deckId, fromLang , toLang){
