@@ -73,9 +73,26 @@ module.exports = function(app){
             });
     });
 
-    app.get("/suggest/:word", controllerUtils.requireLogin, (req, res)=>{
-            const word = req.params.word;
-            dictionaryService.suggest(req.userId, word, r=>{
+       /**
+     * @api {get} /suggest/:lang/:word suggest words
+     * @apiGroup search
+     * @apiName suggest words
+     * @apiDescription Suggest words similar to the word received.
+     * @apiParam {Param} {string} lang lang iso code of the word.
+     * @apiParam {Param} {string} word word to suggest
+     * @apiHeader (Headers) {string} x-access-token user session token
+     * @apiParamExample {Parameter} Request-Example:
+     * curl localhost:3000/suggest/en/ello
+     * @apiSuccessExample {json} Success-Response:
+     *     HTTP/1.1 200 OK
+     *     {"success":true,
+     *      }
+     * @apiVersion 1.0.0
+     *  */
+    app.get("/suggest/:lang/:word", controllerUtils.requireLogin, (req, res)=>{
+            const word = req.params.word,
+                  lang = req.params.lang;
+            dictionaryService.suggest(lang, word, r=>{
                 res.json(r);
             });
     });

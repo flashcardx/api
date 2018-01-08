@@ -112,11 +112,17 @@ describe("dictionaryService", ()=>{
 
     it("define: find definition for word in spanish", done=>{
         dictionaryService.define("es", "pito", r=>{
-            console.log("result: ", r);
             assert.equal(r.success, true);
             done();
         })
     })
 
+    it("suggest words in english should get results", done=>{
+        dictionaryService.suggest("en", "ello", r=>{
+            console.log("result: ", r);
+            assert.equal(r.success, true);
+            done();
+        })
+    })
     
 });
