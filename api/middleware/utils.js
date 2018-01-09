@@ -119,7 +119,10 @@ function verifyRecaptchaHelper(ip, key, callback) {
       res.on('end', function() {
       try {
           var parsedData = JSON.parse(data);
-          callback(parsedData.success);
+          if(env === "production" && parsedData.hostname !== "flashcardx.co")
+            callback(false)
+          else
+            callback(parsedData.success);
       } catch (e) {
           callback(false);
       }

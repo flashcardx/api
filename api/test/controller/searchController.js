@@ -5,16 +5,19 @@ const app = require(appRoot +"/app");
 const setup = require("./setup");
 const config = require(appRoot + "/config");
 const logger = config.getLogger(__filename);
+
 describe("search controller", ()=>{
 
-    var ACCESS_TOKEN;
+    var ACCESS_TOKEN,
+        DECKID;
 
     before(function(done){
         this.timeout(100000);
-        setup.setupBasicUser()
-        .then((token)=>{
+        setup.setupBasicUserAndDeck()
+        .then(({token, deckId})=>{
             logger.info("token: ", token);
             ACCESS_TOKEN = token;
+            DECKID = deckId;
             done();
         })
         .catch(err=>{
@@ -26,7 +29,7 @@ describe("search controller", ()=>{
     it("translation should finish ok", done=>{
         const text = "hello",
               to="es";
-        const url = "/translate?text="+text+"&to="+to;
+        const url = "/translate/" + DECKID + "?text="+text+"&to="+to;
         request(app)
         .get(url)
         .set("x-access-token", ACCESS_TOKEN)
@@ -46,14 +49,14 @@ describe("search controller", ()=>{
     it("test traslate last languages", done=>{
         const text = "hello",
               to="es";
-        const url = "/translate?text="+text+"&to="+to;
+        const url = "/translate/" + DECKID + "?text="+text+"&to="+to;
         request(app)
         .get(url)
         .set("x-access-token", ACCESS_TOKEN)
         .expect(200)
         .then(()=>{
             return request(app)
-                    .get("/translateUsedLangs")
+                    .get("/translateUsedLangs/"+DECKID)
                     .set("x-access-token", ACCESS_TOKEN)
                     .expect(200)
         })

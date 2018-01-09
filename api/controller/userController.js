@@ -6,7 +6,6 @@ const userService = require(appRoot + "/service/userService");
 const codeService = require(appRoot + "/service/codeService");
 const AWSService = require(appRoot + "/service/AWSService");
 const { check, param, query, body, validationResult } = require('express-validator/check');
-const { matchedData, sanitizeParam } = require('express-validator/filter');
 const controllerUtils = require(appRoot + "/middleware").utils;
 const loginUtil = require("./loginUtil");
 const {INVALID_PROMOCODE} = config.errorCodes;
@@ -90,11 +89,12 @@ module.exports = function(app){
         [
             body('code', 'count must be 10 chars long')
             .isLength({ min:10, max:10})
-        ], controllerUtils.onlyDecodeToken,
+        ],
+        controllerUtils.onlyDecodeToken,
         (req, res)=>{
             var userId = req.decodedToken.id;
             var dueDate;
-            codeService.linkUser(userId, req.body.code)
+            codeService.linkUser(userId, req.body.code.toUpperCase())
             .then(due=>{
                 dueDate = due;
                 loginUtil.issueToken(userId, r=>{

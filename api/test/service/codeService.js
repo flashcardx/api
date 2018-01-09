@@ -14,11 +14,12 @@ describe("codeService", ()=>{
 
     const HASH1 = "0123456789",
           HASH2 = "A123456789",
-          HASH3 = "DE5D4E5D4E"
+          HASH3 = "DE5D4E5JD4E",
           SCHOOL1 = undefined,
           MONTHS1 = 3; 
 
-    before(done=>{
+    before(function(done){
+        this.timeout(100000);
         setup.dropDatabase()
         .then(()=>{
             var user = {"name":"tester", password:"1234", "plan.cardsLeft":200};
@@ -29,18 +30,19 @@ describe("codeService", ()=>{
         .then(()=>{
             var code = {hash:HASH3, months:1};
             var codeModel = new Code(code);
-            return codeModel.save();
+            return codeModel.save()
         })
         .then(()=>{
             done();
         })
         .catch(err=>{
             console.error("error in before method(codeService): ", err);
+            done( new Error(err));
         });
     });
 
     it("insert code", done=>{
-        codeService.saveCode(HASH1, MONTHS1, SCHOOL1)
+        codeService.save(HASH1, MONTHS1, SCHOOL1)
         .then(()=>{
             done();
         })
@@ -52,10 +54,10 @@ describe("codeService", ()=>{
 
     it("insert same code twice should fail", done=>{
         var firstStep = false;
-        codeService.saveCode(HASH2, MONTHS1, SCHOOL1)
+        codeService.save(HASH2, MONTHS1, SCHOOL1)
         .then(()=>{
             firstStep = true;
-            return codeService.saveCode(HASH2, MONTHS1, SCHOOL1)
+            return codeService.save(HASH2, MONTHS1, SCHOOL1)
         })
         .then(()=>{
             done("should not get here");
@@ -67,13 +69,15 @@ describe("codeService", ()=>{
         })
     })
 
-    it.only("link code with user", done=>{
+    it("link code with user", done=>{
         codeService.linkUser(userId1, HASH3)
         .then(time=>{
+            console.log("time: ", time);
             done();
         })
         .catch(err=>{
-            done(err);
+            console.error("err: ", err);
+            done( new Error(err));
         });
     })
 });

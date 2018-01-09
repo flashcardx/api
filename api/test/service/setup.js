@@ -4,8 +4,9 @@ const appRoot = require('app-root-path');
 const redis = require('redis');  
 const config = require(appRoot + "/config");
 
-before("before all(root)", ()=>{
+before("before all(root)", done=>{
     require(appRoot+"/app");
+    done();
 })
 
 after(done=>{

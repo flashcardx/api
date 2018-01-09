@@ -1,3 +1,5 @@
+var textract = require('textract');
+
 //returns a number between 0 and 10 telling how much both strings are diffenrent
  function stringDifference(s1, s2) {
       s1 = s1.toLowerCase().trim();
@@ -26,4 +28,15 @@
       return costs[s2.length];
 }
 
+function extractContentFromHTML(s) {
+  return new Promise((resolve, reject)=>{
+    textract.fromBufferWithMime("text/html", new Buffer(s), ( err, text)=>{
+        if(err)
+          return reject(err);
+        resolve(text);
+    })
+  });
+};
+
 module.exports.stringDifference = stringDifference;
+module.exports.extractContentFromHTML = extractContentFromHTML;

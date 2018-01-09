@@ -4,12 +4,15 @@ const User = require(appRoot + "/models/userModel");
 const Code = require(appRoot + "/models/codeModel");
 const loginUtil = require(appRoot + "/controller/loginUtil");
 const mongoose = require("mongoose");
+const Deck = require(appRoot + "/models/deckModel").deck;
 
 //if promise resolves returns access token for the user
-function setupBasicUser(){
+function setupBasicUserAndDeck(){
     const CODE= "0123456789";
     var token,
-        userId
+        userId,
+        deckId;
+
     return new Promise((resolve, reject)=>{
         dropDatabase()
         .then(()=>{
@@ -24,9 +27,15 @@ function setupBasicUser(){
             return codeModel.save();
         })
         .then(()=>{
+            var deck = {name:"MY DECK", description:"abc", ownerId: userId};
+            var deckModel = new Deck(deck);
+            deckId = deckModel._id;
+            return deckModel.save();
+        })
+        .then(()=>{
             loginUtil.issueToken(userId, r=>{
                 if(r.success)
-                    resolve(r.token);
+                    resolve({token: r.token, deckId: deckId});
                 else
                     reject(r.msg)
             });
@@ -54,5 +63,5 @@ function dropDatabase(){
 
 
 module.exports = {
-    setupBasicUser: setupBasicUser
+    setupBasicUserAndDeck: setupBasicUserAndDeck
 }

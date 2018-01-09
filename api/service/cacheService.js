@@ -27,8 +27,8 @@ function putDictionaryResults(lang, q, msg){
     client.set(cacheKey, JSON.stringify(msg), "EX", config.cacheTimeDictionary);//cache time in seconds
 }
 
-function putTranslatorLastLangs(userId, fromLang , toLang){
-    var cacheKey = genKeyTranslatorLastLangs(userId);
+function putTranslatorLastLangs(userId, deckId, fromLang , toLang){
+    var cacheKey = genKeyTranslatorLastLangs(userId, deckId);
     const object = {from: fromLang, to: toLang};
     client.set(cacheKey, JSON.stringify(object), "EX", config.cacheTimeTranslateLang);//cache time in seconds
 }
@@ -69,8 +69,8 @@ function getUserPracticeResults(userId){
     return getResults(cacheKey);
 }
 
-function getTranslatorLastLangs(userId){
-    var cacheKey = genKeyTranslatorLastLangs(userId);
+function getTranslatorLastLangs(userId, deckId){
+    var cacheKey = genKeyTranslatorLastLangs(userId, deckId);
     return getResults(cacheKey);
 }
 
@@ -102,8 +102,8 @@ function genKeyUserPractice(userId){
     return "userPractice-" + userId;
 }
 
-function genKeyTranslatorLastLangs(userId){
-    return "translateLastLang-"+userId;
+function genKeyTranslatorLastLangs(userId, deckId){
+    return "translateLastLang-"+userId + "-"+deckId;
 }
 
 module.exports = {

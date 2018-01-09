@@ -24,10 +24,13 @@ function save(hash, months, school){
 
 function linkUser(userId, code){
     var endDate;
-    code = code.toUpperCase();
     return new Promise((resolve, reject)=>{
-        Code.findOne({hash:code}, "start end months owner")
+        Code.remove({ end: {$lt: new Date()}, owner: userId }) //deletes old code if exists and is due
         .exec()
+        .then(()=>{
+            return Code.findOne({hash:code}, "start end months owner")
+            .exec();
+        })
         .then(code=>{
             if(!code)
                 return reject("code not found");
@@ -41,11 +44,11 @@ function linkUser(userId, code){
             return code.save(code);
         })
         .then(()=>{
-            return resolve(endDate);
+            resolve(endDate);
         })
         .catch(err=>{
-            logger.error(err);
-            return reject(err);
+            logger.error("could not link user with code: ", err);
+            reject(err);
         });
     })
 }
@@ -70,8 +73,33 @@ function validate(userId){
     })
 }
 
+Date.prototype.addDays = function(days) {
+    var dat = new Date(this.valueOf());
+    dat.setDate(dat.getDate() + days);
+    return dat;
+}
+
+function generateFreeTrial(userId){
+    return new Promise((resolve, reject)=>{
+        var code = {
+            hash: userId,
+            months: 1,
+            owner: userId
+        }
+        code.start = new Date();
+        code.end = code.start.addDays(2);
+        var codeModel = new Code(code);
+        codeModel.save(err=>{
+            if(err)
+                return reject(err);
+            return resolve();
+        });
+    });
+}
+
 module.exports = {
     save: save,
     linkUser: linkUser,
-    validate: validate
+    validate: validate,
+    generateFreeTrial: generateFreeTrial
 }

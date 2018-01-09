@@ -3,7 +3,7 @@ var validate = require('mongoose-validator');
 var hashValidator = [
   validate({
     validator: 'isLength',
-    arguments: [10, 10],
+    arguments: [10, 24],
     message: 'hash should be between {ARGS[0]} and {ARGS[1]} characters'
   }),
   validate({

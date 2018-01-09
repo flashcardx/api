@@ -68,6 +68,7 @@
     "requestify": "^0.2.5",
     "shutterstock": "^0.13.0",
     "string": "^3.3.3",
+    "textract": "^2.2.0",
     "voucher-code-generator": "^1.1.1",
     "xss-filters": "^1.2.7"
   },
