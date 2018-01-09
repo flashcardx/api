@@ -3,18 +3,21 @@
         "englishAPIKey": "c33780e013fe8659f0705009e370288bd902da1cd47ad4a48",
         "UrlEnglish":"http://api.wordnik.com:80/v4/word.json",
         "autocomplete":"https://api.datamuse.com",
-        "glosbeDictionraryUrl": "https://glosbe.com/gapi_v0_1/translate"
+        "glosbeDictionraryUrl": "https://glosbe.com/gapi_v0_1/translate",
+        "wikipediaOpenSearch": ".wikipedia.org/w/api.php?action=opensearch&format=json&search="
     },
     "pi":{
         "englishAPIKey": "c33780e013fe8659f0705009e370288bd902da1cd47ad4a48",
         "UrlEnglish":"http://api.wordnik.com:80/v4/word.json",
         "autocomplete":"https://api.datamuse.com",
-        "glosbeDictionraryUrl": "https://glosbe.com/gapi_v0_1/translate"
+        "glosbeDictionraryUrl": "https://glosbe.com/gapi_v0_1/translate",
+        "wikipediaOpenSearch": ".wikipedia.org/w/api.php?action=opensearch&format=json&search="
     },
     "production":{
         "englishAPIKey": "c33780e013fe8659f0705009e370288bd902da1cd47ad4a48",
         "UrlEnglish":"http://api.wordnik.com:80/v4/word.json",
         "autocomplete":"https://api.datamuse.com",
-        "glosbeDictionraryUrl": "https://glosbe.com/gapi_v0_1/translate"
+        "glosbeDictionraryUrl": "https://glosbe.com/gapi_v0_1/translate",
+        "wikipediaOpenSearch": ".wikipedia.org/w/api.php?action=opensearch&format=json&search="
     }
 }
