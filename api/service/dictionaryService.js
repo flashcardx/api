@@ -149,7 +149,8 @@ function define(lang, word, callback){
 
 function suggest(lang, word, callback){
         if(lang === "en" || lang === "es"){
-            var url = dictionaries.autocomplete  + "/sug?s=" + word;
+            const version = (lang==="en")? "enwiki" : lang;
+            var url = dictionaries.autocomplete  + "/sug?s=" + word + "&v="+version;
             requestify.get(url).then(response=>{
                 const resBody = response.getBody();
                 return callback({success:true, msg:resBody});

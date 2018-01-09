@@ -117,8 +117,8 @@ describe("dictionaryService", ()=>{
         })
     })
 
-    it("suggest words in english should get results", done=>{
-        dictionaryService.suggest("en", "ello", r=>{
+    it.only("suggest words in english should get results", done=>{
+        dictionaryService.suggest("en", "hello", r=>{
             console.log("result: ", r);
             assert.equal(r.success, true);
             done();

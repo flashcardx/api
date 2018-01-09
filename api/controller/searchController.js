@@ -74,7 +74,7 @@ module.exports = function(app){
     });
 
        /**
-     * @api {get} /suggest/:lang/:word suggest words
+     * @api {get} /suggestGeneric/:lang/:word suggest words
      * @apiGroup search
      * @apiName suggest words
      * @apiDescription Suggest words similar to the word received.
@@ -89,7 +89,7 @@ module.exports = function(app){
      *      }
      * @apiVersion 1.0.0
      *  */
-    app.get("/suggest/:lang/:word", controllerUtils.requireLogin, (req, res)=>{
+    app.get("/spellSuggestions/:lang/:word", controllerUtils.requireLogin, (req, res)=>{
             const word = req.params.word,
                   lang = req.params.lang;
             dictionaryService.suggest(lang, word, r=>{
