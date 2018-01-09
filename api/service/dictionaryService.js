@@ -48,54 +48,79 @@ function getTranslatorLastLangs(userId, deckId){
     });
 }
 
+function getWikipediaResults(lang, word){
+    return new Promise((resolve, reject)=>{
+        const url = "https://"+lang+dictionaries.wikipediaOpenSearch+word;
+        requestify.get(url)
+        .then(response=>{
+            const resBody = response.getBody();
+            resolve(parseWikipediaResultDefine(resBody[2]))
+        })
+        .catch(err=>{
+            reject(err)     
+        })
+    });
+}
+
 function defineEnglish(word, callback){
    cacheService.getDictionaryResults("en", word)
    .then(results=>{
         if(results){
-               return callback({success:true, msg:results});
+               callback({success:true, msg:results});
+               return Promise.reject()
         }
         const url = dictionaries.UrlEnglish + "/" + word +"/definitions?limit=5&includeRelated=true&sourceDictionaries=all&useCanonical=false&includeTags=false&api_key=" + dictionaries.englishAPIKey;
         return requestify.get(url) 
     })
     .then(response=>{
-                if(!response)
-                    return;
                 const resBody = response.getBody();
                 const text = parseEnglishResultDefine(resBody);
+                if(!text)
+                    return getWikipediaResults("en", word);
+                else
+                    return Promise.resolve(text);
+    })
+    .then(text=>{
                 cacheService.putDictionaryResults("en", word, text);
                 return callback({success:true, msg:text});
     })
     .catch(err=>{
-        logger.error("error in define english: ", err);
-        return callback({success:false, msg: err});
+        if(err){
+            logger.error("error in define english: ", err);
+            return callback({success:false, msg: err});
+        }
     });
 }
 
 function defineOthers(word, langCode, callback){
     cacheService.getDictionaryResults(langCode, word)
     .then(results=>{
-         if(results){
-                 logger.info("got results from cache. ", results);
-                 return callback({success:true, msg:results});
-             }
+                if(results){
+                    callback({success:true, msg:results});
+                    return Promise.reject()
+                }
         const url = dictionaries.glosbeDictionraryUrl + "?format=json&pretty=true&tm=true&from=" + langCode + "&dest=" + langCode + "&phrase="+word
         return requestify.get(url)
     })
     .then(response=>{
-                if(!response)
-                    return Promise.resolve(null);        
                 const resBody = response.getBody();
                 return parseGlosbeResultDefine(resBody);
     })
     .then(text=>{
-                if(text === null)
-                    return;
-                cacheService.putDictionaryResults(langCode, word, text);
-                return callback({success:true, msg:text});            
+            if(text)
+                return Promise.resolve(text)
+            else
+                return getWikipediaResults(langCode, word);
+    })
+    .then(text=>{
+        cacheService.putDictionaryResults(langCode, word, text);
+        return callback({success:true, msg:text});            
     })
     .catch(err=>{
-         logger.error("error in define others: ", err);
-         return callback({success:false, msg: err});
+         if(err){
+             logger.error("error in define others: ", err);
+             return callback({success:false, msg: err});
+         }
     });
 }
 
@@ -103,6 +128,15 @@ function parseEnglishResultDefine(r){
     var text = "";
     for(var i=0; i < r.length && i < 5; i++){
         text += "-" + r[i].partOfSpeech +", "+ r[i].text +"\n";
+    }
+    return text;
+}
+
+function parseWikipediaResultDefine(r){
+    var text = "";
+    for(var i=0; i < r.length && i < 4; i++){
+        if(r[i])
+            text += "-" + r[i] +"\n";
     }
     return text;
 }
@@ -142,9 +176,7 @@ function define(lang, word, callback){
     word = word.toLowerCase();
     switch(lang){
             case "en":  return defineEnglish(word, callback);
-            case "es":  return defineOthers(word, "es", callback) 
             default: return defineOthers(word, lang, callback) 
-            //default: return callback({success:false, msg:"Current languaje is not supported"});
     }
 }
 
