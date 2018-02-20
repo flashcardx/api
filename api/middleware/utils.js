@@ -13,8 +13,10 @@ const querystring = require('querystring');
 function requireLogin(req, res, next){
       onlyDecodeToken(req, res, ()=>{
           const {decodedToken} = req;
+          /*
           if(decodedToken.noPromocode)
               return res.json({ success: false, code:NO_PROMOCODE, msg: "The user does not have an active promocode"});    
+          */
           req.userId = decodedToken.id;// if everything is good, save to request for use in other routes
           next();
       })
