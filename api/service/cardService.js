@@ -64,7 +64,7 @@ function getCards(userId, params, callback){
     }
     Card.find({$and: query })
     .select("name description imgs ownerName updated_at")
-    .sort({updated_at: "desc"})
+    .sort({created_at: "desc"})
     .skip(parseInt(params.skip))
     .limit(params.limit)
     .populate("deckId", "lang")
